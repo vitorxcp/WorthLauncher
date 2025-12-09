@@ -200,6 +200,318 @@
     .hidden-force {
       display: none !important;
     }
+
+    #modal-content h1,
+    #modal-content h2,
+    #modal-content h3 {
+      color: #fff;
+      font-weight: 700;
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+    }
+
+    #modal-content h1 {
+      font-size: 2em;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 0.3em;
+    }
+
+    #modal-content h2 {
+      font-size: 1.5em;
+      color: #fbbf24;
+    }
+
+    #modal-content p {
+      margin-bottom: 1em;
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    #modal-content ul {
+      list-style: disc;
+      padding-left: 1.5em;
+      margin-bottom: 1em;
+      color: #d4d4d4;
+    }
+
+    #modal-content strong {
+      color: #fbbf24;
+    }
+
+    #modal-content a {
+      color: #3b82f6;
+      text-decoration: underline;
+    }
+
+    #modal-content img {
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 1em 0;
+      width: 100%;
+    }
+
+    #modal-content blockquote {
+      border-left: 4px solid #fbbf24;
+      padding-left: 1em;
+      color: #a3a3a3;
+      font-style: italic;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .fallback-pattern {
+      background-color: #111;
+      background-image: radial-gradient(#222 1px, transparent 1px), radial-gradient(#222 1px, #111 1px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+    }
+
+    .news-card-img-container {
+      background-color: #0a0a0a;
+    }
+
+    .news-card-base {
+      background-color: #0a0a0a;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .news-card-base:hover {
+      transform: translateY(-5px);
+      border-color: rgba(234, 179, 8, 0.4);
+      box-shadow: 0 15px 30px rgba(234, 179, 8, 0.1);
+    }
+
+    .artistic-fallback {
+      background:
+        radial-gradient(circle at 100% 0%, rgba(234, 179, 8, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 20%),
+        linear-gradient(135deg, #0f0f0f 0%, #050505 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .artistic-fallback::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 30px 30px;
+      mask-image: radial-gradient(circle, black 40%, transparent 100%);
+      opacity: 0.5;
+    }
+
+    .watermark-icon {
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 120px;
+      height: 120px;
+      opacity: 0.05;
+      transform: rotate(15deg);
+      transition: all 0.5s ease;
+      color: white;
+    }
+
+    .news-card-base:hover .watermark-icon {
+      transform: rotate(0deg) scale(1.1);
+      opacity: 0.1;
+      color: #eab308;
+    }
+
+    .readability-gradient {
+      background: linear-gradient(to top, #000000 10%, rgba(0, 0, 0, 0.8) 40%, transparent 100%);
+    }
+
+    #modal-content h1 {
+      font-size: 1.5em;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.5em;
+    }
+
+    #modal-content h2 {
+      font-size: 1.25em;
+      font-weight: 700;
+      color: #facc15;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    #modal-content h3 {
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #e5e5e5;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    #modal-content p {
+      margin-bottom: 0.8em;
+      line-height: 1.6;
+      color: #d4d4d4;
+    }
+
+    #modal-content ul {
+      list-style-type: disc;
+      padding-left: 1.5em;
+      margin-bottom: 1em;
+    }
+
+    #modal-content ol {
+      list-style-type: decimal;
+      padding-left: 1.5em;
+      margin-bottom: 1em;
+    }
+
+    #modal-content a {
+      color: #facc15;
+      text-decoration: underline;
+    }
+
+    #modal-content blockquote {
+      border-left: 4px solid #facc15;
+      padding-left: 1em;
+      color: #a3a3a3;
+      font-style: italic;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.5em;
+      border-radius: 0 4px 4px 0;
+    }
+
+    #modal-content code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #facc15;
+      font-size: 0.9em;
+    }
+
+    #modal-content pre {
+      background: #000;
+      padding: 1em;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1em;
+      border: 1px solid #333;
+    }
+
+    #modal-content pre code {
+      background: transparent;
+      color: #e5e5e5;
+      padding: 0;
+    }
+
+    #modal-content img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 1em 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #modal-content hr {
+      border-color: rgba(255, 255, 255, 0.1);
+      margin: 1.5em 0;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-card {
+      opacity: 0;
+      animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    .news-card-base:hover .watermark-icon {
+      transform: rotate(0deg) scale(1.2);
+      opacity: 0.15;
+      color: #eab308;
+    }
+
+    #modal-content a {
+      color: #3b82f6;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+      transition: all 0.2s;
+    }
+
+    #modal-content a:hover {
+      color: #60a5fa;
+      border-bottom-color: #60a5fa;
+    }
+
+    @keyframes modalZoomIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes modalZoomOut {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+    }
+
+    .modal-enter {
+      animation: modalZoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .modal-exit {
+      animation: modalZoomOut 0.2s ease-in forwards;
+    }
+
+    .bg-enter {
+      animation: fadeIn 0.3s forwards;
+    }
+
+    .bg-exit {
+      animation: fadeOut 0.3s forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+
+      to {
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 
@@ -286,18 +598,89 @@
             <h1 class="text-7xl font-black text-white tracking-tighter mb-4 drop-shadow-2xl uppercase italic">Worth<span
                 class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">Client</span></h1>
 
-            <div class="flex gap-4 mt-8">
+            <div class="mt-8 mb-4">
+              <div class="flex items-center justify-between mb-4 px-1">
+                <h2 class="text-white font-bold text-lg flex items-center gap-2 tracking-tight">
+                  <div class="p-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-yellow-500"></i>
+                  </div>
+                  Últimas Novidades
+                </h2>
+                <button id="btn-see-all"
+                  class="text-[11px] font-bold text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 group border border-transparent hover:border-white/10">
+                  VER ARQUIVO
+                  <i data-lucide="arrow-right" class="w-3 h-3 group-hover:translate-x-1 transition-transform"></i>
+                </button>
+              </div>
+
+              <div id="blog-feed" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5"></div>
+                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5"></div>
+                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5"></div>
+              </div>
+            </div>
+
+            <div id="blog-modal"
+              class="custom-modal-overlay hidden-force fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-10">
+              <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeBlogModal()"></div>
+
               <div
-                class="news-card glass rounded-2xl p-4 flex flex-col justify-between cursor-pointer border hover:border-blue-500/50">
-                <span class="text-[10px] font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded w-fit">EVENTO</span>
-                <div>
-                  <h3 class="font-bold text-white leading-tight">🎄 NATAL NA REDE WORTH 🎄</h3>
-                  <p class="text-xs text-gray-400 mt-1">MEGA BOOSTER de 50x EXP e cupons de Natal! Acesse redeworth.com.
-                  </p>
+                class="custom-modal-content relative bg-[#0a0a0a] w-full max-w-4xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
+
+                <button onclick="closeBlogModal()"
+                  class="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/50 hover:bg-red-500 text-white transition border border-white/10 backdrop-blur-md group">
+                  <i data-lucide="x" class="w-5 h-5 group-hover:rotate-90 transition-transform"></i>
+                </button>
+
+                <div class="h-64 shrink-0 relative overflow-hidden bg-[#111]">
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10">
+                  </div>
+                  <img id="modal-image" src="" class="w-full h-full object-cover opacity-80" style="display: none;">
+                  <div id="modal-fallback" class="artistic-fallback absolute inset-0 w-full h-full hidden">
+                    <i data-lucide="layout" class="watermark-icon"
+                      style="width: 200px; height: 200px; opacity: 0.05;"></i>
+                  </div>
+                  <div class="absolute bottom-0 left-0 p-8 z-20 w-full">
+                    <span id="modal-tag"
+                      class="text-[10px] font-bold text-black bg-yellow-500 px-3 py-1 rounded uppercase tracking-wider mb-3 inline-block shadow-lg">TAG</span>
+                    <h1 id="modal-title"
+                      class="text-3xl md:text-4xl font-black text-white leading-tight drop-shadow-lg">Título</h1>
+                    <div class="flex items-center gap-3 mt-3 text-xs font-mono text-gray-300">
+                      <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> <span
+                          id="modal-date">Data</span></span>
+                      <span class="w-1 h-1 rounded-full bg-gray-500"></span>
+                      <span class="flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> <span
+                          id="modal-author">Admin</span></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#0a0a0a]">
+                  <div id="modal-content" class="text-gray-300"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="all-news-modal"
+              class="custom-modal-overlay hidden-force fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-10">
+              <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleAllNews(false)"></div>
+              <div
+                class="custom-modal-content relative bg-[#0a0a0a] w-full max-w-5xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
+                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
+                  <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="archive" class="w-5 h-5 text-yellow-500"></i> Arquivo
+                  </h2>
+                  <button onclick="toggleAllNews(false)"
+                    class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition"><i
+                      data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div id="all-news-grid"
+                  class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 custom-scrollbar">
                 </div>
               </div>
             </div>
           </div>
+
         </div>
 
         <div class="w-80 flex flex-col gap-4 relative">
@@ -768,7 +1151,9 @@
     class="hidden-force fixed z-50 px-3 py-2 bg-[#000000]/35 text-white text-xs font-medium rounded-lg shadow-2xl pointer-events-none max-w-xs border border-white/10 tracking-wide"
     style="z-index: 9999 !important;">
   </div>
+  <script src="./build/src/marked.min.js"></script>
   <script src="./build/src/index.js"></script>
+  <script src="./build/src/blog.js"></script>
   <script src="./build/src/socket.io.js"></script>
 </body>
 
