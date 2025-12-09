@@ -189,13 +189,34 @@ socket.on("notification:msg", (data) => {
 
 socket.on("server:online_count", (count) => {
     const el = document.getElementById("count-total-online");
-    if (el) el.innerHTML = `
-    <span class="relative flex h-2.5 w-2.5">
-                <span
-                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+    if (!el) return;
+
+    const fmt = (n) => new Intl.NumberFormat('pt-BR').format(n);
+
+    el.innerHTML = `
+        <div class="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors hover:bg-white/5 cursor-help group">
+            <span class="relative flex h-2.5 w-2.5 shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
-              </span>${count}</span></span>
+            </span>
+            <span class="text-xs font-bold text-gray-200 font-mono tracking-tight group-hover:text-white transition-colors">
+                ${fmt(count.total)} <span class="text-gray-500 font-normal">Online</span>
+            </span>
+        </div>
     `;
+
+    el.setAttribute("title-app", `
+        <div class="w-32 text-xs">
+            <div class="flex justify-between items-center mb-1 border-b border-white/10 pb-1">
+                <span class="text-gray-400">No Launcher</span>
+                <span class="text-white font-mono">${fmt(count.users)}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-yellow-500 font-bold">Jogando</span>
+                <span class="text-yellow-500 font-mono font-bold">${fmt(count.usersLaunch)}</span>
+            </div>
+        </div>
+    `);
 });
 
 socket.on("error", (msg) => showToast(msg, "error"));
@@ -403,6 +424,14 @@ function createFriendElement(friend) {
         <div id="badge-${friend.nick}" class="${friend.hasUnread ? "" : "hidden-force"} w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#121212] animate-pulse mr-1"></div>
     `;
     return div;
+}
+
+function sendSocketLauncherEvent(event) {
+    if(event === "open:client") {
+        socket.emit("game:launch");
+    } else if(event === "close:client") {
+        socket.emit("game:close");
+    }
 }
 
 function renderFriendsList(friends) {
