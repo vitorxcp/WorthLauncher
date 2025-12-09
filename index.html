@@ -147,12 +147,14 @@
     .dropdown-enter {
       transform: translateY(-10px);
       opacity: 0;
+      display: none;
       pointer-events: none;
     }
 
     .dropdown-active {
       transform: translateY(0);
       opacity: 1;
+      display: flex;
       pointer-events: auto;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -202,56 +204,56 @@
       display: none !important;
     }
 
-    #modal-content h1,
-    #modal-content h2,
-    #modal-content h3 {
+    #modal-contentads h1,
+    #modal-contentads h2,
+    #modal-contentads h3 {
       color: #fff;
       font-weight: 700;
       margin-top: 1.5em;
       margin-bottom: 0.5em;
     }
 
-    #modal-content h1 {
+    #modal-contentads h1 {
       font-size: 2em;
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding-bottom: 0.3em;
     }
 
-    #modal-content h2 {
+    #modal-contentads h2 {
       font-size: 1.5em;
       color: #fbbf24;
     }
 
-    #modal-content p {
+    #modal-contentads p {
       margin-bottom: 1em;
       line-height: 1.7;
       font-size: 0.95rem;
     }
 
-    #modal-content ul {
+    #modal-contentads ul {
       list-style: disc;
       padding-left: 1.5em;
       margin-bottom: 1em;
       color: #d4d4d4;
     }
 
-    #modal-content strong {
+    #modal-contentads strong {
       color: #fbbf24;
     }
 
-    #modal-content a {
+    #modal-contentads a {
       color: #3b82f6;
       text-decoration: underline;
     }
 
-    #modal-content img {
+    #modal-contentads img {
       border-radius: 8px;
       border: 1px solid rgba(255, 255, 255, 0.1);
       margin: 1em 0;
       width: 100%;
     }
 
-    #modal-content blockquote {
+    #modal-contentads blockquote {
       border-left: 4px solid #fbbf24;
       padding-left: 1em;
       color: #a3a3a3;
@@ -327,14 +329,14 @@
       background: linear-gradient(to top, #000000 10%, rgba(0, 0, 0, 0.8) 40%, transparent 100%);
     }
 
-    #modal-content h1 {
+    #modal-contentads h1 {
       font-size: 1.5em;
       font-weight: 800;
       color: #fff;
       margin-bottom: 0.5em;
     }
 
-    #modal-content h2 {
+    #modal-contentads h2 {
       font-size: 1.25em;
       font-weight: 700;
       color: #facc15;
@@ -342,7 +344,7 @@
       margin-bottom: 0.5em;
     }
 
-    #modal-content h3 {
+    #modal-contentads h3 {
       font-size: 1.1em;
       font-weight: 600;
       color: #e5e5e5;
@@ -350,30 +352,30 @@
       margin-bottom: 0.5em;
     }
 
-    #modal-content p {
+    #modal-contentads p {
       margin-bottom: 0.8em;
       line-height: 1.6;
       color: #d4d4d4;
     }
 
-    #modal-content ul {
+    #modal-contentads ul {
       list-style-type: disc;
       padding-left: 1.5em;
       margin-bottom: 1em;
     }
 
-    #modal-content ol {
+    #modal-contentads ol {
       list-style-type: decimal;
       padding-left: 1.5em;
       margin-bottom: 1em;
     }
 
-    #modal-content a {
+    #modal-contentads a {
       color: #facc15;
       text-decoration: underline;
     }
 
-    #modal-content blockquote {
+    #modal-contentads blockquote {
       border-left: 4px solid #facc15;
       padding-left: 1em;
       color: #a3a3a3;
@@ -383,7 +385,7 @@
       border-radius: 0 4px 4px 0;
     }
 
-    #modal-content code {
+    #modal-contentads code {
       background: rgba(0, 0, 0, 0.3);
       padding: 2px 4px;
       border-radius: 4px;
@@ -392,7 +394,7 @@
       font-size: 0.9em;
     }
 
-    #modal-content pre {
+    #modal-contentads pre {
       background: #000;
       padding: 1em;
       border-radius: 8px;
@@ -401,20 +403,20 @@
       border: 1px solid #333;
     }
 
-    #modal-content pre code {
+    #modal-contentads pre code {
       background: transparent;
       color: #e5e5e5;
       padding: 0;
     }
 
-    #modal-content img {
+    #modal-contentads img {
       max-width: 100%;
       border-radius: 8px;
       margin: 1em 0;
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    #modal-content hr {
+    #modal-contentads hr {
       border-color: rgba(255, 255, 255, 0.1);
       margin: 1.5em 0;
     }
@@ -442,14 +444,14 @@
       color: #eab308;
     }
 
-    #modal-content a {
+    #modal-contentads a {
       color: #3b82f6;
       text-decoration: none;
       border-bottom: 1px solid rgba(59, 130, 246, 0.3);
       transition: all 0.2s;
     }
 
-    #modal-content a:hover {
+    #modal-contentads a:hover {
       color: #60a5fa;
       border-bottom-color: #60a5fa;
     }
@@ -631,70 +633,10 @@
                 </button>
               </div>
 
-              <div id="blog-feed" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5"></div>
-                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5"></div>
-                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5"></div>
-              </div>
-            </div>
-
-            <div id="blog-modal"
-              class="custom-modal-overlay hidden-force fixed inset-0 z-[11] flex items-center justify-center p-4 sm:p-10">
-              <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeBlogModal()"></div>
-
-              <div
-                class="custom-modal-content relative bg-[#0a0a0a] w-full max-w-4xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
-
-                <button onclick="closeBlogModal()"
-                  class="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/50 hover:bg-red-500 text-white transition border border-white/10 backdrop-blur-md group">
-                  <i data-lucide="x" class="w-5 h-5 group-hover:rotate-90 transition-transform"></i>
-                </button>
-
-                <div class="h-64 shrink-0 relative overflow-hidden bg-[#111]">
-                  <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10">
-                  </div>
-                  <img id="modal-image" src="" class="w-full h-full object-cover opacity-80" style="display: none;">
-                  <div id="modal-fallback" class="artistic-fallback absolute inset-0 w-full h-full hidden">
-                    <i data-lucide="layout" class="watermark-icon"
-                      style="width: 200px; height: 200px; opacity: 0.05;"></i>
-                  </div>
-                  <div class="absolute bottom-0 left-0 p-8 z-20 w-full">
-                    <span id="modal-tag"
-                      class="text-[10px] font-bold text-black bg-yellow-500 px-3 py-1 rounded uppercase tracking-wider mb-3 inline-block shadow-lg">TAG</span>
-                    <h1 id="modal-title"
-                      class="text-3xl md:text-4xl font-black text-white leading-tight drop-shadow-lg">Título</h1>
-                    <div class="flex items-center gap-3 mt-3 text-xs font-mono text-gray-300">
-                      <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> <span
-                          id="modal-date">Data</span></span>
-                      <span class="w-1 h-1 rounded-full bg-gray-500"></span>
-                      <span class="flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> <span
-                          id="modal-author">Admin</span></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#0a0a0a]">
-                  <div id="modal-content" class="text-gray-300"></div>
-                </div>
-              </div>
-            </div>
-
-            <div id="all-news-modal"
-              class="custom-modal-overlay hidden-force fixed inset-0 z-[10] flex items-center justify-center p-4 sm:p-10">
-              <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleAllNews(false)"></div>
-              <div
-                class="custom-modal-content relative bg-[#0a0a0a] w-full max-w-5xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
-                <div class="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
-                  <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                    <i data-lucide="archive" class="w-5 h-5 text-yellow-500"></i> Arquivo
-                  </h2>
-                  <button onclick="toggleAllNews(false)"
-                    class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition"><i
-                      data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
-                <div id="all-news-grid"
-                  class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 custom-scrollbar">
-                </div>
+<div id="blog-feed" class="flex flex-col gap-4 overflow-y-auto h-[calc(100vh-290px)] custom-scrollbar pr-2 pb-2">
+                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5 shrink-0"></div>
+                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5 shrink-0"></div>
+                <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5 shrink-0"></div>
               </div>
             </div>
           </div>
@@ -750,7 +692,7 @@
           </div>
 
           <div id="account-menu"
-            class="absolute top-0 left-0 w-full h-full glass-dark rounded-3xl z-30 dropdown-enter flex flex-col p-5 shadow-2xl border border-white/10">
+            class="absolute top-0 left-0 w-full h-full glass-dark rounded-3xl z-30 dropdown-enter flex-col p-5 shadow-2xl border border-white/10">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
               <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Contas</span>
               <button id="btn-close-accounts" class="text-white hover:text-red-400 no-drag"><i data-lucide="x"
@@ -760,13 +702,13 @@
             <div id="accounts-list" class="flex-1 overflow-y-auto space-y-2 pr-1 mb-4"></div>
 
             <div class="grid grid-cols-2 gap-3 mt-auto">
-              <button id="btn-ms-login"
+              <button title-app="Login via Microsoft" id="btn-ms-login"
                 class="no-drag bg-[#1a1a1a] hover:bg-[#252525] text-white py-3 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border border-white/5">
-                <i data-lucide="gamepad-2" title-app="Login via Microsoft" class="w-4 h-4 text-green-500"></i> Microsoft
+                <i data-lucide="gamepad-2" class="w-4 h-4 text-green-500"></i> Microsoft
               </button>
-              <button id="btn-off-login"
+              <button title-app="Login conta Pirata" id="btn-off-login"
                 class="no-drag bg-[#1a1a1a] hover:bg-[#252525] text-white py-3 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border border-white/5">
-                <i data-lucide="user" title-app="Login conta Pirata" class="w-4 h-4 text-gray-500"></i> Offline
+                <i data-lucide="user" class="w-4 h-4 text-gray-500"></i> Offline
               </button>
             </div>
           </div>
@@ -1247,6 +1189,66 @@
       </div>
     </div>
   </div>
+
+  <div id="blog-modal"
+    class="custom-modal-overlay hidden-force fixed inset-0 z-[11] flex items-center justify-center p-4 sm:p-10">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeBlogModal()"></div>
+
+    <div
+      class="custom-modal-content relative bg-[#0a0a0a] w-full max-w-4xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
+
+      <button onclick="closeBlogModal()"
+        class="absolute top-4 right-4 z-20 p-2 rounded-full bg-black/50 hover:bg-red-500 text-white transition border border-white/10 backdrop-blur-md group">
+        <i data-lucide="x" class="w-5 h-5 group-hover:rotate-90 transition-transform"></i>
+      </button>
+
+      <div class="h-64 shrink-0 relative overflow-hidden bg-[#111]">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10">
+        </div>
+        <img id="modal-image" src="" class="w-full h-full object-cover opacity-80" style="display: none;">
+        <div id="modal-fallback" class="artistic-fallback absolute inset-0 w-full h-full hidden">
+          <i data-lucide="layout" class="watermark-icon" style="width: 200px; height: 200px; opacity: 0.05;"></i>
+        </div>
+        <div class="absolute bottom-0 left-0 p-8 z-20 w-full">
+          <span id="modal-tag"
+            class="text-[10px] font-bold text-black bg-yellow-500 px-3 py-1 rounded uppercase tracking-wider mb-3 inline-block shadow-lg">TAG</span>
+          <h1 id="modal-title" class="text-3xl md:text-4xl font-black text-white leading-tight drop-shadow-lg">
+            Título</h1>
+          <div class="flex items-center gap-3 mt-3 text-xs font-mono text-gray-300">
+            <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> <span
+                id="modal-date">Data</span></span>
+            <span class="w-1 h-1 rounded-full bg-gray-500"></span>
+            <span class="flex items-center gap-1"><i data-lucide="user" class="w-3 h-3"></i> <span
+                id="modal-author">Admin</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#0a0a0a]">
+        <div id="modal-contentads" class="text-gray-300"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="all-news-modal"
+    class="custom-modal-overlay hidden-force fixed inset-0 z-[10] flex items-center justify-center p-4 sm:p-10">
+    <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleAllNews(false)"></div>
+    <div
+      class="custom-modal-content relative bg-[#0a0a0a] w-full max-w-5xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden">
+      <div class="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <i data-lucide="archive" class="w-5 h-5 text-yellow-500"></i> Arquivo
+        </h2>
+        <button onclick="toggleAllNews(false)"
+          class="p-2 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition"><i data-lucide="x"
+            class="w-5 h-5"></i></button>
+      </div>
+      <div id="all-news-grid"
+        class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 custom-scrollbar">
+      </div>
+    </div>
+  </div>
+
   <div id="custom-tooltip"
     class="hidden-force fixed z-50 px-3 py-2 bg-[#000000]/35 text-white text-xs font-medium rounded-lg shadow-2xl pointer-events-none max-w-xs border border-white/10 tracking-wide"
     style="z-index: 9999 !important;">
