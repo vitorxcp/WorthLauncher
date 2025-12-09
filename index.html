@@ -180,6 +180,26 @@
       will-change: scroll-position;
       overflow-anchor: auto;
     }
+
+    #custom-tooltip {
+      transition: opacity 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      opacity: 0;
+      transform: scale(0.9) translateY(5px);
+
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    #custom-tooltip.tooltip-visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    .hidden-force {
+      display: none !important;
+    }
   </style>
 </head>
 
@@ -190,13 +210,21 @@
     <div class="flex items-center gap-3">
       <div class="w-5 h-5 bg-[url('./build/assets/icon.png')] bg-cover bg-center top-[13px] absolute"></div>
       <span class="text-sm font-bold text-gray-200 tracking-widest ml-[25px]">WORTH<span
-          class="text-yellow-500">CLIENT</span></span>
+          class="text-yellow-500">CLIENT</span> <span title-app="Total de pessoas online no Launcher"
+          class="no-drag ml-2 inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-[12px] font-semibold backdrop-blur-sm"
+          id="count-total-online">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+          </span>0</span></span>
     </div>
     <div class="no-drag flex items-center gap-2">
-      <button id="min-btn" class="p-1.5 rounded-md hover:bg-white/10 text-gray-400 hover:text-white transition"><i
-          data-lucide="minus" class="w-4 h-4"></i></button>
-      <button id="close-btn" class="p-1.5 rounded-md hover:bg-red-500/90 hover:text-white text-gray-400 transition"><i
-          data-lucide="x" class="w-4 h-4"></i></button>
+      <button id="min-btn" title-app="Minimizar Launcher"
+        class="p-1.5 rounded-md hover:bg-white/10 text-gray-400 hover:text-white transition"><i data-lucide="minus"
+          class="w-4 h-4"></i></button>
+      <button id="close-btn" title-app="Fechar Launcher"
+        class="p-1.5 rounded-md hover:bg-red-500/90 hover:text-white text-gray-400 transition"><i data-lucide="x"
+          class="w-4 h-4"></i></button>
     </div>
   </div>
 
@@ -209,29 +237,31 @@
     </div>
 
     <aside class="w-20 z-10 flex flex-col items-center py-6 gap-2 border-r border-white/5 bg-black/40 backdrop-blur-md">
-      <button onclick="switchTab('home')" id="tab-home"
+      <button onclick="switchTab('home')" title-app="Menu Principal" id="tab-home"
         class="tab-btn active w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
         <i data-lucide="gamepad-2" class="w-6 h-6"></i>
         <span class="text-[9px] font-bold">JOGAR</span>
       </button>
-      <button onclick="switchTab('store')" id="tab-store"
+      <button onclick="switchTab('store')" title-app="Loja" id="tab-store"
         class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
         <i data-lucide="shirt" class="w-6 h-6"></i>
         <span class="text-[9px] font-bold">LOJA</span>
       </button>
-      <button onclick="switchTab('social')" id="tab-social"
+      <button onclick="switchTab('social')" title-app="Amigos" id="tab-social"
         class="relative tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
-
         <i data-lucide="users" class="w-6 h-6"></i>
-        <span class="text-[9px] font-bold">SOCIAL</span>
-
+        <span class="text-[9px] font-bold">AMIGOS</span>
         <div id="social-ping"
           class="hidden-force absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0a0a0a] animate-pulse pointer-events-none">
         </div>
-
+      </button>
+      <button onclick="switchTab('console')" title-app="Logs do Sistema" id="tab-console"
+        class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag transition-all hover:bg-yellow-500/10 hover:text-yellow-500">
+        <i data-lucide="terminal-square" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold">CONSOLE</span>
       </button>
       <div class="flex-1"></div>
-      <button onclick="switchTab('settings')" id="tab-settings"
+      <button onclick="switchTab('settings')" title-app="Configurações" id="tab-settings"
         class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
         <i data-lucide="settings" class="w-6 h-6"></i>
         <span class="text-[9px] font-bold">OPÇÕES</span>
@@ -268,14 +298,6 @@
               </div>
             </div>
           </div>
-
-          <div class="glass p-4 rounded-xl border-l-2 border-yellow-500 h-32 overflow-hidden flex flex-col relative">
-            <div class="absolute top-2 right-2 text-[10px] text-gray-500 uppercase font-bold tracking-widest">Console
-            </div>
-            <div id="log-console"
-              class="overflow-y-auto h-full pr-2 flex flex-col-reverse text-xs font-mono w-full break-all whitespace-pre-wrap">
-            </div>
-          </div>
         </div>
 
         <div class="w-80 flex flex-col gap-4 relative">
@@ -283,7 +305,7 @@
             class="glass p-6 rounded-3xl flex flex-col items-center text-center shadow-2xl relative overflow-hidden group border border-white/10">
 
             <div class="w-full flex items-center justify-end absolute top-4 right-4 z-20">
-              <button id="btn-toggle-accounts"
+              <button id="btn-toggle-accounts" title-app="Selecionar Conta"
                 class="text-gray-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition no-drag">
                 <i data-lucide="users" class="w-5 h-5"></i>
               </button>
@@ -339,11 +361,11 @@
             <div class="grid grid-cols-2 gap-3 mt-auto">
               <button id="btn-ms-login"
                 class="no-drag bg-[#1a1a1a] hover:bg-[#252525] text-white py-3 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border border-white/5">
-                <i data-lucide="gamepad-2" class="w-4 h-4 text-green-500"></i> Microsoft
+                <i data-lucide="gamepad-2" title-app="Login via Microsoft" class="w-4 h-4 text-green-500"></i> Microsoft
               </button>
               <button id="btn-off-login"
                 class="no-drag bg-[#1a1a1a] hover:bg-[#252525] text-white py-3 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border border-white/5">
-                <i data-lucide="user" class="w-4 h-4 text-gray-500"></i> Offline
+                <i data-lucide="user" title-app="Login conta Pirata" class="w-4 h-4 text-gray-500"></i> Offline
               </button>
             </div>
           </div>
@@ -365,7 +387,8 @@
 
           <div class="relative group z-50">
             <button
-              class="flex items-center gap-2 bg-black/40 border border-white/10 px-3 py-1.5 rounded-lg hover:bg-white/5 transition">
+              class="flex items-center gap-2 bg-black/40 border border-white/10 px-3 py-1.5 rounded-lg hover:bg-white/5 transition"
+              title-app="Definir seu Status">
               <div id="my-status-dot" class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
               <span id="my-status-text" class="text-xs font-bold text-gray-300">Online</span>
               <i data-lucide="chevron-down" class="w-3 h-3 text-gray-500"></i>
@@ -392,7 +415,6 @@
             </div>
           </div>
         </div>
-
         <div class="flex-1 flex gap-4 h-[calc(100%-4rem)] overflow-hidden">
 
           <div class="w-64 glass rounded-2xl flex flex-col border border-white/5">
@@ -400,7 +422,7 @@
               <div class="flex gap-2">
                 <input type="text" id="input-add-friend" placeholder="Nick do amigo..."
                   class="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-yellow-500 outline-none">
-                <button id="btn-add-friend"
+                <button id="btn-add-friend" title-app="Enviar Pedido de Amizade"
                   class="bg-yellow-500 hover:bg-yellow-400 text-black p-2 rounded-lg transition">
                   <i data-lucide="plus" class="w-4 h-4"></i>
                 </button>
@@ -437,7 +459,7 @@
               <form id="chat-form" class="flex gap-3">
                 <input type="text" id="chat-input" placeholder="Digite sua mensagem..." autocomplete="off"
                   class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-yellow-500 focus:outline-none transition">
-                <button type="submit"
+                <button type="submit" title-app="Enviar Mensagem"
                   class="bg-yellow-500 hover:bg-yellow-400 text-black px-4 rounded-xl font-bold transition">
                   <i data-lucide="send" class="w-4 h-4"></i>
                 </button>
@@ -446,6 +468,62 @@
           </div>
         </div>
       </section>
+
+      <section id="view-console"
+        class="flex-1 hidden-force fade-enter flex flex-col h-full overflow-hidden p-6 relative">
+
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center border border-yellow-500/30">
+              <i data-lucide="terminal" class="w-5 h-5 text-yellow-500"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white tracking-tight">System Console</h2>
+              <p class="text-xs text-gray-500 font-mono">monitoramento de processos v2.0</p>
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button onclick="copyConsoleLogs()" title-app="Copiar Logs"
+              class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white transition">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+            </button>
+            <button onclick="clearConsoleLogs()" title-app="Limpar Terminal"
+              class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="flex-1 rounded-xl bg-[#0a0a0a]/80 backdrop-blur-xl border border-white/10 flex flex-col overflow-hidden shadow-2xl relative group">
+
+          <div class="h-8 bg-white/5 border-b border-white/5 flex items-center px-3 gap-2 select-none">
+            <div class="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+            <span class="ml-2 text-[10px] text-gray-500 font-mono">root@launcher:~</span>
+          </div>
+
+          <div id="log-console"
+            class="flex-1 overflow-y-auto p-4 font-mono text-xs space-y-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+            <div class="text-green-400 mb-2">
+              <span class="opacity-50">[SYSTEM]</span> Inicializando interface de debug... <span
+                class="text-white font-bold">OK</span>
+            </div>
+          </div>
+
+          <div class="p-2 bg-black/20 border-t border-white/5 flex items-center gap-2 text-xs font-mono">
+            <span class="text-yellow-500">➜</span>
+            <span class="text-blue-400">~</span>
+            <input type="text" placeholder="Aguardando comandos..." disabled
+              class="bg-transparent border-none outline-none text-gray-500 w-full cursor-not-allowed select-none">
+          </div>
+
+        </div>
+      </section>
+
       <section id="view-settings" class="flex-1 hidden-force fade-enter overflow-y-auto">
         <h2 class="text-3xl font-black text-white mb-6 flex items-center gap-3 uppercase italic">
           Configurações <span class="text-gray-600">Gerais</span>
@@ -551,9 +629,9 @@
                 </div>
                 <div class="bg-black/40 p-3 rounded-xl border border-white/5">
                   <span class="text-[10px] text-gray-500 uppercase font-bold block mb-1">Build ID</span>
-                  <div class="flex items-center gap-2 group cursor-pointer" title="Copiar ID"
-                    onclick="navigator.clipboard.writeText('b-2025.12.08-rc1')">
-                    <span class="text-gray-300 font-mono text-xs">b-2025.12.08-rc1</span>
+                  <div class="flex items-center gap-2 group cursor-pointer" title-app="Copiar ID"
+                    onclick="navigator.clipboard.writeText('build-2025.12.09-rc1')">
+                    <span class="text-gray-300 font-mono text-xs">build-2025.12.09-rc1</span>
                     <i data-lucide="copy" class="w-3 h-3 text-gray-600 group-hover:text-white transition"></i>
                   </div>
                 </div>
@@ -561,6 +639,7 @@
               <div class="w-64 flex flex-col justify-between border-l border-white/5 pl-8">
                 <div class="space-y-2">
                   <button onclick="window.open('https://discord.gg/TKfuE4ddtp')"
+                    title-app="Entrar no Servidor do Discord da Rede Worth"
                     class="w-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 text-[#5865F2] border border-[#5865F2]/20 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition no-drag cursor-pointer">
                     <i data-lucide="message-circle" class="w-4 h-4"></i> Discord Rede Worth
                   </button>
@@ -684,6 +763,10 @@
           class="flex-1 py-3 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-bold uppercase tracking-wider transition shadow-lg shadow-yellow-500/20">Entrar</button>
       </div>
     </div>
+  </div>
+  <div id="custom-tooltip"
+    class="hidden-force fixed z-50 px-3 py-2 bg-[#000000]/35 text-white text-xs font-medium rounded-lg shadow-2xl pointer-events-none max-w-xs border border-white/10 tracking-wide"
+    style="z-index: 9999 !important;">
   </div>
   <script src="./build/src/index.js"></script>
   <script src="./build/src/socket.io.js"></script>
