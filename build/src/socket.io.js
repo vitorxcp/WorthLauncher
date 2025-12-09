@@ -306,7 +306,7 @@ function createFriendElement(friend) {
     div.innerHTML = `
         <div class="relative shrink-0">
             <img src="https://mc-heads.net/avatar/${friend.nick}" class="w-9 h-9 rounded-lg bg-black/30 shadow-sm" loading="lazy">
-            <div id="status-dot-${friend.nick}" class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#121212] ${statusColor}"></div>
+            <div id="status-dot-${friend.nick}" class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#121212] ${statusColor}" title-app="${friend.status || "offline"}"></div>
         </div>
         <div class="flex-1 min-w-0">
             <h4 class="text-sm font-bold text-gray-200 truncate leading-tight">${friend.nick}</h4>
@@ -360,6 +360,7 @@ function updateFriendStatusUI(nick, status) {
     const dot = document.getElementById(`status-dot-${nick}`);
     const text = document.getElementById(`status-text-${nick}`);
     if (dot) dot.className = `absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#121212] ${getStatusColor(status)}`;
+    if (dot) dot.setAttribute("title-app", status);
     if (text) text.innerText = status;
     if (currentChatFriend === nick) els.headerStatus.innerText = status;
 }
