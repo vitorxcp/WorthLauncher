@@ -19,30 +19,204 @@ const accountsListEl = document.getElementById('accounts-list');
 const modalWelcome = document.getElementById('modal-welcome');
 const isFirstRun = !localStorage.getItem('setup_complete');
 
+const getTimestamp = () => {
+    const now = new Date();
+    return now.toLocaleTimeString('pt-BR', { hour12: false });
+};
+
+const MC_COLORS = {
+    '0': '#000000', '1': '#0000AA', '2': '#00AA00', '3': '#00AAAA',
+    '4': '#AA0000', '5': '#AA00AA', '6': '#FFAA00', '7': '#AAAAAA',
+    '8': '#555555', '9': '#5555FF', 'a': '#55FF55', 'b': '#55FFFF',
+    'c': '#FF5555', 'd': '#FF55FF', 'e': '#FFFF55', 'f': '#FFFFFF'
+};
+
+const MC_STYLES = {
+    'l': 'font-weight: bold;',
+    'm': 'text-decoration: line-through;',
+    'n': 'text-decoration: underline;',
+    'o': 'font-style: italic;'
+};
+
+function parseMinecraftText(text) {
+    if (!text) return "";
+
+    let clean = text.replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '�': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
+
+    clean = clean.replace(/&amp;([0-9a-fk-or])/gi, '&$1');
+
+    let formatted = '<span>' + clean.replace(/[&§]([0-9a-fk-or])/gi, (match, code) => {
+        code = code.toLowerCase();
+
+        if (MC_COLORS[code]) {
+            return `</span><span style="color: ${MC_COLORS[code]}">`;
+        }
+        else if (MC_STYLES[code]) {
+            return `<span style="${MC_STYLES[code]}">`;
+        }
+        else if (code === 'r') {
+            return `</span><span class="reset-style">`;
+        }
+        return '';
+    }) + '</span>';
+
+    return formatted;
+}
+
+function addLogToUI(msg, forceType = null) {
+    if (!logConsole) return;
+    if (!msg) return;
+
+    const rawText = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
+
+    const cleanText = rawText.replace(/[&§][0-9a-fk-or]/gi, '');
+    const lowerText = cleanText.toLowerCase();
+
+    let type = 'info';
+
+    if (lowerText.includes('exception') ||
+        lowerText.includes('error') ||
+        lowerText.includes('fatal') ||
+        lowerText.includes('caused by') ||
+        lowerText.match(/^\s*at\s+/)
+    ) {
+        type = 'error';
+    }
+    else if (lowerText.includes('warn') || lowerText.includes('missing')) {
+        type = 'warn';
+    }
+    else if (lowerText.includes('success') || lowerText.includes('concluído') || lowerText.includes('iniciado')) {
+        type = 'success';
+    }
+    else if (lowerText.includes('[chat]') || lowerText.includes('<') && lowerText.includes('>')) {
+        type = 'chat';
+    }
+    else if (lowerText.includes('[debug]') || lowerText.includes('sys')) {
+        type = 'system';
+    }
+
+    const CONFIG = {
+        'error': {
+            bg: 'hover:bg-red-500/10',
+            text: 'text-red-400',
+            icon: 'ERR',
+            iconColor: 'text-red-500'
+        },
+        'warn': {
+            bg: 'hover:bg-yellow-500/10',
+            text: 'text-yellow-400',
+            icon: 'WARN',
+            iconColor: 'text-yellow-500'
+        },
+        'success': {
+            bg: 'hover:bg-green-500/10',
+            text: 'text-green-400',
+            icon: 'OK',
+            iconColor: 'text-green-500'
+        },
+        'chat': {
+            bg: 'hover:bg-blue-500/5',
+            text: 'text-white',
+            icon: 'CHAT',
+            iconColor: 'text-blue-400'
+        },
+        'system': {
+            bg: 'hover:bg-blue-500/10',
+            text: 'text-cyan-400',
+            icon: 'SYS',
+            iconColor: 'text-cyan-500'
+        },
+        'info': {
+            bg: 'hover:bg-white/5',
+            text: 'text-gray-300',
+            icon: 'INFO',
+            iconColor: 'text-gray-500'
+        }
+    };
+
+    const style = CONFIG[type] || CONFIG['info'];
+
+    const line = document.createElement("div");
+    line.className = `flex gap-2 px-1 rounded ${style.bg} transition-colors text-xs font-mono mb-0.5 leading-snug items-start`;
+
+    const processedMessage = parseMinecraftText(rawText);
+
+    line.innerHTML = `
+        <span class="text-gray-600 select-none opacity-50 shrink-0 font-mono text-[10px] py-0.5 w-[50px] text-right mr-1">
+            [${getTimestamp()}]
+        </span>
+        
+        <span class="${style.iconColor} font-bold select-none w-8 text-center opacity-90 text-[10px] py-0.5 shrink-0">
+            ${style.icon}
+        </span>
+        
+        <span class="${style.text} flex-1 break-all py-0.5">
+            ${processedMessage}
+        </span>
+    `;
+
+    logConsole.appendChild(line);
+
+    if (logConsole.scrollTop + logConsole.clientHeight >= logConsole.scrollHeight - 100) {
+        logConsole.scrollTop = logConsole.scrollHeight;
+    }
+}
+
+function addLog(msg) {
+    addLogToUI(msg, 'system');
+}
+
+const originalLog = console.log;
+const originalError = console.error;
+const originalWarn = console.warn;
+
+console.log = (...args) => {
+    originalLog(...args);
+    addLogToUI(args.join(' '), 'info');
+};
+console.error = (...args) => {
+    originalError(...args);
+    addLogToUI(args.join(' '), 'error');
+};
+console.warn = (...args) => {
+    originalWarn(...args);
+    addLogToUI(args.join(' '), 'warn');
+};
+
+window.clearConsoleLogs = () => {
+    if (logConsole) logConsole.innerHTML = `
+        <div class="text-gray-500 italic border-b border-white/5 pb-1 mb-2 text-[10px]">Terminal limpo pelo usuário.</div>
+    `;
+};
+
+window.copyConsoleLogs = () => {
+    if (!logConsole) return;
+    const text = logConsole.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        showGenericToast("Logs copiados para a área de transferência!");
+    }).catch(err => {
+        console.error("Falha ao copiar logs");
+    });
+};
+
+function showGenericToast(msg) {
+    let t = document.getElementById('toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full text-xs border border-white/10 shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-50";
+        document.body.appendChild(t);
+    }
+    t.innerText = msg;
+    t.style.opacity = '1';
+    setTimeout(() => t.style.opacity = '0', 2000);
+}
+
 if (isFirstRun) {
     modalWelcome.classList.remove('hidden-force');
 }
-
-document.getElementById('btn-finish-setup').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-finish-setup');
-
-    btn.innerText = "Configurando...";
-    btn.classList.add("opacity-50", "cursor-wait");
-
-    if (createDesktop) {
-        await window.api.createShortcut();
-    }
-
-    localStorage.setItem('setup_complete', 'true');
-
-    modalWelcome.classList.add('opacity-0', 'pointer-events-none');
-
-    addLog("Configuração inicial concluída.");
-
-    setTimeout(() => {
-        modalWelcome.classList.add('hidden-force');
-    }, 500);
-});
 
 document.getElementById('btn-finish-setup').addEventListener('click', async () => {
     const btn = document.getElementById('btn-finish-setup');
@@ -54,10 +228,8 @@ document.getElementById('btn-finish-setup').addEventListener('click', async () =
 
     setTimeout(() => {
         localStorage.setItem('setup_complete', 'true');
-
         card.classList.add('scale-90', 'opacity-0');
         modal.classList.add('opacity-0');
-
         setTimeout(() => {
             modal.classList.add('hidden-force');
             addLog("Setup inicial finalizado.");
@@ -189,13 +361,13 @@ document.getElementById('btn-confirm-offline').addEventListener('click', async (
 
 document.getElementById('btn-ms-login').addEventListener('click', async () => {
     toggleAccountMenu(false);
-    addLog("Autenticando Microsoft...");
+    addLog("Iniciando fluxo de autenticação Microsoft...");
     const res = await window.api.loginMicrosoft();
     if (res.success) {
         addAccount({ user: res.user, type: 'microsoft', uuid: res.uuid });
-        addLog(`Bem-vindo, ${res.user}`);
+        addLog(`Autenticado com sucesso. Bem-vindo, ${res.user}`);
     } else {
-        addLog(`Erro: ${res.error}`);
+        console.error(`Falha no login Microsoft: ${res.error}`);
     }
 });
 
@@ -231,9 +403,7 @@ function saveSettings() {
     settings.height = document.getElementById('res-height').value;
     localStorage.setItem('worth_settings', JSON.stringify(settings));
 
-    const t = document.getElementById('toast');
-    t.style.opacity = '1';
-    setTimeout(() => t.style.opacity = '0', 2000);
+    showGenericToast("Configurações salvas");
 }
 
 document.getElementById('ram-slider').addEventListener('input', (e) => {
@@ -253,17 +423,20 @@ document.getElementById('btn-reset-settings').addEventListener('click', () => {
 });
 
 window.switchTab = (tabName) => {
-    ['home', 'social', 'settings', 'store'].forEach(v => {
+    ['home', 'social', 'settings', 'store', "console"].forEach(v => {
         const el = document.getElementById('view-' + v);
         const btn = document.getElementById('tab-' + v);
-        if (v === tabName) {
-            el.classList.remove('hidden-force');
-            setTimeout(() => el.classList.add('fade-enter-active'), 10);
-            btn.classList.add('active');
-        } else {
-            el.classList.add('hidden-force');
-            el.classList.remove('fade-enter-active');
-            btn.classList.remove('active');
+
+        if (el && btn) {
+            if (v === tabName) {
+                el.classList.remove('hidden-force');
+                setTimeout(() => el.classList.add('fade-enter-active'), 10);
+                btn.classList.add('active');
+            } else {
+                el.classList.add('hidden-force');
+                el.classList.remove('fade-enter-active');
+                btn.classList.remove('active');
+            }
         }
     });
 }
@@ -279,7 +452,7 @@ btnPlay.addEventListener('click', async () => {
     progressContainer.style.opacity = "1";
 
     if (btnPlay.as3cd) {
-        addLog("Fechando sessão de jogo...");
+        addLog("Solicitando fechamento do jogo...", 'warn');
         btnPlay.disabled = true;
         btnPlay.as3cd = false;
         btnPlay.innerHTML = `<i data-lucide="shield-alert" class="fill-black w-6 h-6"></i> FECHANDO JOGO`;
@@ -287,14 +460,14 @@ btnPlay.addEventListener('click', async () => {
         progressContainer.style.opacity = "0";
         const res = await window.api.abortGame();
         if (res.success) {
-            addLog("Sessão de jogo fechada.");
+            addLog("Jogo fechado forçadamente.", 'success');
             btnPlay.disabled = false;
             btnPlay.as3cd = false;
             btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
             lucide.createIcons();
             progressContainer.style.opacity = "0";
         } else {
-            addLog("Sessão de jogo Iniciada");
+            addLog("Falha ao fechar jogo, restaurando estado.", 'error');
             btnPlay.disabled = false;
             btnPlay.as3cd = true;
             btnPlay.innerHTML = `<i data-lucide="pause" class="fill-black w-6 h-6"></i> SAIR DO JOGO`;
@@ -313,7 +486,7 @@ btnPlay.addEventListener('click', async () => {
     userSelect = { type: currentUser.type, user: currentUser.user, uuid: currentUser.uuid };
 
     if (!res.success) {
-        addLog(`ERRO FATAL: ${res.error}`);
+        console.error(`ERRO DE LANÇAMENTO: ${res.error}`);
         btnPlay.disabled = false;
         btnPlay.as3cd = false;
         btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
@@ -324,22 +497,15 @@ btnPlay.addEventListener('click', async () => {
             removeAccount(savedAccounts.findIndex(a => a.user === currentUser.user));
         }
     } else {
-        addLog("MCLC: Processo do jogo iniciado.");
+        addLog("Processo do jogo iniciado com PID: " + (res.pid || 'N/A'), 'success');
         if (settings.closeLauncher) setTimeout(() => window.api.close(), 5000);
     }
 });
 
-function addLog(msg) {
-    const d = document.createElement('div');
+window.api.onLog((msg) => {
+    addLogToUI(msg, 'system');
+});
 
-    d.className = "text-[10px] text-gray-400 border-b border-white/5 pb-1 mb-1 font-mono hover:text-white transition break-all whitespace-pre-wrap";
-
-    const time = new Date().toLocaleTimeString().split(' ')[0];
-    d.innerHTML = `<span class="text-yellow-600 font-bold">[${time}]</span> ${msg}`;
-    logConsole.prepend(d);
-}
-
-window.api.onLog(addLog);
 window.api.onProgress((data) => {
     let pct = 0;
     if (data.task && data.total) pct = (data.task / data.total) * 100;
@@ -348,7 +514,7 @@ window.api.onProgress((data) => {
 });
 
 window.api.onGameClosed(() => {
-    addLog("Sessão de jogo finalizada.");
+    addLog("Sessão de jogo finalizada (Exit Code 0).", 'success');
     btnPlay.disabled = false;
     btnPlay.as3cd = false;
     btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
@@ -358,7 +524,7 @@ window.api.onGameClosed(() => {
 });
 
 window.api.onGameStarted(() => {
-    addLog("Sessão de jogo Iniciada");
+    addLog("Minecraft iniciado e janela detectada.", 'success');
     btnPlay.disabled = false;
     btnPlay.as3cd = true;
     btnPlay.innerHTML = `<i data-lucide="pause" class="fill-black w-6 h-6"></i> SAIR DO JOGO`;
@@ -368,7 +534,7 @@ window.api.onGameStarted(() => {
 });
 
 window.api.onGameStartedExtra(() => {
-    addLog("Sessão de jogo Iniciada");
+    addLog("Inicializando JVM e Assets...", 'info');
     btnPlay.disabled = false;
     btnPlay.as3cd = true;
     btnPlay.innerHTML = `<i data-lucide="loader" class="fill-black w-6 h-6"></i> INICIANDO JOGO`;
@@ -384,7 +550,7 @@ updateSettingsUI();
 const lastUser = JSON.parse(localStorage.getItem('worth_last_user'));
 if (lastUser) selectAccount(lastUser);
 
-addLog("WorthClient iniciado com sucesso.");
+addLog("WorthClient carregado e pronto.");
 
 window.addEventListener("load", () => {
     setTimeout(() => document.getElementById("view-home").classList.add('fade-enter-active'), 10);
@@ -395,7 +561,6 @@ window.addEventListener("load", () => {
         fetch("https://api.mcstatus.io/v2/status/java/redeworth.com")
             .then(async a => await a.json())
             .then(async res => {
-
                 let state = {
                     color: "text-red-500",
                     dot: "bg-red-500",
@@ -425,7 +590,7 @@ window.addEventListener("load", () => {
                         };
                     }
                 }
-                statusEl.classList.remove("bg-yellow-500/10", "border-yellow-500/20");
+                statusEl.classList.remove("bg-yellow-500/10", "border-yellow-500/20", "bg-red-500/10", "border-red-500/20");
                 statusEl.classList.add(state.asa[0], state.asa[1]);
                 statusEl.innerHTML = `
                     <span class="relative flex h-2.5 w-2.5">
@@ -446,11 +611,68 @@ window.addEventListener("load", () => {
 
     statusPing();
     setInterval(statusPing, 30000);
+
+    const tooltip = document.getElementById('custom-tooltip');
+    let hideTimeout = null;
+
+    const updateTooltipPosition = (e) => {
+        if (tooltip.classList.contains('hidden-force')) return;
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        const tipWidth = tooltip.offsetWidth;
+        const tipHeight = tooltip.offsetHeight;
+        const offset = 15;
+        let newLeft = e.clientX + offset;
+        let newTop = e.clientY + offset;
+
+        if (newLeft + tipWidth > winWidth - 10) newLeft = e.clientX - offset - tipWidth;
+        if (newTop + tipHeight > winHeight - 10) newTop = e.clientY - offset - tipHeight;
+
+        tooltip.style.left = newLeft + 'px';
+        tooltip.style.top = newTop + 'px';
+    };
+
+    const showTooltip = (e) => {
+        if (hideTimeout) {
+            clearTimeout(hideTimeout);
+            hideTimeout = null;
+        }
+        const target = e.target.closest('[title-app]');
+        if (!target) return;
+        const text = target.getAttribute('title-app');
+        if (!text) return;
+
+        tooltip.innerHTML = text;
+        tooltip.classList.remove('hidden-force');
+        updateTooltipPosition(e);
+        requestAnimationFrame(() => {
+            tooltip.classList.add('tooltip-visible');
+        });
+    };
+
+    const hideTooltip = () => {
+        tooltip.classList.remove('tooltip-visible');
+        hideTimeout = setTimeout(() => {
+            tooltip.classList.add('hidden-force');
+        }, 200);
+    };
+
+    document.addEventListener('mousemove', (e) => {
+        if (!tooltip.classList.contains('hidden-force')) updateTooltipPosition(e);
+    });
+
+    document.addEventListener('mouseover', (e) => {
+        if (e.target.closest('[title-app]')) showTooltip(e);
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        const target = e.target.closest('[title-app]');
+        if (target && !target.contains(e.relatedTarget)) hideTooltip();
+    });
 })
 
 const checkFirstRun = async () => {
     const fromInstaller = window.api.isInstallerLaunch ? await window.api.isInstallerLaunch() : false;
-
     if (fromInstaller) {
         document.getElementById('modal-step-1').classList.remove('hidden-force');
     }
@@ -459,7 +681,6 @@ checkFirstRun();
 
 document.getElementById('btn-goto-step2').addEventListener('click', () => {
     const step1 = document.getElementById('modal-step-1');
-
     step1.classList.add('opacity-0');
     setTimeout(() => {
         step1.classList.add('hidden-force');
