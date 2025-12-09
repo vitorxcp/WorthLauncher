@@ -10,6 +10,10 @@
   <script src="./build/src/lucide.min.js"></script>
   <script src="./build/src/socket.io.min.js"></script>
   <style>
+    #custom-tooltip {
+      pointer-events: none !important;
+    }
+
     .drag-region {
       -webkit-app-region: drag;
     }
@@ -633,7 +637,8 @@
                 </button>
               </div>
 
-<div id="blog-feed" class="flex flex-col gap-4 overflow-y-auto h-[calc(100vh-290px)] custom-scrollbar pr-2 pb-2">
+              <div id="blog-feed"
+                class="flex flex-col gap-4 overflow-y-auto h-[calc(100vh-290px)] custom-scrollbar pr-2 pb-2">
                 <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5 shrink-0"></div>
                 <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5 shrink-0"></div>
                 <div class="h-60 rounded-2xl bg-white/5 animate-pulse border border-white/5 shrink-0"></div>
