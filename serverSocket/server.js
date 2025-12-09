@@ -188,10 +188,10 @@ app.post("/admin/painel/blog/:id/update", checkAdminAuth, (req, res) => {
     blogDB[postIndex].title = title || blogDB[postIndex].title;
     blogDB[postIndex].summary = summary || blogDB[postIndex].summary;
     blogDB[postIndex].content = content || blogDB[postIndex].content;
-    
+
     if (bannerUrl) blogDB[postIndex].image = bannerUrl;
     if (tags) blogDB[postIndex].tags = tags.split(',').map(t => t.trim());
-    
+
     blogDB[postIndex].updatedAt = Date.now();
     saveData('blog');
     res.json({ success: true, message: "Post atualizado!", redirect: "/admin/painel/blog" });
@@ -231,7 +231,7 @@ app.post("/api/v1/files/upload", async (req, res) => {
 
     const uploadDir = path.join(__dirname, `app/web/upload/${folder}`);
 
-    if (!fs.existsSync(uploadDir)){
+    if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
     }
 
@@ -243,10 +243,10 @@ app.post("/api/v1/files/upload", async (req, res) => {
             console.error("Erro ao salvar arquivo:", error);
             return res.status(500).json({ status: 'error', message: error });
         }
-        
-        return res.status(200).json({ 
-            status: 'success', 
-            path: `/upload/${folder}/${newFileName}` 
+
+        return res.status(200).json({
+            status: 'success',
+            path: `/upload/${folder}/${newFileName}`
         });
     });
 });
@@ -262,8 +262,14 @@ const io = new Server(PORT, {
 });
 
 let onlineUsers = {};
+let usersSessionGames = {};
+
 function updateOnlineCount() {
     io.emit("server:online_count", Object.keys(onlineUsers).length);
+}
+
+function updateUsersSessionGames() {
+    io.emit("server:users_session_games", Object.keys(usersSessionGames).length);
 }
 
 console.log(`[SOCKET] Servidor Social rodando na porta ${PORT}`);
@@ -311,6 +317,16 @@ io.on("connection", (socket) => {
 
         if (onlineUsers[targetNick]) io.to(onlineUsers[targetNick]).emit("friend:request_received", { from: nick });
         socket.emit("success", `Convite enviado para ${targetNick}`);
+    });
+
+    socket.on("game:launch", () => {
+        onlineUsers[nick] = socket.id;
+        updateUsersSessionGames();
+    })
+
+    socket.on("game:close", () => {
+        delete onlineUsers[nick];
+        updateUsersSessionGames();
     });
 
     socket.on("friend:respond", ({ requesterNick, accept }) => {
