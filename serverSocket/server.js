@@ -34,6 +34,11 @@ const io = new Server(PORT, {
 
 let onlineUsers = {};
 
+function updateOnlineCount() {
+    const total = Object.keys(onlineUsers).length;
+    io.emit("server:online_count", total);
+}
+
 console.log(`[SOCKET] Servidor Social rodando na porta ${PORT}`);
 
 io.on("connection", (socket) => {
@@ -52,6 +57,8 @@ io.on("connection", (socket) => {
 
     onlineUsers[nick] = socket.id;
     socket.join(nick);
+
+    updateOnlineCount();
 
     console.log(`[+] ${nick} online (${status}).`);
 
@@ -161,6 +168,8 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         if (usersDB[nick]) usersDB[nick].status = 'offline';
         delete onlineUsers[nick];
+
+        updateOnlineCount();
 
         if (usersDB[nick]) {
             usersDB[nick].friends.forEach(f => {
