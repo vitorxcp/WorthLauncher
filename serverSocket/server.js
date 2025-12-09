@@ -297,7 +297,7 @@ io.on("connection", (socket) => {
     socket.emit("init:data", { friends: friendsListWithData, requests: usersDB[nick].requests });
 
     usersDB[nick].friends.forEach(friend => {
-        if (onlineUsers[friend]) io.to(onlineUsers[friend]).emit("friend:status_update", { nick, status: 'online' });
+        if (onlineUsers[friend]) io.to(onlineUsers[friend]).emit("friend:status_update", { nick, status });
     });
 
     socket.on("friend:add", (targetNick) => {
