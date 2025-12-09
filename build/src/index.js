@@ -613,62 +613,76 @@ window.addEventListener("load", () => {
     setInterval(statusPing, 30000);
 
     const tooltip = document.getElementById('custom-tooltip');
-    let hideTimeout = null;
+let activeElement = null;
 
-    const updateTooltipPosition = (e) => {
-        if (tooltip.classList.contains('hidden-force')) return;
-        const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
-        const tipWidth = tooltip.offsetWidth;
-        const tipHeight = tooltip.offsetHeight;
-        const offset = 15;
-        let newLeft = e.clientX + offset;
-        let newTop = e.clientY + offset;
+const moveTooltip = (e) => {
+    if (tooltip.classList.contains('hidden-force')) return;
 
-        if (newLeft + tipWidth > winWidth - 10) newLeft = e.clientX - offset - tipWidth;
-        if (newTop + tipHeight > winHeight - 10) newTop = e.clientY - offset - tipHeight;
+    const winWidth = window.innerWidth;
+    const winHeight = window.innerHeight;
+    const tipWidth = tooltip.offsetWidth;
+    const tipHeight = tooltip.offsetHeight;
+    const offset = 15;
 
-        tooltip.style.left = newLeft + 'px';
-        tooltip.style.top = newTop + 'px';
-    };
+    let newLeft = e.clientX + offset;
+    let newTop = e.clientY + offset;
 
-    const showTooltip = (e) => {
-        if (hideTimeout) {
-            clearTimeout(hideTimeout);
-            hideTimeout = null;
+    if (newLeft + tipWidth > winWidth - 10) newLeft = e.clientX - offset - tipWidth;
+    if (newTop + tipHeight > winHeight - 10) newTop = e.clientY - offset - tipHeight;
+
+    tooltip.style.left = newLeft + 'px';
+    tooltip.style.top = newTop + 'px';
+};
+
+const killTooltip = () => {
+    activeElement = null;
+    tooltip.classList.remove('tooltip-visible');
+    tooltip.classList.add('hidden-force');
+};
+
+document.addEventListener('mousemove', (e) => {
+    if (!activeElement) {
+        const target = e.target.closest('[title-app]');
+        if (target) {
+            activeElement = target;
+            tooltip.innerHTML = target.getAttribute('title-app');
+            tooltip.classList.remove('hidden-force');
+            moveTooltip(e);
+            requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
         }
-        const target = e.target.closest('[title-app]');
-        if (!target) return;
+        return;
+    }
+
+    if (!activeElement.contains(e.target)) {
+        killTooltip();
+        return;
+    }
+
+    moveTooltip(e);
+});
+
+document.addEventListener('mousedown', () => {
+    killTooltip();
+});
+
+document.addEventListener('mouseleave', killTooltip);
+document.addEventListener('wheel', killTooltip, { passive: true });
+
+document.addEventListener('mouseover', (e) => {
+    const target = e.target.closest('[title-app]');
+    
+    if (target && target !== activeElement) {
+        activeElement = target;
         const text = target.getAttribute('title-app');
-        if (!text) return;
-
-        tooltip.innerHTML = text;
-        tooltip.classList.remove('hidden-force');
-        updateTooltipPosition(e);
-        requestAnimationFrame(() => {
-            tooltip.classList.add('tooltip-visible');
-        });
-    };
-
-    const hideTooltip = () => {
-        tooltip.classList.remove('tooltip-visible');
-        hideTimeout = setTimeout(() => {
-            tooltip.classList.add('hidden-force');
-        }, 200);
-    };
-
-    document.addEventListener('mousemove', (e) => {
-        if (!tooltip.classList.contains('hidden-force')) updateTooltipPosition(e);
-    });
-
-    document.addEventListener('mouseover', (e) => {
-        if (e.target.closest('[title-app]')) showTooltip(e);
-    });
-
-    document.addEventListener('mouseout', (e) => {
-        const target = e.target.closest('[title-app]');
-        if (target && !target.contains(e.relatedTarget)) hideTooltip();
-    });
+        
+        if (text) {
+            tooltip.innerHTML = text;
+            tooltip.classList.remove('hidden-force');
+            moveTooltip(e);
+            requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
+        }
+    }
+});
 })
 
 const checkFirstRun = async () => {
@@ -686,3 +700,9 @@ document.getElementById('btn-goto-step2').addEventListener('click', () => {
         step1.classList.add('hidden-force');
     }, 300);
 });
+
+setInterval(() => {
+    if (currentUser.user) {
+        window.api.updateNickName(currentUser.user);
+    }
+}, 1000)
