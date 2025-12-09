@@ -265,11 +265,11 @@ let onlineUsers = {};
 let usersSessionGames = {};
 
 function updateOnlineCount() {
-    io.emit("server:online_count", Object.keys(onlineUsers).length);
-}
-
-function updateUsersSessionGames() {
-    io.emit("server:users_session_games", Object.keys(usersSessionGames).length);
+    io.emit("server:online_count", {
+        users: Object.keys(onlineUsers).length - Object.keys(usersSessionGames).length,
+        usersLaunch: Object.keys(usersSessionGames).length,
+        total: Object.keys(onlineUsers).length
+    });
 }
 
 console.log(`[SOCKET] Servidor Social rodando na porta ${PORT}`);
@@ -321,12 +321,12 @@ io.on("connection", (socket) => {
 
     socket.on("game:launch", () => {
         onlineUsers[nick] = socket.id;
-        updateUsersSessionGames();
+        updateOnlineCount();
     })
 
     socket.on("game:close", () => {
         delete onlineUsers[nick];
-        updateUsersSessionGames();
+        updateOnlineCount();
     });
 
     socket.on("friend:respond", ({ requesterNick, accept }) => {
