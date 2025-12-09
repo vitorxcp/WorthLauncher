@@ -120,6 +120,17 @@ socket.on("notification:msg", (data) => {
     }
 });
 
+socket.on("server:online_count", (count) => {
+    const el = document.getElementById("count-total-online");
+    if(el) el.innerHTML = `
+    <span class="relative flex h-2.5 w-2.5">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+              </span>${count}</span></span>
+    `;
+});
+
 socket.on("error", (msg) => showToast(msg, "error"));
 socket.on("success", (msg) => showToast(msg, "success"));
 
