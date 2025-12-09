@@ -7,7 +7,7 @@ contextBridge.exposeInMainWorld('api', {
     createShortcut: () => ipcRenderer.invoke('system:create-shortcut'),
     minimize: () => ipcRenderer.send('window:minimize'),
     close: () => ipcRenderer.send('window:close'),
-abortGame: () => ipcRenderer.invoke('game:abort'),    
+    abortGame: () => ipcRenderer.invoke('game:abort'),
     onGameStarted: (cb) => {
         const listener = () => cb();
         ipcRenderer.on('game:started', listener);
