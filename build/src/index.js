@@ -515,6 +515,7 @@ window.api.onProgress((data) => {
 
 window.api.onGameClosed(() => {
     addLog("Sessão de jogo finalizada (Exit Code 0).", 'success');
+    sendSocketLauncherEvent("close:client");
     btnPlay.disabled = false;
     btnPlay.as3cd = false;
     btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
@@ -525,6 +526,7 @@ window.api.onGameClosed(() => {
 
 window.api.onGameStarted(() => {
     addLog("Minecraft iniciado e janela detectada.", 'success');
+    sendSocketLauncherEvent("open:client");
     btnPlay.disabled = false;
     btnPlay.as3cd = true;
     btnPlay.innerHTML = `<i data-lucide="pause" class="fill-black w-6 h-6"></i> SAIR DO JOGO`;
