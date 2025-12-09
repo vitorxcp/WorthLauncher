@@ -12,7 +12,7 @@ const modalFallback = document.getElementById("modal-fallback");
 const modalTag = document.getElementById("modal-tag");
 const modalDate = document.getElementById("modal-date");
 const modalAuthor = document.getElementById("modal-author");
-const modalContent = document.getElementById("modal-content");
+const modalContent = document.getElementById("modal-contentads");
 
 let cachedPosts = [];
 
@@ -33,7 +33,7 @@ async function loadBlogFeed() {
 
         if (data.success && data.posts.length > 0) {
             cachedPosts = data.posts;
-            renderCards(cachedPosts.slice(0, 3), feedContainer);
+            renderCards(cachedPosts, feedContainer);
         } else {
             feedContainer.innerHTML = `<div class="col-span-3 text-center py-12 text-gray-600 font-mono text-xs border border-dashed border-white/5 rounded-xl animate-card">Nenhuma notícia encontrada.</div>`;
         }
@@ -48,15 +48,15 @@ function renderCards(posts, container) {
 
     posts.forEach((post, index) => {
         const card = document.createElement("div");
-        card.className = "news-card-base group relative h-60 rounded-2xl overflow-hidden cursor-pointer animate-card";
+card.className = "news-card-base group relative h-60 rounded-2xl overflow-hidden cursor-pointer animate-card shrink-0";
         card.style.animationDelay = `${index * 150}ms`;
-        
+
         const mainTag = post.tags && post.tags.length > 0 ? post.tags[0] : "INFO";
         const hasImage = post.image && post.image.trim() !== "" && !post.image.includes("default-blog.png");
         const imageUrl = post.image.startsWith('http') ? post.image : `${API_HOST}${post.image}`;
 
         let backgroundHTML;
-        
+
         if (hasImage) {
             backgroundHTML = `
                 <div class="absolute inset-0 bg-[#111]">
@@ -112,11 +112,12 @@ function openBlogModal(post) {
     modalTag.innerText = post.tags && post.tags.length > 0 ? post.tags[0] : "INFO";
     modalDate.innerText = post.dateFormatted || '';
     modalAuthor.innerText = post.author || 'Equipe';
-    
+
+
     if (typeof marked !== 'undefined') {
         modalContent.innerHTML = marked.parse(post.content);
     } else {
-        modalContent.innerHTML = post.content; 
+        modalContent.innerHTML = post.content;
     }
 
     const links = modalContent.querySelectorAll('a');
@@ -140,9 +141,9 @@ function openBlogModal(post) {
     } else {
         modalImage.style.display = 'none';
         modalFallback.classList.remove('hidden');
-        if(modalFallback.innerHTML.trim() === "") {
-             modalFallback.innerHTML = `<i data-lucide="layout" class="watermark-icon" style="width: 200px; height: 200px; opacity: 0.05;"></i>`;
-             lucide.createIcons();
+        if (modalFallback.innerHTML.trim() === "") {
+            modalFallback.innerHTML = `<i data-lucide="layout" class="watermark-icon" style="width: 200px; height: 200px; opacity: 0.05;"></i>`;
+            lucide.createIcons();
         }
     }
 
@@ -150,7 +151,7 @@ function openBlogModal(post) {
     const modalBg = blogModal.querySelector('div.absolute');
 
     blogModal.classList.remove("hidden-force");
-    
+
     modalContentDiv.classList.remove('modal-exit');
     modalBg.classList.remove('bg-exit');
 
@@ -159,7 +160,7 @@ function openBlogModal(post) {
 }
 
 window.closeBlogModal = () => {
-    if(blogModal) {
+    if (blogModal) {
         const modalContentDiv = blogModal.querySelector('div.relative');
         const modalBg = blogModal.querySelector('div.absolute');
 
@@ -177,7 +178,7 @@ window.closeBlogModal = () => {
 };
 
 const btnSeeAll = document.getElementById("btn-see-all");
-if(btnSeeAll) {
+if (btnSeeAll) {
     btnSeeAll.addEventListener("click", () => {
         renderCards(cachedPosts, allNewsGrid);
         toggleAllNews(true);
@@ -185,7 +186,7 @@ if(btnSeeAll) {
 }
 
 window.toggleAllNews = (show) => {
-    if(allNewsModal) {
+    if (allNewsModal) {
         const modalContentDiv = allNewsModal.querySelector('div.relative');
         const modalBg = allNewsModal.querySelector('div.absolute');
 
@@ -193,13 +194,13 @@ window.toggleAllNews = (show) => {
             allNewsModal.classList.remove("hidden-force");
             modalContentDiv.classList.remove('modal-exit');
             modalBg.classList.remove('bg-exit');
-            
+
             modalContentDiv.classList.add('modal-enter');
             modalBg.classList.add('bg-enter');
         } else {
             modalContentDiv.classList.remove('modal-enter');
             modalBg.classList.remove('bg-enter');
-            
+
             modalContentDiv.classList.add('modal-exit');
             modalBg.classList.add('bg-exit');
 
