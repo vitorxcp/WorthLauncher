@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Launcher Otimizado 1.8.9 com Chat e Auto-Update",
   "main": "WorthLauncher.js",
+  "email": "vitor.xp.1958@gmail.com",
   "scripts": {
     "start": "electron .",
     "dev": "concurrently \"vite\" \"electron .\"",
@@ -14,6 +15,31 @@
   },
   "author": "vitorxp",
   "license": "MIT",
+  "homepage": "https://github.com/vitorxcp/WorthLauncher",
+  "icon": "build/assets/Logo-Worth-256x256.png",
+  "repository": {
+    "type": "git",
+    "url": "git+"
+  },
+  "workspaces": [
+    "plugins/*"
+  ],
+  "api": "none",
+  "badges": [
+    {
+      "url": "https://img.shields.io/badge/License-MIT-green.svg",
+      "alt": "License: MIT"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "vitorxp",
+      "email": "vitor.xp.1958@gmail.com"
+    },
+    {
+      "name": "Klovers7"
+    }
+  ],
   "dependencies": {
     "adm-zip": "^0.5.10",
     "axios": "^1.6.7",
@@ -70,11 +96,11 @@
     },
     "linux": {
       "target": [
-        "AppImage",
+        "tar.gz",
         "deb",
         "rpm"
       ],
-      "icon": "build/assets/icon.png",
+      "icon": "build/assets/Logo-Worth-256x256.png",
       "category": "Game",
       "description": "Launcher de Minecraft Otimizado para Rede Worth",
       "artifactName": "${productName}-Linux-${version}.${ext}"
