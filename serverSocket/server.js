@@ -320,12 +320,12 @@ io.on("connection", (socket) => {
     });
 
     socket.on("game:launch", () => {
-        onlineUsers[nick] = socket.id;
+        usersSessionGames[nick] = socket.id;
         updateOnlineCount();
     })
 
     socket.on("game:close", () => {
-        delete onlineUsers[nick];
+        delete usersSessionGames[nick];
         updateOnlineCount();
     });
 
