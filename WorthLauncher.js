@@ -418,6 +418,31 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 
     nickname = authDetails.user;
 
+    const isFullscreen = (config.fullscreen === true || String(config.fullscreen) === 'true');
+
+    try {
+        const optionsPath = path.join(ROOT, 'options.txt');
+        let optionsContent = "";
+
+        if (fs.existsSync(optionsPath)) {
+            optionsContent = fs.readFileSync(optionsPath, 'utf8');
+        }
+
+        if (optionsContent.includes("fullscreen:")) {
+            optionsContent = optionsContent.replace(/fullscreen:(true|false)/g, `fullscreen:${isFullscreen}`);
+        } else {
+            optionsContent += `\nfullscreen:${isFullscreen}`;
+        }
+
+        fs.writeFileSync(optionsPath, optionsContent);
+        sendLog(`[CONFIG] options.txt atualizado -> Fullscreen: ${isFullscreen}`);
+
+    } catch (e) {
+        console.error("[CONFIG] Erro ao editar options.txt:", e);
+    }
+
+    sendLog(`[CONFIG] Fullscreen: ${isFullscreen ? 'ATIVADO' : 'DESATIVADO'} | Res: ${config.width}x${config.height} | RAM: ${config.ram}`);
+
     const opts = {
         clientPackage: null,
         authorization: authorization,
@@ -433,7 +458,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
         },
         javaPath: "java",
         window: {
-            fullscreen: config.fullscreen,
+            fullscreen: isFullscreen,
             width: parseInt(config.width) || 854,
             height: parseInt(config.height) || 480
         },
@@ -577,9 +602,9 @@ ipcMain.handle("game:abort", async () => {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.show();
             mainWindow.focus();
-            
+
             mainWindow.webContents.send("game:closed");
-            
+
             if (typeof updateDiscordActivity === 'function') {
                 updateDiscordActivity("Navegando no Launcher", "Ocioso");
             }
