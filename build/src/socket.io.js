@@ -1,4 +1,3 @@
-/* Otimização CSS Injetada via JS */
 const styleParams = document.createElement('style');
 styleParams.innerHTML = `
     #chat-messages {
@@ -6,15 +5,60 @@ styleParams.innerHTML = `
         content-visibility: auto; 
         contain-intrinsic-size: 0 500px;
         will-change: scroll-position;
-        overflow-anchor: auto; /* IMPORTANTE: Ajuda o navegador a fixar o scroll */
+        overflow-anchor: auto;
+        scroll-behavior: smooth;
+        height: 100%; 
+        overflow-y: auto;
     }
-    .msg-item {
-        contain: content;
+    
+    .msg-item { contain: content; }
+    .show { opacity: 1 !important; transform: translateY(0) !important; }
+
+    #btn-scroll-bottom {
+        position: absolute;
+        bottom: 80px; 
+        right: 20px;
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #eab308;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transform: translateY(10px) scale(0.9);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        z-index: 50;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-    .show {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
+    #btn-scroll-bottom.visible {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: all;
     }
+    #btn-scroll-bottom:hover {
+        background: #eab308;
+        color: black;
+        transform: scale(1.1);
+        border-color: #eab308;
+    }
+    #btn-scroll-bottom.new-message-alert::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        background: #ef4444;
+        border-radius: 50%;
+        border: 2px solid #000;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(0.95); opacity: 1; } }
 `;
 document.head.appendChild(styleParams);
 
@@ -30,11 +74,34 @@ const els = {
     headerAvatar: document.getElementById("chat-header-avatar"),
     placeholder: document.getElementById("chat-placeholder"),
     myStatusDot: document.getElementById("my-status-dot"),
-    myStatusText: document.getElementById("my-status-text")
+    myStatusText: document.getElementById("my-status-text"),
+    chatContainer: document.getElementById("chat-messages").parentElement
 };
 
+const btnScrollBottom = document.createElement("div");
+btnScrollBottom.id = "btn-scroll-bottom";
+btnScrollBottom.setAttribute("title-app", "Ir para o fim");
+btnScrollBottom.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+if (getComputedStyle(els.chatContainer).position === 'static') {
+    els.chatContainer.style.position = 'relative';
+}
+els.chatContainer.appendChild(btnScrollBottom);
+
+btnScrollBottom.onclick = () => {
+    scrollToBottom(true);
+};
+
+els.chatMsgs.addEventListener('scroll', () => {
+    const distanceToBottom = els.chatMsgs.scrollHeight - els.chatMsgs.scrollTop - els.chatMsgs.clientHeight;
+    if (distanceToBottom > 1000) {
+        btnScrollBottom.classList.add('visible');
+    } else {
+        btnScrollBottom.classList.remove('visible');
+    }
+});
+
 let currentChatFriend = null;
-let fullChatHistory = []; 
+let fullChatHistory = [];
 let isInternalScroll = false;
 
 const ICONS = {
@@ -60,19 +127,19 @@ const socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
     autoConnect: true
 });
 
-window.closeConnectionSocket = function() {
+window.closeConnectionSocket = function () {
     if (socket.connected) {
         socket.disconnect();
         updateMyStatusUI("offline");
     }
 };
 
-window.openConnectionSocket = function() {
+window.openConnectionSocket = function () {
     const newIdentity = { nick: currentUser.user, uuid: currentUser.uuid };
-    
+
     localStorage.setItem("chat_identity", JSON.stringify(newIdentity));
     socket.auth = newIdentity;
-    
+
     if (socket.connected) socket.disconnect();
     socket.connect();
 };
@@ -82,7 +149,7 @@ socket.on("connect", () => {
 });
 socket.on("disconnect", () => updateMyStatusUI("offline"));
 
-socket.on("init:data", (data) => {  
+socket.on("init:data", (data) => {
     requestAnimationFrame(() => {
         renderFriendsList(data.friends || []);
         if (data.requests) checkPendingRequests(data.requests);
@@ -104,7 +171,7 @@ socket.on("chat:receive", (msg) => {
     const isChatOpen = currentChatFriend === msg.sender || msg.sender === socket.auth.nick;
     if (isChatOpen) {
         fullChatHistory.push(msg);
-        appendSingleMessage(msg, true); 
+        appendSingleMessage(msg, true);
     } else {
         showNotificationBadge(msg.sender);
         document.getElementById("social-ping")?.classList.remove("hidden-force");
@@ -122,7 +189,7 @@ socket.on("notification:msg", (data) => {
 
 socket.on("server:online_count", (count) => {
     const el = document.getElementById("count-total-online");
-    if(el) el.innerHTML = `
+    if (el) el.innerHTML = `
     <span class="relative flex h-2.5 w-2.5">
                 <span
                   class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
@@ -136,34 +203,40 @@ socket.on("success", (msg) => showToast(msg, "success"));
 
 function renderInitialHistory() {
     observer.unobserve(topSentinel);
+
+    els.chatMsgs.style.scrollBehavior = 'auto';
     els.chatMsgs.innerHTML = "";
     els.chatMsgs.appendChild(topSentinel);
 
     const initialBatch = fullChatHistory.slice(-30);
     const fragment = document.createDocumentFragment();
-    
+
     initialBatch.forEach(msg => {
         fragment.appendChild(createMessageElement(msg, false));
     });
 
     els.chatMsgs.appendChild(fragment);
-    
-    scrollToBottom(true);
-    
-    setTimeout(() => observer.observe(topSentinel), 500);
+
+els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+
+    setTimeout(() => {
+            els.chatMsgs.style.scrollBehavior = 'smooth';
+            observer.observe(topSentinel);
+        }, 100);
 }
 
 function loadOlderMessages() {
-    const currentRenderedCount = els.chatMsgs.children.length - 1; 
-    
+    const currentRenderedCount = els.chatMsgs.children.length - 1;
+
     if (currentRenderedCount >= fullChatHistory.length) return;
 
     isInternalScroll = true;
+els.chatMsgs.style.scrollBehavior = 'auto';
 
     const nextIndex = fullChatHistory.length - currentRenderedCount;
     const startIndex = Math.max(0, nextIndex - 30);
     const olderBatch = fullChatHistory.slice(startIndex, nextIndex);
-    
+
     if (olderBatch.length === 0) {
         isInternalScroll = false;
         return;
@@ -182,12 +255,13 @@ function loadOlderMessages() {
         const newHeight = els.chatMsgs.scrollHeight;
         els.chatMsgs.scrollTop = newHeight - prevHeight;
         isInternalScroll = false;
+        setTimeout(() => els.chatMsgs.style.scrollBehavior = 'smooth', 50);
     });
 }
 
 function appendSingleMessage(msg, animate = true) {
     const isMe = msg.sender === socket.auth.nick;
-    
+
     const wasAtBottom = isUserAtBottom();
 
     const el = createMessageElement(msg, animate);
@@ -197,6 +271,8 @@ function appendSingleMessage(msg, animate = true) {
         scrollToBottom(true);
     } else if (wasAtBottom) {
         scrollToBottom(false);
+    } else {
+        btnScrollBottom.classList.add('new-message-alert');
     }
 
     trimExcessMessages();
@@ -204,7 +280,7 @@ function appendSingleMessage(msg, animate = true) {
 
 function trimExcessMessages() {
     const MAX_DOM_NODES = 150;
-    
+
     if (els.chatMsgs.children.length > MAX_DOM_NODES) {
         for (let i = 0; i < 5; i++) {
             const node = topSentinel.nextElementSibling;
@@ -220,40 +296,41 @@ function isUserAtBottom() {
 
 function scrollToBottom(force = false) {
     requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-            if (force) {
-                els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
-            } else {
-                els.chatMsgs.scrollTo({ 
-                    top: els.chatMsgs.scrollHeight, 
-                    behavior: 'smooth' 
-                });
-            }
-        });
+        if (force) {
+            const oldBehavior = els.chatMsgs.style.scrollBehavior;
+            els.chatMsgs.style.scrollBehavior = 'auto';
+            els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+            setTimeout(() => els.chatMsgs.style.scrollBehavior = oldBehavior, 50);
+        } else {
+            els.chatMsgs.scrollTo({ 
+                top: els.chatMsgs.scrollHeight, 
+                behavior: 'smooth' 
+            });
+        }
     });
 }
 
 function createMessageElement(msg, animate = true) {
     const myNick = socket.auth.nick || JSON.parse(localStorage.getItem("chat_identity") || "{}").nick;
     const isMe = msg.sender === myNick;
-    
+
     const time = new Date(msg.timestamp || Date.now())
         .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const fullDate = new Date(msg.timestamp || Date.now())
-    .toLocaleString('pt-BR', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
+        .toLocaleString('pt-BR', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
 
     const div = document.createElement("div");
     div.className = `flex ${isMe ? "justify-end" : "justify-start"} mb-1 msg-item`;
-    
+
     if (!animate) {
-        div.classList.add("show"); 
+        div.classList.add("show");
     } else {
         div.classList.add("msg-anim");
         requestAnimationFrame(() => div.classList.add("show"));
@@ -270,7 +347,7 @@ function createMessageElement(msg, animate = true) {
             ${!isMe ? `<span class="text-[10px] text-yellow-500/90 block mb-0.5 font-bold tracking-wide">${msg.sender}</span>` : ""}
             <span class="break-words leading-snug block">${msg.text}</span>
             <div class="text-[9px] mt-1 text-right font-mono flex items-center justify-end gap-1 select-none text-gray-400">
-                <span title-app="${fullDate}">${time}</span> <span title-app="${msg.read ? "Visualizada": "Não Visualizada"}">${isMe ? statusIcon : ""}</span>
+                <span title-app="${fullDate}">${time}</span> <span title-app="${msg.read ? "Visualizada" : "Não Visualizada"}">${isMe ? statusIcon : ""}</span>
             </div>
         </div>
     `;
@@ -282,7 +359,7 @@ function selectFriend(nick, status) {
 
     fullChatHistory = [];
     isInternalScroll = false;
-    
+
     if (currentChatFriend) {
         document.getElementById(`friend-item-${currentChatFriend}`)?.classList.remove("bg-white/10", "border-yellow-500/50");
     }
@@ -302,6 +379,8 @@ function selectFriend(nick, status) {
 
     socket.emit("chat:mark_read", nick);
     socket.emit("chat:select", nick);
+
+    btnScrollBottom.classList.remove('visible');
 }
 
 function createFriendElement(friend) {
@@ -311,7 +390,7 @@ function createFriendElement(friend) {
     div.onclick = () => selectFriend(friend.nick, friend.status);
 
     const statusColor = getStatusColor(friend.status);
-    
+
     div.innerHTML = `
         <div class="relative shrink-0">
             <img src="https://mc-heads.net/avatar/${friend.nick}" title-app="${friend.nick}" class="w-9 h-9 rounded-lg bg-black/30 shadow-sm" loading="lazy">
@@ -383,7 +462,7 @@ function showNotificationBadge(nick) {
 function checkGlobalNotification() {
     const hasUnread = document.querySelector('[id^="badge-"]:not(.hidden-force)');
     const ping = document.getElementById("social-ping");
-    if(ping) hasUnread ? ping.classList.remove("hidden-force") : ping.classList.add("hidden-force");
+    if (ping) hasUnread ? ping.classList.remove("hidden-force") : ping.classList.add("hidden-force");
 }
 
 function getStatusColor(status) {
@@ -400,7 +479,7 @@ function updateMyStatusUI(status) {
 
 window.changeMyStatus = (s) => {
     updateMyStatusUI(s);
-    if(socket.connected) socket.emit("status:change", s);
+    if (socket.connected) socket.emit("status:change", s);
 };
 
 function showToast(msg, type = "info") {
