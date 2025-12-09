@@ -239,6 +239,15 @@ function createMessageElement(msg, animate = true) {
     
     const time = new Date(msg.timestamp || Date.now())
         .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const fullDate = new Date(msg.timestamp || Date.now())
+    .toLocaleString('pt-BR', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
 
     const div = document.createElement("div");
     div.className = `flex ${isMe ? "justify-end" : "justify-start"} mb-1 msg-item`;
@@ -261,7 +270,7 @@ function createMessageElement(msg, animate = true) {
             ${!isMe ? `<span class="text-[10px] text-yellow-500/90 block mb-0.5 font-bold tracking-wide">${msg.sender}</span>` : ""}
             <span class="break-words leading-snug block">${msg.text}</span>
             <div class="text-[9px] mt-1 text-right font-mono flex items-center justify-end gap-1 select-none text-gray-400">
-                ${time} ${isMe ? statusIcon : ""}
+                <span title-app="${fullDate}">${time}</span> <span title-app="${msg.read ? "Visualizada": "Não Visualizada"}">${isMe ? statusIcon : ""}</span>
             </div>
         </div>
     `;
@@ -305,7 +314,7 @@ function createFriendElement(friend) {
     
     div.innerHTML = `
         <div class="relative shrink-0">
-            <img src="https://mc-heads.net/avatar/${friend.nick}" class="w-9 h-9 rounded-lg bg-black/30 shadow-sm" loading="lazy">
+            <img src="https://mc-heads.net/avatar/${friend.nick}" title-app="${friend.nick}" class="w-9 h-9 rounded-lg bg-black/30 shadow-sm" loading="lazy">
             <div id="status-dot-${friend.nick}" class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#121212] ${statusColor}" title-app="${friend.status || "offline"}"></div>
         </div>
         <div class="flex-1 min-w-0">
