@@ -105,6 +105,9 @@ dist-electron
 .temp
 .cache
 
+a.html
+a.js
+
 # vitepress build output
 **/.vitepress/dist
 
