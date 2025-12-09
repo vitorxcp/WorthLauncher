@@ -550,8 +550,6 @@ updateSettingsUI();
 const lastUser = JSON.parse(localStorage.getItem('worth_last_user'));
 if (lastUser) selectAccount(lastUser);
 
-addLog("WorthClient carregado e pronto.");
-
 window.addEventListener("load", () => {
     setTimeout(() => document.getElementById("view-home").classList.add('fade-enter-active'), 10);
 
@@ -706,3 +704,5 @@ setInterval(() => {
         window.api.updateNickName(currentUser.user);
     }
 }, 1000)
+
+addLog("WorthLauncher carregado e pronto.");
