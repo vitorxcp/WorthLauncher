@@ -9,6 +9,7 @@ const CLIENT_ID = '1447664037440782418';
 const DiscordRPC = require('discord-rpc');
 const firstRunFile = path.join(app.getPath('appData'), '.worthlauncher', '.first_run');
 const date = new Date();
+const dateNow = Date.now();
 
 let isInstallerLaunch = false;
 
@@ -102,6 +103,35 @@ function downloadFile(url, dest, sendLog) {
     });
 }
 
+let rpcInterval = null;
+
+function updateDiscordActivity(details, state) {
+    if (!rpc) return;
+
+    if (rpcInterval) clearInterval(rpcInterval);
+
+    const activityUpdater = () => {
+        if (!rpc) return; 
+
+        rpc.setActivity({
+            details: details,
+            state: state,
+            largeImageKey: 'large_image',
+            largeImageText: 'WorthLauncher',
+            smallImageKey: `https://mc-heads.net/avatar/${nickname}/128`,
+            smallImageText: nickname,
+            instance: false,
+            startTimestamp: dateNow 
+        }).catch((err) => {
+            console.error("[RPC] Erro ao atualizar:", err);
+        });
+    };
+
+    activityUpdater();
+
+    rpcInterval = setInterval(activityUpdater, 15000);
+}
+
 function startRPC() {
     if (rpc) {
         try {
@@ -116,13 +146,7 @@ function startRPC() {
     rpc.on('ready', () => {
         console.log("[DEBUG] - RPC Discord iniciado com sucesso.");
 
-        rpc.setActivity({
-            details: 'Navegando no Menu',
-            largeImageKey: 'large_image',
-            largeImageText: 'WorthLauncher',
-            instance: false,
-            startTimestamp: Date.now() + (24 * 60 * 60 * 1000)
-        }).catch(console.error);
+        updateDiscordActivity("Navegando no Launcher", "Ocioso");
     });
 
     rpc.on('disconnected', () => {
@@ -214,8 +238,6 @@ function createWindow() {
         shell.openExternal(url);
         return { action: 'deny' };
     });
-
-    mainWindow.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
 }
 
 app.whenReady().then(async () => {
@@ -295,26 +317,8 @@ ipcMain.handle('app:check-installer-launch', () => {
     return isInstallerLaunch;
 });
 
-ipcMain.handle('system:create-shortcut', async () => {
-    try {
-        if (process.platform === 'win32') {
-            const target = app.getPath('exe');
-            const desktopPath = app.getPath('desktop');
-            const shortcutPath = path.join(desktopPath, 'WorthLauncher.lnk');
-
-            shell.writeShortcutLink(shortcutPath, 'create', {
-                target: target,
-                cwd: path.dirname(target),
-                description: 'WorthLauncher Client 1.8.9',
-                icon: target,
-                appUserModelId: 'com.vitorxp.worthlauncher'
-            });
-            return { success: true };
-        }
-        return { success: false, error: 'Apenas Windows.' };
-    } catch (err) {
-        return { success: false, error: err.message };
-    }
+ipcMain.handle('user:update-nick', (event, nick) => {
+    nickname = nick;
 });
 
 ipcMain.handle('auth:microsoft', async () => {
@@ -365,7 +369,6 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send("log", msg);
         }
-        console.log(msg);
     };
 
     const ROOT = getLauncherRoot();
@@ -406,15 +409,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
         return { success: false, error: err.message };
     }
 
-    rpc.setActivity({
-        details: 'Iniciando Client...',
-        largeImageKey: 'large_image',
-        largeImageText: 'WorthLauncher',
-        smallImageKey: `https://mc-heads.net/avatar/${authDetails.user}/128`,
-        smallImageText: authDetails.user,
-        instance: false,
-        startTimestamp: Date.now() + (24 * 60 * 60 * 1000)
-    }).catch(console.error);
+    updateDiscordActivity("Iniciando o Client...", "Carregando");
 
     nickname = authDetails.user;
 
@@ -485,25 +480,9 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             }
 
             if (servername) {
-                rpc.setActivity({
-                    details: `Jogando em ${servername}`,
-                    largeImageKey: 'large_image',
-                    largeImageText: 'WorthLauncher',
-                    smallImageKey: `https://mc-heads.net/avatar/${nickname}/128`,
-                    smallImageText: nickname,
-                    instance: false,
-                    startTimestamp: Date.now() + (24 * 60 * 60 * 1000)
-                }).catch(console.error);
+                updateDiscordActivity(`Jogando em ${servername}`, "No jogo");
             } else {
-                rpc.setActivity({
-                    details: `Jogando em Servidor Privado`,
-                    largeImageKey: 'large_image',
-                    largeImageText: 'WorthLauncher',
-                    smallImageKey: `https://mc-heads.net/avatar/${nickname}/128`,
-                    smallImageText: nickname,
-                    instance: false,
-                    startTimestamp: Date.now() + (24 * 60 * 60 * 1000)
-                }).catch(console.error);
+                updateDiscordActivity("Jogando em Servidor Privado", "Jogando Minecraft");
             }
         }
 
@@ -513,15 +492,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
                 if (mainWindow && !mainWindow.isDestroyed()) {
                     mainWindow.webContents.send("game:started");
 
-                    rpc.setActivity({
-                        details: 'No menu do jogo',
-                        largeImageKey: 'large_image',
-                        largeImageText: 'WorthLauncher',
-                        smallImageKey: `https://mc-heads.net/avatar/${nickname}/128`,
-                        smallImageText: nickname,
-                        instance: false,
-                        startTimestamp: Date.now() + (24 * 60 * 60 * 1000)
-                    }).catch(console.error);
+                    updateDiscordActivity("No jogo", `Jogando como ${nickname}`);
 
                     if (configApp.closeLauncher) {
                         sendLog("[SYSTEM] Minimizando para bandeja...");
@@ -563,6 +534,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             mainWindow.webContents.send("game:closed");
         }
         sendLog("[SYSTEM] Jogo Fechado. Restaurando launcher.");
+        updateDiscordActivity("Navegando no Launcher", "Ocioso");
     });
 
     try {
