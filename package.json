@@ -43,7 +43,7 @@
     }
   ],
   "dependencies": {
-    "adm-zip": "^0.5.10",
+    "adm-zip": "^0.5.16",
     "axios": "^1.6.7",
     "discord-rpc": "^4.0.1",
     "electron-store": "^8.1.0",
