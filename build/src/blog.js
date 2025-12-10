@@ -123,7 +123,23 @@ function openBlogModal(post) {
     if (!modalTitle || !blogModal) return;
 
     modalTitle.innerText = post.title;
-    modalTag.innerText = post.tags && post.tags.length > 0 ? post.tags[0] : "INFO";
+    modalTag.innerHTML = post.tags[0] ?
+                        (
+                            post.tags.map(tag => {
+                                return `
+                                <span class="text-[10px] font-bold text-black bg-yellow-500 px-2 py-0.5 rounded shadow-lg uppercase tracking-wide group-hover:bg-white transition-colors">
+                        ${tag}
+                    </span>
+                                `
+                            })
+                        )
+                        :
+                        `
+                        <span class="text-[10px] font-bold text-black bg-yellow-500 px-2 py-0.5 rounded shadow-lg uppercase tracking-wide group-hover:bg-white transition-colors">
+                        INFO
+                    </span>
+                        `
+                    
     modalDate.innerText = post.dateFormatted || '';
     modalAuthor.innerText = post.author || 'Equipe';
 
