@@ -35,5 +35,8 @@ contextBridge.exposeInMainWorld('api', {
         return () => ipcRenderer.removeListener('game:closed', listener);
     },
     isInstallerLaunch: () => ipcRenderer.invoke('app:check-installer-launch'),
-    updateNickName: (nick) => ipcRenderer.invoke('user:update-nick', nick)
+    updateNickName: (nick) => ipcRenderer.invoke('user:update-nick', nick),
+    updateSettings: (settings) => {
+        ipcRenderer.invoke('settings:update', settings);
+    },
 });
