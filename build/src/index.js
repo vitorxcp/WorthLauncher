@@ -4,7 +4,7 @@ let currentUser = null;
 let userSelect = null;
 let savedAccounts = JSON.parse(localStorage.getItem('worth_accounts')) || [];
 
-const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 854, height: 480 };
+const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 854, height: 480, discordRichPresence: true };
 let settings = JSON.parse(localStorage.getItem('worth_settings')) || defaultSettings;
 
 const logConsole = document.getElementById('log-console');
@@ -396,6 +396,7 @@ function updateToggleUI(key, active) {
 window.toggleSetting = (key) => {
     settings[key] = !settings[key];
     saveSettings();
+    window.api.updateSettings(settings);
     updateSettingsUI();
 }
 
@@ -614,76 +615,76 @@ window.addEventListener("load", () => {
     setInterval(statusPing, 30000);
 
     const tooltip = document.getElementById('custom-tooltip');
-let activeElement = null;
+    let activeElement = null;
 
-const moveTooltip = (e) => {
-    if (tooltip.classList.contains('hidden-force')) return;
+    const moveTooltip = (e) => {
+        if (tooltip.classList.contains('hidden-force')) return;
 
-    const winWidth = window.innerWidth;
-    const winHeight = window.innerHeight;
-    const tipWidth = tooltip.offsetWidth;
-    const tipHeight = tooltip.offsetHeight;
-    const offset = 15;
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        const tipWidth = tooltip.offsetWidth;
+        const tipHeight = tooltip.offsetHeight;
+        const offset = 15;
 
-    let newLeft = e.clientX + offset;
-    let newTop = e.clientY + offset;
+        let newLeft = e.clientX + offset;
+        let newTop = e.clientY + offset;
 
-    if (newLeft + tipWidth > winWidth - 10) newLeft = e.clientX - offset - tipWidth;
-    if (newTop + tipHeight > winHeight - 10) newTop = e.clientY - offset - tipHeight;
+        if (newLeft + tipWidth > winWidth - 10) newLeft = e.clientX - offset - tipWidth;
+        if (newTop + tipHeight > winHeight - 10) newTop = e.clientY - offset - tipHeight;
 
-    tooltip.style.left = newLeft + 'px';
-    tooltip.style.top = newTop + 'px';
-};
+        tooltip.style.left = newLeft + 'px';
+        tooltip.style.top = newTop + 'px';
+    };
 
-const killTooltip = () => {
-    activeElement = null;
-    tooltip.classList.remove('tooltip-visible');
-    tooltip.classList.add('hidden-force');
-};
+    const killTooltip = () => {
+        activeElement = null;
+        tooltip.classList.remove('tooltip-visible');
+        tooltip.classList.add('hidden-force');
+    };
 
-document.addEventListener('mousemove', (e) => {
-    if (!activeElement) {
-        const target = e.target.closest('[title-app]');
-        if (target) {
-            activeElement = target;
-            tooltip.innerHTML = target.getAttribute('title-app');
-            tooltip.classList.remove('hidden-force');
-            moveTooltip(e);
-            requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
+    document.addEventListener('mousemove', (e) => {
+        if (!activeElement) {
+            const target = e.target.closest('[title-app]');
+            if (target) {
+                activeElement = target;
+                tooltip.innerHTML = target.getAttribute('title-app');
+                tooltip.classList.remove('hidden-force');
+                moveTooltip(e);
+                requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
+            }
+            return;
         }
-        return;
-    }
 
-    if (!activeElement.contains(e.target)) {
+        if (!activeElement.contains(e.target)) {
+            killTooltip();
+            return;
+        }
+
+        moveTooltip(e);
+    });
+
+    document.addEventListener('mousedown', () => {
         killTooltip();
-        return;
-    }
+    });
 
-    moveTooltip(e);
-});
+    document.addEventListener('mouseleave', killTooltip);
+    document.addEventListener('wheel', killTooltip, { passive: true });
 
-document.addEventListener('mousedown', () => {
-    killTooltip();
-});
+    document.addEventListener('mouseover', (e) => {
+        const target = e.target.closest('[title-app]');
 
-document.addEventListener('mouseleave', killTooltip);
-document.addEventListener('wheel', killTooltip, { passive: true });
+        if (target && target !== activeElement) {
+            activeElement = target;
+            const text = target.getAttribute('title-app');
 
-document.addEventListener('mouseover', (e) => {
-    const target = e.target.closest('[title-app]');
-    
-    if (target && target !== activeElement) {
-        activeElement = target;
-        const text = target.getAttribute('title-app');
-        
-        if (text) {
-            tooltip.innerHTML = text;
-            tooltip.classList.remove('hidden-force');
-            moveTooltip(e);
-            requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
+            if (text) {
+                tooltip.innerHTML = text;
+                tooltip.classList.remove('hidden-force');
+                moveTooltip(e);
+                requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
+            }
         }
-    }
-});
+    });
 })
 
 const checkFirstRun = async () => {
