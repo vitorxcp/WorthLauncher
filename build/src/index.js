@@ -618,6 +618,19 @@ window.addEventListener("load", () => {
     const tooltip = document.getElementById('custom-tooltip');
     let activeElement = null;
 
+    const observer = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'title-app') {
+                const newText = activeElement.getAttribute('title-app');
+                if (newText) {
+                    tooltip.innerHTML = newText;
+                } else {
+                    killTooltip();
+                }
+            }
+        }
+    });
+
     const moveTooltip = (e) => {
         if (tooltip.classList.contains('hidden-force')) return;
 
@@ -638,6 +651,8 @@ window.addEventListener("load", () => {
     };
 
     const killTooltip = () => {
+        observer.disconnect();
+
         activeElement = null;
         tooltip.classList.remove('tooltip-visible');
         tooltip.classList.add('hidden-force');
@@ -647,22 +662,41 @@ window.addEventListener("load", () => {
         if (!activeElement) {
             const target = e.target.closest('[title-app]');
             if (target) {
-                activeElement = target;
-                tooltip.innerHTML = target.getAttribute('title-app');
-                tooltip.classList.remove('hidden-force');
-                moveTooltip(e);
-                requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
+                activateTooltip(target, e);
             }
             return;
         }
 
         if (!activeElement.contains(e.target)) {
             killTooltip();
+
+            const newTarget = e.target.closest('[title-app]');
+            if (newTarget) {
+                activateTooltip(newTarget, e);
+            }
             return;
         }
 
         moveTooltip(e);
     });
+
+    function activateTooltip(target, e) {
+        const text = target.getAttribute('title-app');
+        if (!text) return;
+
+        activeElement = target;
+        tooltip.innerHTML = text;
+        tooltip.classList.remove('hidden-force');
+
+        moveTooltip(e);
+        requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
+
+        observer.disconnect();
+        observer.observe(target, {
+            attributes: true,
+            attributeFilter: ['title-app']
+        });
+    }
 
     document.addEventListener('mousedown', () => {
         killTooltip();
@@ -675,15 +709,8 @@ window.addEventListener("load", () => {
         const target = e.target.closest('[title-app]');
 
         if (target && target !== activeElement) {
-            activeElement = target;
-            const text = target.getAttribute('title-app');
-
-            if (text) {
-                tooltip.innerHTML = text;
-                tooltip.classList.remove('hidden-force');
-                moveTooltip(e);
-                requestAnimationFrame(() => tooltip.classList.add('tooltip-visible'));
-            }
+            if (activeElement) observer.disconnect();
+            activateTooltip(target, e);
         }
     });
 })
