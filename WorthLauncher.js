@@ -16,6 +16,7 @@ const dateNow = Date.now();
 
 let isInstallerLaunch = false;
 let { settings, saveDataSettings } = require('./plugins/settingsRegister.js');
+const { updateDiscordActivity } = require('./plugins/richPresencePlugin.js');
 let gamePID = null;
 
 if (fs.existsSync(firstRunFile)) {
@@ -168,49 +169,6 @@ async function ensureJava(sendLog) {
     }
 }
 
-let rpcInterval = null;
-
-function updateDiscordActivity(details, state) {
-    if (!rpc) return;
-    if (!settings.discordRichPresence) {
-        rpc.clearActivity().catch((err) => {
-            console.error("[RPC] Erro ao limpar atividade:", err);
-        });
-
-        return;
-    };
-
-    if (rpcInterval) clearInterval(rpcInterval);
-
-    const activityUpdater = () => {
-        if (!rpc) return;
-        if (!settings.discordRichPresence) {
-            rpc.clearActivity().catch((err) => {
-                console.error("[RPC] Erro ao limpar atividade:", err);
-            });
-
-            return;
-        };
-
-        rpc.setActivity({
-            details: details,
-            state: state,
-            largeImageKey: 'large_image',
-            largeImageText: 'WorthLauncher',
-            smallImageKey: `https://mc-heads.net/avatar/${nickname}/128`,
-            smallImageText: nickname,
-            instance: false,
-            startTimestamp: dateNow
-        }).catch((err) => {
-            console.error("[RPC] Erro ao atualizar:", err);
-        });
-    };
-
-    activityUpdater();
-
-    rpcInterval = setInterval(activityUpdater, 1000);
-}
-
 function startRPC() {
     if (rpc) {
         try {
@@ -225,7 +183,7 @@ function startRPC() {
     rpc.on('ready', () => {
         console.log("[DEBUG] - RPC Discord iniciado com sucesso.");
 
-        updateDiscordActivity("Navegando no Launcher", "Ocioso");
+        updateDiscordActivity("Navegando no Launcher", "Ocioso", rpc, nickname);
     });
 
     rpc.on('disconnected', () => {
@@ -286,12 +244,10 @@ function createWindow() {
         minWidth: 1000,
         minHeight: 650,
         frame: false,
-        transparent: true,
-        show: false,
         backgroundColor: '#00000000',
         icon: path.join(__dirname, 'build/assets/icon.png'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, 'build', 'preload.js'),
             contextIsolation: true,
             nodeIntegration: false,
             devTools: true
@@ -397,6 +353,7 @@ ipcMain.handle('app:check-installer-launch', () => {
 
 ipcMain.handle('user:update-nick', (event, nick) => {
     nickname = nick;
+    updateDiscordActivity(null, null, rpc, nickname)
 });
 
 ipcMain.handle('settings:update', (event, receivedSettings) => {
@@ -512,7 +469,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
         return { success: false, error: err.message };
     }
 
-    updateDiscordActivity("Iniciando o Client...", "Carregando");
+    updateDiscordActivity("Iniciando o Client...", "Carregando", rpc, nickname);
 
     nickname = authDetails.user;
 
@@ -606,9 +563,9 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             }
 
             if (servername) {
-                updateDiscordActivity(`Jogando em ${servername}`, "No jogo");
+                updateDiscordActivity(`Jogando em ${servername}`, "No jogo", rpc, nickname);
             } else {
-                updateDiscordActivity("Jogando em Servidor Privado", "Jogando Minecraft");
+                updateDiscordActivity("Jogando em Servidor Privado", "Jogando Minecraft", rpc, nickname);
             }
         }
 
@@ -620,7 +577,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
                 if (mainWindow && !mainWindow.isDestroyed()) {
                     mainWindow.webContents.send("game:started");
 
-                    updateDiscordActivity("No jogo", `Jogando como ${nickname}`);
+                    updateDiscordActivity("No jogo", `Jogando como ${nickname}`, rpc, nickname);
 
                     if (configApp.closeLauncher) {
                         sendLog("[SYSTEM] Minimizando para bandeja...");
@@ -663,7 +620,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             mainWindow.webContents.send("game:closed");
         }
         sendLog("[SYSTEM] Jogo Fechado. Restaurando launcher.");
-        updateDiscordActivity("Navegando no Launcher", "Ocioso");
+        updateDiscordActivity("Navegando no Launcher", "Ocioso", rpc, nickname);
     });
 
     try {
