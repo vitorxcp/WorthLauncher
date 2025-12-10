@@ -81,10 +81,24 @@ card.className = "news-card-base group relative h-60 rounded-2xl overflow-hidden
             <div class="absolute inset-0 readability-gradient"></div>
             
             <div class="absolute bottom-0 left-0 w-full p-6 flex flex-col items-start z-10">
-                <div class="flex items-center gap-2 mb-2 w-full">
-                    <span class="text-[10px] font-bold text-black bg-yellow-500 px-2 py-0.5 rounded shadow-lg uppercase tracking-wide group-hover:bg-white transition-colors">
-                        ${mainTag}
+                <div class="flex items-center gap-1 mb-2 w-full">
+                    ${post.tags[0] ?
+                        (
+                            post.tags.map(tag => {
+                                return `
+                                <span class="text-[10px] font-bold text-black bg-yellow-500 px-2 py-0.5 rounded shadow-lg uppercase tracking-wide group-hover:bg-white transition-colors">
+                        ${tag}
                     </span>
+                                `
+                            })
+                        )
+                        :
+                        `
+                        <span class="text-[10px] font-bold text-black bg-yellow-500 px-2 py-0.5 rounded shadow-lg uppercase tracking-wide group-hover:bg-white transition-colors">
+                        INFO
+                    </span>
+                        `
+                    }
                     <span class="text-[10px] text-gray-400 font-mono ml-auto opacity-70">
                         ${post.dateFormatted || 'Hoje'}
                     </span>
