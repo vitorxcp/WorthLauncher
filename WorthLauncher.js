@@ -5,6 +5,8 @@ const { Client } = require('minecraft-launcher-core');
 const { Auth } = require('msmc');
 const fs = require('fs-extra');
 const https = require('https');
+const AdmZip = require('adm-zip');
+const os = require("os");
 const CLIENT_ID = '1447664037440782418';
 const DiscordRPC = require('discord-rpc');
 const firstRunFile = path.join(app.getPath('appData'), '.worthlauncher', '.first_run');
@@ -64,6 +66,7 @@ let isQuitting = false;
 
 const FORGE_VERSION = "1.8.9-11.15.1.2318-1.8.9";
 const FORGE_URL = `https://maven.minecraftforge.net/net/minecraftforge/forge/${FORGE_VERSION}/forge-${FORGE_VERSION}-universal.jar`;
+const JAVA_URL_WIN = "https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u392-b08/OpenJDK8U-jre_x64_windows_hotspot_8u392b08.zip";
 
 function getLauncherRoot() {
     return path.resolve(app.getPath('appData'), '.worthlauncher');
@@ -102,6 +105,60 @@ function downloadFile(url, dest, sendLog) {
             reject(err);
         });
     });
+}
+
+async function ensureJava(sendLog) {
+    const runtimeDir = path.join(getLauncherRoot(), 'runtime');
+    const javaLocalDir = path.join(runtimeDir, 'java-runtime-gamma');
+
+    const execName = process.platform === 'win32' ? 'javaw.exe' : 'java';
+    const localJavaPath = path.join(javaLocalDir, 'bin', execName);
+
+    if (fs.existsSync(localJavaPath)) {
+        sendLog("[JAVA] Usando Java portátil instalado.");
+        return localJavaPath;
+    }
+
+    try {
+        const check = spawnSync('java', ['-version']);
+        if (check.error) throw new Error("Java não global");
+        sendLog("[JAVA] Java global detectado, mas baixaremos a versão otimizada (Java 8).");
+    } catch (e) {
+        sendLog("[JAVA] Java não encontrado no sistema.");
+    }
+
+    sendLog("[JAVA] Iniciando instalação do Java Runtime...");
+    const zipPath = path.join(runtimeDir, 'java_installer.zip');
+
+    try {
+        fs.ensureDirSync(runtimeDir);
+
+        await downloadFile(JAVA_URL_WIN, zipPath, sendLog);
+
+        sendLog("[JAVA] Extraindo arquivos...");
+        const zip = new AdmZip(zipPath);
+        zip.extractAllTo(runtimeDir, true);
+
+        const folders = fs.readdirSync(runtimeDir).filter(f => fs.statSync(path.join(runtimeDir, f)).isDirectory());
+        const extractedFolder = folders.find(f => f.includes("jdk") || f.includes("jre"));
+
+        if (extractedFolder) {
+            const oldPath = path.join(runtimeDir, extractedFolder);
+            if (fs.existsSync(javaLocalDir)) fs.removeSync(javaLocalDir);
+            fs.renameSync(oldPath, javaLocalDir);
+        }
+
+        fs.unlinkSync(zipPath);
+
+        sendLog("[JAVA] Instalação do Java concluída!");
+
+        if (fs.existsSync(localJavaPath)) return localJavaPath;
+        throw new Error("Executável do Java não encontrado após extração.");
+
+    } catch (err) {
+        sendLog(`[ERRO] Falha ao instalar Java: ${err.message}`);
+        return process.platform === 'win32' ? 'javaw' : 'java';
+    }
 }
 
 let rpcInterval = null;
@@ -337,8 +394,8 @@ ipcMain.handle('user:update-nick', (event, nick) => {
 
 ipcMain.handle('settings:update', (event, receivedSettings) => {
     try {
-        const updates = typeof receivedSettings === "string" 
-            ? JSON.parse(receivedSettings) 
+        const updates = typeof receivedSettings === "string"
+            ? JSON.parse(receivedSettings)
             : receivedSettings;
 
         settings = receivedSettings;
@@ -404,6 +461,13 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 
     const ROOT = getLauncherRoot();
     const FORGE_PATH = getForgePath();
+
+    let javaExecutable;
+    try {
+        javaExecutable = await ensureJava(sendLog);
+    } catch (e) {
+        return { success: false, error: "Erro crítico ao configurar Java: " + e.message };
+    }
 
     let authorization;
 
@@ -482,7 +546,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             max: config.ram || "4G",
             min: "2G"
         },
-        javaPath: "java",
+        javaPath: javaExecutable,
         window: {
             fullscreen: isFullscreen,
             width: parseInt(config.width) || 854,
