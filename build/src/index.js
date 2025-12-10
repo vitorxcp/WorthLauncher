@@ -453,32 +453,33 @@ btnPlay.addEventListener('click', async () => {
     btnPlay.innerHTML = `<span class="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full"></span>`;
     progressContainer.style.opacity = "1";
 
-    if (btnPlay.as3cd) {
-        addLog("Solicitando fechamento do jogo...", 'warn');
-        btnPlay.disabled = true;
-        btnPlay.as3cd = false;
-        btnPlay.innerHTML = `<i data-lucide="shield-alert" class="fill-black w-6 h-6"></i> FECHANDO JOGO`;
-        lucide.createIcons();
-        progressContainer.style.opacity = "0";
-        const res = await window.api.abortGame();
-        if (res.success) {
-            addLog("Jogo fechado forçadamente.", 'success');
-            btnPlay.disabled = false;
-            btnPlay.as3cd = false;
-            btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
-            lucide.createIcons();
-            progressContainer.style.opacity = "0";
-        } else {
-            addLog("Falha ao fechar jogo, restaurando estado.", 'error');
-            btnPlay.disabled = false;
-            btnPlay.as3cd = true;
-            btnPlay.innerHTML = `<i data-lucide="pause" class="fill-black w-6 h-6"></i> SAIR DO JOGO`;
-            lucide.createIcons();
-            progressContainer.style.opacity = "0";
-            progressBar.style.width = '0%';
-        }
-        return;
-    }
+    // Desativado para solução de erros:
+    // if (btnPlay.as3cd) {
+    //     addLog("Solicitando fechamento do jogo...", 'warn');
+    //     btnPlay.disabled = true;
+    //     btnPlay.as3cd = false;
+    //     btnPlay.innerHTML = `<i data-lucide="shield-alert" class="fill-black w-6 h-6"></i> FECHANDO JOGO`;
+    //     lucide.createIcons();
+    //     progressContainer.style.opacity = "0";
+    //     const res = await window.api.abortGame();
+    //     if (res.success) {
+    //         addLog("Jogo fechado forçadamente.", 'success');
+    //         btnPlay.disabled = false;
+    //         btnPlay.as3cd = false;
+    //         btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
+    //         lucide.createIcons();
+    //         progressContainer.style.opacity = "0";
+    //     } else {
+    //         addLog("Falha ao fechar jogo, restaurando estado.", 'error');
+    //         btnPlay.disabled = false;
+    //         btnPlay.as3cd = true;
+    //         btnPlay.innerHTML = `<i data-lucide="pause" class="fill-black w-6 h-6"></i> SAIR DO JOGO`;
+    //         lucide.createIcons();
+    //         progressContainer.style.opacity = "0";
+    //         progressBar.style.width = '0%';
+    //     }
+    //     return;
+    // }
 
     const res = await window.api.launchGame(
         { type: currentUser.type, user: currentUser.user, uuid: currentUser.uuid },
@@ -531,7 +532,7 @@ window.api.onGameStarted(() => {
     sendSocketLauncherEvent("open:client");
     btnPlay.disabled = false;
     btnPlay.as3cd = true;
-    btnPlay.innerHTML = `<i data-lucide="pause" class="fill-black w-6 h-6"></i> SAIR DO JOGO`;
+    btnPlay.innerHTML = `JOGANDO`;
     lucide.createIcons();
     progressContainer.style.opacity = "0";
     progressBar.style.width = '0%';
