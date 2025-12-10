@@ -27,6 +27,8 @@
   "api": "none",
   "badges": [
     {
+      "description": "License: MIT",
+      "href": "https://img.shields.io/badge/License-MIT-green.svg",
       "url": "https://img.shields.io/badge/License-MIT-green.svg",
       "alt": "License: MIT"
     }
