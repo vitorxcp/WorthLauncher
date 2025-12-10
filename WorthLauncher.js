@@ -89,19 +89,33 @@ function getTokenPath() {
 
 function downloadFile(url, dest, sendLog) {
     return new Promise((resolve, reject) => {
-        sendLog(`[NETWORK] Baixando: ${path.basename(dest)}...`);
-        fs.ensureDirSync(path.dirname(dest));
-        const file = fs.createWriteStream(dest);
-        https.get(url, (response) => {
+        sendLog(`[NETWORK] Conectando: ${url}`);
+        
+        const request = https.get(url, (response) => {
+            if (response.statusCode === 301 || response.statusCode === 302) {
+                if (response.headers.location) {
+                    return downloadFile(response.headers.location, dest, sendLog)
+                        .then(resolve)
+                        .catch(reject);
+                }
+            }
+
             if (response.statusCode !== 200) {
                 return reject(new Error(`Erro HTTP: ${response.statusCode}`));
             }
+
+            sendLog(`[NETWORK] Baixando: ${path.basename(dest)}...`);
+            fs.ensureDirSync(path.dirname(dest));
+            const file = fs.createWriteStream(dest);
+
             response.pipe(file);
             file.on('finish', () => {
                 file.close(() => resolve());
             });
-        }).on('error', (err) => {
-            fs.unlink(dest, () => { });
+        });
+
+        request.on('error', (err) => {
+            if (fs.existsSync(dest)) fs.unlink(dest, () => {});
             reject(err);
         });
     });
@@ -110,24 +124,16 @@ function downloadFile(url, dest, sendLog) {
 async function ensureJava(sendLog) {
     const runtimeDir = path.join(getLauncherRoot(), 'runtime');
     const javaLocalDir = path.join(runtimeDir, 'java-runtime-gamma');
-
+    
     const execName = process.platform === 'win32' ? 'javaw.exe' : 'java';
     const localJavaPath = path.join(javaLocalDir, 'bin', execName);
 
     if (fs.existsSync(localJavaPath)) {
-        sendLog("[JAVA] Usando Java portátil instalado.");
+        sendLog("[JAVA] Usando Java portátil (Sem Console).");
         return localJavaPath;
     }
 
-    try {
-        const check = spawnSync('java', ['-version']);
-        if (check.error) throw new Error("Java não global");
-        sendLog("[JAVA] Java global detectado, mas baixaremos a versão otimizada (Java 8).");
-    } catch (e) {
-        sendLog("[JAVA] Java não encontrado no sistema.");
-    }
-
-    sendLog("[JAVA] Iniciando instalação do Java Runtime...");
+    sendLog("[JAVA] Java portátil não encontrado. Iniciando instalação...");
     const zipPath = path.join(runtimeDir, 'java_installer.zip');
 
     try {
@@ -149,15 +155,14 @@ async function ensureJava(sendLog) {
         }
 
         fs.unlinkSync(zipPath);
-
-        sendLog("[JAVA] Instalação do Java concluída!");
+        sendLog("[JAVA] Instalação concluída com sucesso!");
 
         if (fs.existsSync(localJavaPath)) return localJavaPath;
-        throw new Error("Executável do Java não encontrado após extração.");
+        throw new Error("Executável não encontrado após extração.");
 
     } catch (err) {
-        sendLog(`[ERRO] Falha ao instalar Java: ${err.message}`);
-        return process.platform === 'win32' ? 'javaw' : 'java';
+        sendLog(`[ERRO] Falha crítica no Java: ${err.message}`);
+        return 'java'; 
     }
 }
 
@@ -466,7 +471,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
     try {
         javaExecutable = await ensureJava(sendLog);
     } catch (e) {
-        return { success: false, error: "Erro crítico ao configurar Java: " + e.message };
+        return { success: false, error: "Erro Java: " + e.message };
     }
 
     let authorization;
@@ -644,37 +649,37 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 ipcMain.handle("game:abort", async () => {
     try {
         if (!launcher || !launcher.child) {
-            return { success: false, error: "Nenhum processo de jogo encontrado." };
+            console.log("[SYSTEM] Tentativa de abortar, mas nenhum processo encontrado no launcher.");
+            return { success: false, error: "Jogo não está rodando." };
         }
 
         const pid = launcher.child.pid;
-        console.log(`[SYSTEM] Iniciando encerramento forçado do PID: ${pid}`);
+        console.log(`[SYSTEM] Solicitando encerramento do PID: ${pid}`);
 
         if (process.platform === 'win32') {
-            exec(`taskkill /F /PID ${pid} /T`, (error) => {
-                if (error) console.log(`[SYSTEM] Aviso ao matar processo: ${error.message}`);
-                else console.log("[SYSTEM] Processo Windows eliminado.");
+            exec(`taskkill /F /PID ${pid} /T`, (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`[SYSTEM] Erro no taskkill: ${err.message}`);
+                    try { process.kill(pid, 'SIGKILL'); } catch(e){}
+                } else {
+                    console.log("[SYSTEM] Processo Windows eliminado via Taskkill.");
+                }
             });
         } else {
             try {
                 process.kill(pid, 'SIGKILL');
             } catch (e) {
-                console.log("[SYSTEM] Erro ao matar processo Linux/Mac (já fechado?):", e.message);
+                console.log("[SYSTEM] Erro ao matar processo Unix:", e.message);
             }
         }
 
-        launcher.removeAllListeners();
-        launcher.child = null;
+        launcher.child = null; 
 
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.show();
             mainWindow.focus();
-
             mainWindow.webContents.send("game:closed");
-
-            if (typeof updateDiscordActivity === 'function') {
-                updateDiscordActivity("Navegando no Launcher", "Ocioso");
-            }
+            updateDiscordActivity("Navegando no Launcher", "Ocioso");
         }
 
         return { success: true };
