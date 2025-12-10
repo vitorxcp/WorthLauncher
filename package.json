@@ -51,7 +51,8 @@
     "fs-extra": "^11.2.0",
     "minecraft-launcher-core": "^3.13.0",
     "msmc": "^5.0.2",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "sudo-prompt": "^9.2.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
