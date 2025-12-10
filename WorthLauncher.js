@@ -12,6 +12,7 @@ const date = new Date();
 const dateNow = Date.now();
 
 let isInstallerLaunch = false;
+let { settings, saveDataSettings } = require('./plugins/settingsRegister.js');
 
 if (fs.existsSync(firstRunFile)) {
     isInstallerLaunch = true;
@@ -107,11 +108,25 @@ let rpcInterval = null;
 
 function updateDiscordActivity(details, state) {
     if (!rpc) return;
+    if (!settings.discordRichPresence) {
+        rpc.clearActivity().catch((err) => {
+            console.error("[RPC] Erro ao limpar atividade:", err);
+        });
+
+        return;
+    };
 
     if (rpcInterval) clearInterval(rpcInterval);
 
     const activityUpdater = () => {
-        if (!rpc) return; 
+        if (!rpc) return;
+        if (!settings.discordRichPresence) {
+            rpc.clearActivity().catch((err) => {
+                console.error("[RPC] Erro ao limpar atividade:", err);
+            });
+
+            return;
+        };
 
         rpc.setActivity({
             details: details,
@@ -121,7 +136,7 @@ function updateDiscordActivity(details, state) {
             smallImageKey: `https://mc-heads.net/avatar/${nickname}/128`,
             smallImageText: nickname,
             instance: false,
-            startTimestamp: dateNow 
+            startTimestamp: dateNow
         }).catch((err) => {
             console.error("[RPC] Erro ao atualizar:", err);
         });
@@ -129,7 +144,7 @@ function updateDiscordActivity(details, state) {
 
     activityUpdater();
 
-    rpcInterval = setInterval(activityUpdater, 15000);
+    rpcInterval = setInterval(activityUpdater, 1000);
 }
 
 function startRPC() {
@@ -255,8 +270,7 @@ app.whenReady().then(async () => {
     createWindow();
 });
 
-app.on('window-all-closed', () => {
-});
+app.on('window-all-closed', () => { });
 
 app.on('before-quit', () => {
     isQuitting = true;
@@ -319,6 +333,23 @@ ipcMain.handle('app:check-installer-launch', () => {
 
 ipcMain.handle('user:update-nick', (event, nick) => {
     nickname = nick;
+});
+
+ipcMain.handle('settings:update', (event, receivedSettings) => {
+    try {
+        const updates = typeof receivedSettings === "string" 
+            ? JSON.parse(receivedSettings) 
+            : receivedSettings;
+
+        settings = receivedSettings;
+
+        saveDataSettings(settings);
+        return true;
+
+    } catch (e) {
+        console.error("ERRO FATAL:", e.message || e);
+        return false;
+    }
 });
 
 ipcMain.handle('auth:microsoft', async () => {
