@@ -1,3 +1,4 @@
+const sudo = require('sudo-prompt');
 const { exec } = require('child_process');
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu } = require('electron');
 const path = require('path');
@@ -15,6 +16,7 @@ const dateNow = Date.now();
 
 let isInstallerLaunch = false;
 let { settings, saveDataSettings } = require('./plugins/settingsRegister.js');
+let gamePID = null;
 
 if (fs.existsSync(firstRunFile)) {
     isInstallerLaunch = true;
@@ -90,7 +92,7 @@ function getTokenPath() {
 function downloadFile(url, dest, sendLog) {
     return new Promise((resolve, reject) => {
         sendLog(`[NETWORK] Conectando: ${url}`);
-        
+
         const request = https.get(url, (response) => {
             if (response.statusCode === 301 || response.statusCode === 302) {
                 if (response.headers.location) {
@@ -115,7 +117,7 @@ function downloadFile(url, dest, sendLog) {
         });
 
         request.on('error', (err) => {
-            if (fs.existsSync(dest)) fs.unlink(dest, () => {});
+            if (fs.existsSync(dest)) fs.unlink(dest, () => { });
             reject(err);
         });
     });
@@ -124,7 +126,7 @@ function downloadFile(url, dest, sendLog) {
 async function ensureJava(sendLog) {
     const runtimeDir = path.join(getLauncherRoot(), 'runtime');
     const javaLocalDir = path.join(runtimeDir, 'java-runtime-gamma');
-    
+
     const execName = process.platform === 'win32' ? 'javaw.exe' : 'java';
     const localJavaPath = path.join(javaLocalDir, 'bin', execName);
 
@@ -162,7 +164,7 @@ async function ensureJava(sendLog) {
 
     } catch (err) {
         sendLog(`[ERRO] Falha crítica no Java: ${err.message}`);
-        return 'java'; 
+        return 'java';
     }
 }
 
@@ -457,6 +459,7 @@ ipcMain.handle("auth:offline", async (event, username) => {
 
 ipcMain.handle("game:launch", async (event, authDetails, config) => {
     configApp = config;
+    gamePID = null;
 
     const sendLog = (msg) => {
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -561,11 +564,34 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 
     launcher.removeAllListeners();
 
+    launcher.launcher?.on("spawn", (child) => {
+        if (child && child.pid) {
+            gamePID = child.pid;
+            console.log(`[SYSTEM] PID CAPTURADO (SPAWN REAL): ${gamePID}`);
+        }
+    });
+
     let hasStarted = false;
 
-    launcher.on("debug", (e) => sendLog(`[DEBUG] ${e}`));
+    const checkPID = () => {
+        if (!gamePID && launcher.child && launcher.child.pid) {
+            gamePID = launcher.child.pid;
+            console.log(`[SYSTEM] PID Capturado: ${gamePID}`);
+        }
+    };
+
+    launcher.on("debug", (msg) => {
+        if (typeof msg === "string" && msg.includes("Spawned child process with pid")) {
+            const pid = parseInt(msg.split("pid")[1].trim());
+            if (!isNaN(pid)) {
+                gamePID = pid;
+                console.log(`[SYSTEM] PID CAPTURADO (DEBUG): ${gamePID}`);
+            }
+        }
+    });
 
     launcher.on("data", (e) => {
+        checkPID();
         sendLog(`[GAME] ${e}`);
 
         var servername = null;
@@ -589,6 +615,8 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
         if (!hasStarted && e) {
             if (String(e).includes("LWJGL") || String(e).includes("OpenAL") || String(e).includes("Setting user") || String(e).includes("[Client thread/INFO]")) {
                 hasStarted = true;
+
+                checkPID();
                 if (mainWindow && !mainWindow.isDestroyed()) {
                     mainWindow.webContents.send("game:started");
 
@@ -628,6 +656,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
     });
 
     launcher.on("close", (e) => {
+        gamePID = null;
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.show();
             mainWindow.focus();
@@ -646,49 +675,67 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
     }
 });
 
-ipcMain.handle("game:abort", async () => {
-    try {
-        if (!launcher || !launcher.child) {
-            console.log("[SYSTEM] Tentativa de abortar, mas nenhum processo encontrado no launcher.");
-            return { success: false, error: "Jogo não está rodando." };
-        }
+// Desativado para solução de erros:
+// ipcMain.handle("game:abort", async () => {
+//     if (mainWindow && !mainWindow.isDestroyed()) {
+//         mainWindow.show();
+//         mainWindow.focus();
+//         mainWindow.webContents.send("game:closed");
+//         if (typeof updateDiscordActivity === 'function') {
+//             updateDiscordActivity("Navegando no Launcher", "Ocioso");
+//         }
+//     }
 
-        const pid = launcher.child.pid;
-        console.log(`[SYSTEM] Solicitando encerramento do PID: ${pid}`);
+//     console.log("[SYSTEM] INICIANDO FINALIZAÇÃO COM ELEVAÇÃO (ADMIN)...");
 
-        if (process.platform === 'win32') {
-            exec(`taskkill /F /PID ${pid} /T`, (err, stdout, stderr) => {
-                if (err) {
-                    console.error(`[SYSTEM] Erro no taskkill: ${err.message}`);
-                    try { process.kill(pid, 'SIGKILL'); } catch(e){}
-                } else {
-                    console.log("[SYSTEM] Processo Windows eliminado via Taskkill.");
-                }
-            });
-        } else {
-            try {
-                process.kill(pid, 'SIGKILL');
-            } catch (e) {
-                console.log("[SYSTEM] Erro ao matar processo Unix:", e.message);
-            }
-        }
+//     gamePID = null;
+//     if (launcher) {
+//         launcher.removeAllListeners();
+//         launcher.child = null;
+//     }
 
-        launcher.child = null; 
+//     const runtimePath = path.join(getLauncherRoot(), "runtime", "java-runtime-gamma", "bin")
+//         .replace(/\\/g, "\\\\");
 
-        if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.show();
-            mainWindow.focus();
-            mainWindow.webContents.send("game:closed");
-            updateDiscordActivity("Navegando no Launcher", "Ocioso");
-        }
+//     const psScript = `
+//         $ErrorActionPreference = 'SilentlyContinue'
+//         $rt = "${runtimePath}"
+//         $procs = Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'java*' }
 
-        return { success: true };
+//         foreach ($p in $procs) {
+//             $proc = Get-Process -Id $p.ProcessId
+//             if ($null -ne $proc) {
+//                 foreach ($m in $proc.Modules) {
+//                     if ($m.FileName -like "*$rt*") {
+//                         Stop-Process -Id $p.ProcessId -Force
+//                         Write-Output "KILLED PID $($p.ProcessId)"
+//                         break
+//                     }
+//                 }
+//             }
+//         }
+//     `;
 
-    } catch (err) {
-        console.error("[ERRO FATAL] Falha ao abortar jogo:", err);
-        return { success: false, error: err.message };
-    }
-});
+//     const flatScript = psScript.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+//     const cmd = `powershell -NoProfile -ExecutionPolicy Bypass -Command "${flatScript.replace(/"/g, '\\"')}"`;
+
+//     const options = {
+//         name: 'WorthLauncher'
+//     };
+
+//     return new Promise((resolve) => {
+//         sudo.exec(cmd, options, (error, stdout, stderr) => {
+//             if (error) {
+//                 console.log("[SYSTEM] Erro no Sudo ou Cancelado pelo usuário:", error.message);
+//             } else {
+//                 if (stdout) console.log("[SYSTEM] PS OUT:", stdout.trim());
+//             }
+            
+//             console.log("[SYSTEM] FINALIZAÇÃO CONCLUÍDA.");
+//             resolve({ success: true });
+//         });
+//     });
+// });
 
 ipcMain.on("window:close", () => {
     isQuitting = true;
