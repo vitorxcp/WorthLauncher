@@ -377,6 +377,7 @@ function updateSettingsUI() {
     document.getElementById('res-width').value = settings.width || 854;
     document.getElementById('res-height').value = settings.height || 480;
     updateToggleUI('fullscreen', settings.fullscreen);
+    updateToggleUI('discord-rich', settings.discordRichPresence);
     updateToggleUI('closeLauncher', settings.closeLauncher);
 }
 
@@ -395,7 +396,7 @@ function updateToggleUI(key, active) {
 window.toggleSetting = (key) => {
     settings[key] = !settings[key];
     saveSettings();
-    updateToggleUI(key, settings[key]);
+    updateSettingsUI();
 }
 
 function saveSettings() {
