@@ -127,15 +127,14 @@ const socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
     autoConnect: true
 });
 
-window.closeConnectionSocket = function () {
+function closeConnectionSocket() {
     if (socket.connected) {
         socket.disconnect();
-        updateMyStatusUI("offline");
     }
 };
 
-window.openConnectionSocket = function () {
-    const newIdentity = { nick: currentUser.user, uuid: currentUser.uuid };
+function openConnectionSocket() {
+    const newIdentity = { nick: currentUser.user, uuid: currentUser.uuid, status: localStorage.getItem('status-account') || "online" };
 
     localStorage.setItem("chat_identity", JSON.stringify(newIdentity));
     socket.auth = newIdentity;
@@ -147,7 +146,7 @@ window.openConnectionSocket = function () {
 socket.on("connect", () => {
     updateMyStatusUI(localStorage.getItem('status-account') || "online")
 });
-socket.on("disconnect", () => updateMyStatusUI("offline"));
+socket.on("disconnect", () => {});
 
 socket.on("init:data", (data) => {
     requestAnimationFrame(() => {
