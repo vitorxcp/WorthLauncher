@@ -696,6 +696,20 @@ window.addEventListener("load", () => {
 
         moveTooltip(e);
     });
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const buildString = `build-${year}.${month}.${day}-rc1-${window.api.version}`;
+
+    document.getElementById("version-app-normal").textContent = `v${window.api.version}`;
+    document.getElementById("version-app-build").onclick = () => {
+        navigator.clipboard.writeText(buildString)
+    };
+    document.getElementById("version-app-build").innerHTML = `
+    <span class="text-gray-300 font-mono text-xs">${buildString}</span>
+                    <i data-lucide="copy" class="w-3 h-3 text-gray-600 group-hover:text-white transition"></i>
+    `
 
     function activateTooltip(target, e) {
         const text = target.getAttribute('title-app');
