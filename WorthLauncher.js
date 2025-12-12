@@ -19,15 +19,15 @@ const Seven = require('node-7z');
 const axios = require('axios');
 const sevenBin = require('7zip-bin');
 
-autoUpdater.autoDownload = false; 
+autoUpdater.autoDownload = false;
 autoUpdater.allowPrerelease = true;
 autoUpdater.logger = require("electron-log");
 autoUpdater.logger.transports.file.level = "info";
 
 autoUpdater.setFeedURL({
-  provider: 'github',
-  owner: 'vitorxcp',
-  repo: 'WorthLauncher'
+    provider: 'github',
+    owner: 'vitorxcp',
+    repo: 'WorthLauncher'
 });
 
 let isInstallerLaunch = false;
@@ -225,7 +225,7 @@ function createTray() {
     if (tray) {
         try {
             tray.destroy();
-        } catch(e) {}
+        } catch (e) { }
     }
 
     let iconPath = path.join(__dirname, 'build/assets/icon.png');
@@ -709,7 +709,7 @@ ipcMain.on("updateVerify", () => {
     console.log("[UPDATE] Verificando...");
     autoUpdater.checkForUpdates().catch(err => {
         console.error("[UPDATE CRITICAL]", err);
-        if(splashWindow && !splashWindow.isDestroyed()) {
+        if (splashWindow && !splashWindow.isDestroyed()) {
             splashWindow.webContents.send("firstUpdate", false);
         }
     });
@@ -717,17 +717,17 @@ ipcMain.on("updateVerify", () => {
 
 autoUpdater.on('update-available', (info) => {
     console.log("[UPDATE] Encontrado:", info.version);
-    if(splashWindow) splashWindow.webContents.send("yepUpdate", true);
-    
+    if (splashWindow) splashWindow.webContents.send("yepUpdate", true);
+
     autoUpdater.downloadUpdate();
 });
 
 autoUpdater.on('update-not-available', () => {
-    if(splashWindow) splashWindow.webContents.send("firstUpdate", false);
+    if (splashWindow) splashWindow.webContents.send("firstUpdate", false);
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
-    if(splashWindow) {
+    if (splashWindow) {
         splashWindow.webContents.send("outputPercentUpdate", Math.round(progressObj.percent));
     }
 });
@@ -747,12 +747,12 @@ autoUpdater.on('update-downloaded', (info) => {
 
             if (fakeProgress >= 100) {
                 clearInterval(interval);
-
+                
                 splashWindow.webContents.send("firstUpdate", true);
 
                 setTimeout(() => {
-                    autoUpdater.quitAndInstall(false, true);
-                })
+                    autoUpdater.quitAndInstall(true, true); 
+                }, 1000); 
             }
         }, 150);
     }
@@ -760,7 +760,7 @@ autoUpdater.on('update-downloaded', (info) => {
 
 autoUpdater.on('error', (err) => {
     console.error("[UPDATE ERROR]", err);
-    if(splashWindow && !splashWindow.isDestroyed()) {
+    if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send("firstUpdate", false);
     }
 });
