@@ -124,10 +124,10 @@ const observer = new IntersectionObserver((entries) => {
 }, { root: els.chatMsgs, rootMargin: "200px 0px 0px 0px" });
 
 function getAuthIdentity() {
-    return { 
-        nick: currentUser.user, 
-        uuid: currentUser.uuid, 
-        status: localStorage.getItem('status-account') || "online" 
+    return {
+        nick: currentUser.user,
+        uuid: currentUser.uuid,
+        status: localStorage.getItem('status-account') || "online"
     };
 }
 
@@ -142,18 +142,11 @@ function initializeSocket() {
     });
 
     setupSocketEvents();
-    
     return socket;
 }
 
-    socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
-    auth: { nick: currentUser.user, uuid: currentUser.uuid, status: localStorage.getItem('status-account') || "online" },
-    transports: ["websocket"],
-    reconnection: true,
-    autoConnect: true
-});
-
 function openConnectionSocket() {
+    console.log("A1")
     const newIdentity = getAuthIdentity();
     localStorage.setItem("chat_identity", JSON.stringify(newIdentity));
 
@@ -161,10 +154,14 @@ function openConnectionSocket() {
         if (socket) {
             socket.auth = newIdentity;
             socket.connect();
+    console.log("Asd")
+
         } else {
             initializeSocket();
         }
     } else {
+    console.log("Adas")
+
         socket.auth = newIdentity;
     }
 }
@@ -173,60 +170,63 @@ function closeConnectionSocket() {
     if (!socketinf || !socket) return;
     if (socket.connected) {
         socket.disconnect();
+        socket = null;
     }
 }
 
-socket.on("connect", () => {
-    socketinf = true;
-    updateMyStatusUI(localStorage.getItem('status-account') || "online")
-});
-socket.on("disconnect", () => { });
 
-socket.on("init:data", (data) => {
-    requestAnimationFrame(() => {
-        renderFriendsList(data.friends || []);
-        if (data.requests) checkPendingRequests(data.requests);
-        setTimeout(checkGlobalNotification, 300);
+function setupSocketEvents() {
+    socket.on("connect", () => {
+        socketinf = true;
+        updateMyStatusUI(localStorage.getItem('status-account') || "online")
     });
-});
+    socket.on("disconnect", () => { });
 
-socket.on("friend:request_received", (req) => showInviteToast(req.from));
-socket.on("friend:new", (friend) => addFriendToUI(friend));
-socket.on("friend:status_update", ({ nick, status }) => updateFriendStatusUI(nick, status));
+    socket.on("init:data", (data) => {
+        requestAnimationFrame(() => {
+            renderFriendsList(data.friends || []);
+            if (data.requests) checkPendingRequests(data.requests);
+            setTimeout(checkGlobalNotification, 300);
+        });
+    });
 
-socket.on("chat:history", ({ friend, messages }) => {
-    if (currentChatFriend !== friend) return;
-    fullChatHistory = messages || [];
-    renderInitialHistory();
-});
+    socket.on("friend:request_received", (req) => showInviteToast(req.from));
+    socket.on("friend:new", (friend) => addFriendToUI(friend));
+    socket.on("friend:status_update", ({ nick, status }) => updateFriendStatusUI(nick, status));
 
-socket.on("chat:receive", (msg) => {
-    const isChatOpen = currentChatFriend === msg.sender || msg.sender === socket.auth.nick;
-    if (isChatOpen) {
-        fullChatHistory.push(msg);
-        appendSingleMessage(msg, true);
-    } else {
-        showNotificationBadge(msg.sender);
-        document.getElementById("social-ping")?.classList.remove("hidden-force");
-    }
-});
+    socket.on("chat:history", ({ friend, messages }) => {
+        if (currentChatFriend !== friend) return;
+        fullChatHistory = messages || [];
+        renderInitialHistory();
+    });
 
-socket.on("notification:msg", (data) => {
-    if (currentChatFriend !== data.from) {
-        showNotificationBadge(data.from);
-        document.getElementById("social-ping")?.classList.remove("hidden-force");
-    } else {
-        socket.emit("chat:mark_read", data.from);
-    }
-});
+    socket.on("chat:receive", (msg) => {
+        const isChatOpen = currentChatFriend === msg.sender || msg.sender === socket.auth.nick;
+        if (isChatOpen) {
+            fullChatHistory.push(msg);
+            appendSingleMessage(msg, true);
+        } else {
+            showNotificationBadge(msg.sender);
+            document.getElementById("social-ping")?.classList.remove("hidden-force");
+        }
+    });
 
-socket.on("server:online_count", (count) => {
-    const el = document.getElementById("count-total-online");
-    if (!el) return;
+    socket.on("notification:msg", (data) => {
+        if (currentChatFriend !== data.from) {
+            showNotificationBadge(data.from);
+            document.getElementById("social-ping")?.classList.remove("hidden-force");
+        } else {
+            socket.emit("chat:mark_read", data.from);
+        }
+    });
 
-    const fmt = (n) => new Intl.NumberFormat('pt-BR').format(n);
+    socket.on("server:online_count", (count) => {
+        const el = document.getElementById("count-total-online");
+        if (!el) return;
 
-    el.innerHTML = `
+        const fmt = (n) => new Intl.NumberFormat('pt-BR').format(n);
+
+        el.innerHTML = `
         <div class="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors hover:bg-white/5 cursor-help group">
             <span class="relative flex h-2.5 w-2.5 shrink-0">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
@@ -238,7 +238,7 @@ socket.on("server:online_count", (count) => {
         </div>
     `;
 
-    el.setAttribute("title-app", `
+        el.setAttribute("title-app", `
         <div class="w-32 text-xs">
             <div class="flex justify-between items-center mb-1 border-b border-white/10 pb-1">
                 <span class="text-gray-400">No Launcher</span>
@@ -250,10 +250,11 @@ socket.on("server:online_count", (count) => {
             </div>
         </div>
     `);
-});
+    });
 
-socket.on("error", (msg) => showToast(msg, "error"));
-socket.on("success", (msg) => showToast(msg, "success"));
+    socket.on("error", (msg) => showToast(msg, "error"));
+    socket.on("success", (msg) => showToast(msg, "success"));
+}
 
 function renderInitialHistory() {
     observer.unobserve(topSentinel);
@@ -460,6 +461,7 @@ function createFriendElement(friend) {
 }
 
 function sendSocketLauncherEvent(event) {
+    openConnectionSocket();
     if (event === "open:client") {
         socket.emit("game:launch");
     } else if (event === "close:client") {
