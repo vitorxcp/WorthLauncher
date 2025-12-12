@@ -261,14 +261,18 @@ function removeAccount(index) {
 }
 
 function selectAccount(acc, a) {
-    if (!a) closeConnectionSocket();
+    if (currentUser) {
+        if (!a) closeConnectionSocket();
+    }
     currentUser = acc;
     localStorage.setItem('worth_last_user', JSON.stringify(acc));
     updateUserUI(acc.user, acc.type);
     toggleAccountMenu(false);
-    setTimeout(() => {
-        if (!a) openConnectionSocket();
-    }, 500);
+    if (currentUser) {
+        setTimeout(() => {
+            if (!a) openConnectionSocket();
+        }, 500);
+    }
 }
 
 function updateUserUI(user, type) {
@@ -746,7 +750,7 @@ document.getElementById('btn-goto-step2').addEventListener('click', () => {
 });
 
 setInterval(() => {
-    if (currentUser.user) {
+    if (currentUser ? currentUser.user : null) {
         window.api.updateNickName(currentUser.user);
     }
 }, 1000)
