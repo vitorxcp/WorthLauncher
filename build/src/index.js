@@ -529,6 +529,15 @@ window.api.onGameClosed(() => {
     lucide.createIcons();
     progressContainer.style.opacity = "0";
     progressBar.style.width = '0%';
+
+    closeConnectionSocket();
+    currentUser = acc;
+    localStorage.setItem('worth_last_user', JSON.stringify(acc));
+    updateUserUI(acc.user, acc.type);
+    toggleAccountMenu(false);
+    setTimeout(() => {
+        openConnectionSocket();
+    }, 500);
 });
 
 window.api.onGameStarted(() => {
