@@ -546,7 +546,7 @@ window.api.onGameClosed(() => {
 window.api.onGameStarted(() => {
     addLog("Minecraft iniciado e janela detectada.", 'success');
     sendSocketLauncherEvent("open:client");
-    btnPlay.disabled = false;
+    btnPlay.disabled = true;
     btnPlay.as3cd = true;
     btnPlay.innerHTML = `JOGANDO`;
     lucide.createIcons();
@@ -556,7 +556,7 @@ window.api.onGameStarted(() => {
 
 window.api.onGameStartedExtra(() => {
     addLog("Inicializando JVM e Assets...", 'info');
-    btnPlay.disabled = false;
+    btnPlay.disabled = true;
     btnPlay.as3cd = true;
     btnPlay.innerHTML = `<i data-lucide="loader" class="fill-black w-6 h-6"></i> INICIANDO JOGO`;
     lucide.createIcons();
@@ -744,7 +744,45 @@ window.addEventListener("load", () => {
             activateTooltip(target, e);
         }
     });
+
+    verificarAtualizarVersao();
+
+    document.getElementById("f43fd").onclick = () => {
+        window.api.updateLauncher();
+    }
+
+    setInterval(async () => {
+        await verificarAtualizarVersao();
+    }, 60000)
 })
+
+async function verificarAtualizarVersao() {
+    try {
+        const response = await fetch('https://api.github.com/repos/vitorxcp/WorthLauncher/releases/latest');
+        if (!response.ok) throw new Error('Falha ao obter versão mais recente.');
+
+        const data = await response.json();
+        if (!data.tag_name) throw new Error('Nenhuma release encontrada no GitHub.');
+
+        const versaoMaisRecente = data.tag_name;
+        const versaoLocal = `v${window.api.version}`;
+
+        if (versaoLocal !== versaoMaisRecente) {
+            if (Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", "")) <= Number(String(versaoLocal).replaceAll(".", "").replace("v", "")))
+                console.log(`\x1b[0;32m[💎] Você já está na versão mais recente, uma que nem existe no meu sistema ainda ;-; (seu abuser)\x1b[0m`);
+            else if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", ""))) <= 3)
+                console.log(`\x1b[0;31m[⚠️] Você se encontra em uma versão muito antiga, recomendo atualizar urgente.\n➡ Baixe aqui a versão ${versaoMaisRecente}: ${data.assets[0]?.browser_download_url}\x1b[0m`);
+            else {
+                console.log(`\x1b[0;33m[⚠️] Nova versão disponível: ${versaoMaisRecente}.\n➡ Baixe aqui: ${data.assets[0]?.browser_download_url}\x1b[0m`);
+                document.getElementById("f43fd").classList.remove('hidden-force');
+            }
+        } else {
+            console.log('\x1b[0;32m[💎] Você já está na versão mais recente.\x1b[0m');
+        }
+    } catch (error) {
+        console.log('\x1b[0;31m[❌] Não foi possível verificar a versão mais recente.\x1b[0m');
+    }
+}
 
 const checkFirstRun = async () => {
     const fromInstaller = window.api.isInstallerLaunch ? await window.api.isInstallerLaunch() : false;
