@@ -1,6 +1,6 @@
 {
   "name": "worthlauncher",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Launcher Otimizado 1.8.9 com Chat e Auto-Update",
   "main": "WorthLauncher.js",
   "email": "vitor.xp.1958@gmail.com",
@@ -19,7 +19,7 @@
   "icon": "build/assets/Logo-Worth-256x256.png",
   "repository": {
     "type": "git",
-    "url": "git+"
+    "url": "git+https://github.com/vitorxcp/WorthLauncher.git"
   },
   "workspaces": [
     "plugins/*"
@@ -47,6 +47,7 @@
     "adm-zip": "^0.5.16",
     "axios": "^1.6.7",
     "discord-rpc": "^4.0.1",
+    "electron-log": "^5.4.3",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.6.2",
     "express-session": "^1.18.2",
@@ -103,7 +104,10 @@
       }
     ],
     "win": {
-      "target": "zip",
+      "target": [
+        "nsis",
+        "zip"
+      ],
       "icon": "build/assets/Logo-Worth-256x256.ico"
     },
     "linux": {
