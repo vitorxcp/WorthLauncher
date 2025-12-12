@@ -222,6 +222,12 @@ function retryConnection() {
 }
 
 function createTray() {
+    if (tray) {
+        try {
+            tray.destroy();
+        } catch(e) {}
+    }
+
     let iconPath = path.join(__dirname, 'build/assets/icon.png');
     if (!fs.existsSync(iconPath)) {
         iconPath = path.join(process.resourcesPath, 'build/assets/icon.png');
@@ -254,6 +260,12 @@ function createTray() {
 }
 
 function createWindow() {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+        return;
+    }
+
     mainWindow = new BrowserWindow({
         width: 1100,
         height: 700,
@@ -265,7 +277,7 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, 'build', 'preload.js'),
             contextIsolation: true,
-            nodeIntegration: false,
+            nodeIntegration: true,
             devTools: true
         }
     });
@@ -714,11 +726,6 @@ autoUpdater.on('update-not-available', () => {
     if(splashWindow) splashWindow.webContents.send("firstUpdate", false);
 });
 
-autoUpdater.on('error', (err) => {
-    console.error("[UPDATE ERROR]", err);
-    if(splashWindow) splashWindow.webContents.send("firstUpdate", false);
-});
-
 autoUpdater.on('download-progress', (progressObj) => {
     if(splashWindow) {
         splashWindow.webContents.send("outputPercentUpdate", Math.round(progressObj.percent));
@@ -751,12 +758,12 @@ autoUpdater.on('update-downloaded', (info) => {
     }
 });
 
-autoUpdater.on("error", (err) => {
-    console.log("[UPDATE ERROR] Deu erro aq po...", err.message);
-    if(splashWindow) {
+autoUpdater.on('error', (err) => {
+    console.error("[UPDATE ERROR]", err);
+    if(splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.webContents.send("firstUpdate", false);
     }
-})
+});
 
 ipcMain.on("window:close", () => {
     isQuitting = true;
