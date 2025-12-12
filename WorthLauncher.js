@@ -1,3 +1,4 @@
+const { autoUpdater } = require('electron-updater');
 const sudo = require('sudo-prompt');
 const { exec } = require('child_process');
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu } = require('electron');
@@ -687,7 +688,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 //             } else {
 //                 if (stdout) console.log("[SYSTEM] PS OUT:", stdout.trim());
 //             }
-            
+
 //             console.log("[SYSTEM] FINALIZAÇÃO CONCLUÍDA.");
 //             resolve({ success: true });
 //         });
