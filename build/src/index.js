@@ -260,11 +260,15 @@ function removeAccount(index) {
     saveAccountsToStorage();
 }
 
-function selectAccount(acc) {
+function selectAccount(acc, a) {
+    if (!a) closeConnectionSocket();
     currentUser = acc;
     localStorage.setItem('worth_last_user', JSON.stringify(acc));
     updateUserUI(acc.user, acc.type);
     toggleAccountMenu(false);
+    setTimeout(() => {
+        if (!a) openConnectionSocket();
+    }, 500);
 }
 
 function updateUserUI(user, type) {
@@ -553,9 +557,10 @@ document.getElementById('close-btn').addEventListener('click', window.api.close)
 
 updateSettingsUI();
 const lastUser = JSON.parse(localStorage.getItem('worth_last_user'));
-if (lastUser) selectAccount(lastUser);
+if (lastUser) selectAccount(lastUser, "a");
 
 window.addEventListener("load", () => {
+
     setTimeout(() => document.getElementById("view-home").classList.add('fade-enter-active'), 10);
 
     const statusPing = () => {
