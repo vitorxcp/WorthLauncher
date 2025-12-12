@@ -19,6 +19,17 @@ const Seven = require('node-7z');
 const axios = require('axios');
 const sevenBin = require('7zip-bin');
 
+autoUpdater.autoDownload = false; 
+autoUpdater.allowPrerelease = true;
+autoUpdater.logger = require("electron-log");
+autoUpdater.logger.transports.file.level = "info";
+
+autoUpdater.setFeedURL({
+  provider: 'github',
+  owner: 'vitorxcp',
+  repo: 'WorthLauncher'
+});
+
 let isInstallerLaunch = false;
 let { settings, saveDataSettings } = require('./plugins/settingsRegister.js');
 let { updateDiscordActivity } = require('./plugins/RichPresencePlugin.js');
@@ -676,110 +687,76 @@ ipcMain.on("updateVersionApp", async (event, data) => {
     restartApp();
 })
 
-const pathTo7zip = app.isPackaged
-    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', '7zip-bin', 'win', 'x64', '7za.exe')
-    : sevenBin.path7za;
+ipcMain.on("updateVerify", () => {
+    if (!app.isPackaged) {
+        console.log("[DEV] Pulando verificação de update.");
+        if (splashWindow) splashWindow.webContents.send("firstUpdate", false);
+        return;
+    }
 
-ipcMain.on("updateVerify", async (event) => {
-    try {
-        console.log("[UPDATE] Verificando atualizações...");
-        
-        const response = await axios.get("https://api.github.com/repos/vitorxcp/WorthLauncher/releases/latest", {
-            validateStatus: () => true
-        });
-
-        if (response.status !== 200 || !response.data.tag_name) {
-            return splashWindow.webContents.send("firstUpdate", false);
-        }
-
-        const latestVersion = response.data.tag_name;
-        const currentVersion = `v${peq.version}`;
-
-        const parseVer = (v) => parseInt(v.replace(/[^\d]/g, "")) || 0;
-
-        if (parseVer(latestVersion) <= parseVer(currentVersion)) {
-            console.log("[UPDATE] Versão atualizada.");
-            return splashWindow.webContents.send("firstUpdate", false);
-        }
-
-        const zipAsset = response.data.assets.find(a => a.name.endsWith('.zip') || a.name.endsWith('.7z'));
-        if (!zipAsset) {
-            console.log("[UPDATE] Nenhum ZIP encontrado na release.");
-            return splashWindow.webContents.send("firstUpdate", false);
-        }
-
-        const zipUrl = zipAsset.browser_download_url;
-        splashWindow.webContents.send("yepUpdate", true);
-
-        const updateZipPath = path.join(app.getPath('temp'), `update_${Date.now()}.zip`);
-        const extractPath = path.resolve(__dirname, ".."); 
-
-        console.log(`[UPDATE] Baixando ${zipUrl}...`);
-
-        const downloadStream = await axios({
-            url: zipUrl,
-            method: 'GET',
-            responseType: 'stream'
-        });
-
-        const totalLength = parseInt(downloadStream.headers['content-length'], 10) || 0;
-        let downloaded = 0;
-
-        downloadStream.data.on('data', (chunk) => {
-            downloaded += chunk.length;
-            if (totalLength > 0) {
-                const percent = Math.round((downloaded / totalLength) * 100);
-                if (splashWindow && !splashWindow.isDestroyed()) {
-                    splashWindow.webContents.send("outputPercentUpdate", percent);
-                }
-            }
-        });
-
-        const writer = fs.createWriteStream(updateZipPath);
-        await pipeline(downloadStream.data, writer);
-
-        console.log("[UPDATE] Download concluído. Iniciando extração...");
-        splashWindow.webContents.send("updateDonwloadFirst", true);
-
-        const myStream = Seven.extractFull(updateZipPath, extractPath, {
-            $bin: pathTo7zip,
-            $progress: true,
-            recursive: true,
-            overwrite: 'a'
-        });
-
-        myStream.on('progress', (progress) => {
-            if (splashWindow && !splashWindow.isDestroyed()) {
-                splashWindow.webContents.send("outputPercentExtractedFiles", progress.percent);
-            }
-        });
-
-        await new Promise((resolve, reject) => {
-            myStream.on('end', resolve);
-            myStream.on('error', reject);
-        });
-
-        console.log("[UPDATE] Extração concluída.");
-        splashWindow.webContents.send("outputExtractedFiles", true);
-
-        try { fs.unlinkSync(updateZipPath); } catch(e){}
-
-        const updateFlag = path.join(path.dirname(app.getPath('exe')), "update.flag");
-        try { fs.writeFileSync(updateFlag, "true"); } catch(e){}
-
-        splashWindow.webContents.send("firstUpdate", true);
-        setTimeout(() => {
-            app.relaunch();
-            app.exit(0);
-        }, 1000);
-
-    } catch (error) {
-        console.error("[UPDATE ERROR]", error);
-        if (splashWindow && !splashWindow.isDestroyed()) {
+    console.log("[UPDATE] Verificando...");
+    autoUpdater.checkForUpdates().catch(err => {
+        console.error("[UPDATE CRITICAL]", err);
+        if(splashWindow && !splashWindow.isDestroyed()) {
             splashWindow.webContents.send("firstUpdate", false);
         }
+    });
+});
+
+autoUpdater.on('update-available', (info) => {
+    console.log("[UPDATE] Encontrado:", info.version);
+    if(splashWindow) splashWindow.webContents.send("yepUpdate", true);
+    
+    autoUpdater.downloadUpdate();
+});
+
+autoUpdater.on('update-not-available', () => {
+    if(splashWindow) splashWindow.webContents.send("firstUpdate", false);
+});
+
+autoUpdater.on('error', (err) => {
+    console.error("[UPDATE ERROR]", err);
+    if(splashWindow) splashWindow.webContents.send("firstUpdate", false);
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    if(splashWindow) {
+        splashWindow.webContents.send("outputPercentUpdate", Math.round(progressObj.percent));
     }
 });
+
+autoUpdater.on('update-downloaded', (info) => {
+    console.log("[UPDATE] Download pronto. Preparando instalação...");
+    
+    if(splashWindow) {
+        splashWindow.webContents.send("updateDonwloadFirst", true);
+        
+        let fakeProgress = 0;
+        const interval = setInterval(() => {
+            fakeProgress += 10;
+            if(splashWindow && !splashWindow.isDestroyed()) {
+                splashWindow.webContents.send("outputPercentExtractedFiles", fakeProgress);
+            }
+
+            if (fakeProgress >= 100) {
+                clearInterval(interval);
+
+                splashWindow.webContents.send("firstUpdate", true);
+
+                setTimeout(() => {
+                    autoUpdater.quitAndInstall(false, true);
+                })
+            }
+        }, 150);
+    }
+});
+
+autoUpdater.on("error", (err) => {
+    console.log("[UPDATE ERROR] Deu erro aq po...", err.message);
+    if(splashWindow) {
+        splashWindow.webContents.send("firstUpdate", false);
+    }
+})
 
 ipcMain.on("window:close", () => {
     isQuitting = true;
