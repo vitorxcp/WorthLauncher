@@ -1,6 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const package = require("../package.json");
+
+var version = package.version;
 
 contextBridge.exposeInMainWorld('api', {
+    version,
     loginMicrosoft: () => ipcRenderer.invoke('auth:microsoft'),
     loginOffline: (nick) => ipcRenderer.invoke('auth:offline', nick),
     launchGame: (authPayload, config) => ipcRenderer.invoke('game:launch', authPayload, config),
