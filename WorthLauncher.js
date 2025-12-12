@@ -16,7 +16,7 @@ const dateNow = Date.now();
 
 let isInstallerLaunch = false;
 let { settings, saveDataSettings } = require('./plugins/settingsRegister.js');
-const { updateDiscordActivity } = require('./plugins/richPresencePlugin.js');
+let { updateDiscordActivity } = require('./plugins/RichPresencePlugin.js');
 let gamePID = null;
 
 if (fs.existsSync(firstRunFile)) {
