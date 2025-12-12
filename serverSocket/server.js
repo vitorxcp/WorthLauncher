@@ -162,7 +162,7 @@ app.post("/admin/painel/blog/new/post", checkAdminAuth, (req, res) => {
             summary: summary || title.substring(0, 100) + "...",
             content: content,
             image: bannerUrl || "/assets/default-blog.png",
-            author: req.session.user.nick, // Usa o nick da sessão
+            author: req.session.user.nick,
             author_id: req.session.user.id,
             timestamp: Date.now(),
             dateFormatted: new Date().toLocaleDateString("pt-BR"),
@@ -262,6 +262,7 @@ const io = new Server(PORT, {
 });
 
 let onlineUsers = {};
+let playingUsers = [];
 let usersSessionGames = {};
 
 function updateOnlineCount() {
@@ -270,12 +271,19 @@ function updateOnlineCount() {
         usersLaunch: Object.keys(usersSessionGames).length,
         total: Object.keys(onlineUsers).length
     });
+
+    io.emit("client:users_playing", Object.keys(usersSessionGames));
 }
 
 console.log(`[SOCKET] Servidor Social rodando na porta ${PORT}`);
 
 io.on("connection", (socket) => {
-    const { nick, uuid, status } = socket.handshake.auth;
+    let nick = socket.handshake.auth.nick || socket.handshake.query.nick;
+    let uuid = socket.handshake.auth.uuid || socket.handshake.query.uuid;
+    let status = socket.handshake.auth.status || socket.handshake.query.status;
+
+    // if(onlineUsers[nick]) return;
+
     if (!nick) return socket.disconnect();
 
     if (!usersDB[nick]) {
@@ -389,6 +397,10 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
+        if (usersSessionGames[nick]) {
+            delete usersSessionGames[nick];
+            updateOnlineCount();
+        }
         if (usersDB[nick]) usersDB[nick].status = 'offline';
         delete onlineUsers[nick];
         updateOnlineCount();
