@@ -1,3 +1,6 @@
+let socket = null;
+let socketinf = false;
+
 const styleParams = document.createElement('style');
 styleParams.innerHTML = `
     #chat-messages {
@@ -120,33 +123,64 @@ const observer = new IntersectionObserver((entries) => {
     }
 }, { root: els.chatMsgs, rootMargin: "200px 0px 0px 0px" });
 
-const socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
+function getAuthIdentity() {
+    return { 
+        nick: currentUser.user, 
+        uuid: currentUser.uuid, 
+        status: localStorage.getItem('status-account') || "online" 
+    };
+}
+
+function initializeSocket() {
+    if (socket) return socket;
+
+    socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
+        auth: getAuthIdentity(),
+        transports: ["websocket"],
+        reconnection: true,
+        autoConnect: true
+    });
+
+    setupSocketEvents();
+    
+    return socket;
+}
+
+    socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
     auth: { nick: currentUser.user, uuid: currentUser.uuid, status: localStorage.getItem('status-account') || "online" },
     transports: ["websocket"],
     reconnection: true,
     autoConnect: true
 });
 
+function openConnectionSocket() {
+    const newIdentity = getAuthIdentity();
+    localStorage.setItem("chat_identity", JSON.stringify(newIdentity));
+
+    if (!socket || !socketinf) {
+        if (socket) {
+            socket.auth = newIdentity;
+            socket.connect();
+        } else {
+            initializeSocket();
+        }
+    } else {
+        socket.auth = newIdentity;
+    }
+}
+
 function closeConnectionSocket() {
+    if (!socketinf || !socket) return;
     if (socket.connected) {
         socket.disconnect();
     }
-};
-
-function openConnectionSocket() {
-    const newIdentity = { nick: currentUser.user, uuid: currentUser.uuid, status: localStorage.getItem('status-account') || "online" };
-
-    localStorage.setItem("chat_identity", JSON.stringify(newIdentity));
-    socket.auth = newIdentity;
-
-    if (socket.connected) socket.disconnect();
-    socket.connect();
-};
+}
 
 socket.on("connect", () => {
+    socketinf = true;
     updateMyStatusUI(localStorage.getItem('status-account') || "online")
 });
-socket.on("disconnect", () => {});
+socket.on("disconnect", () => { });
 
 socket.on("init:data", (data) => {
     requestAnimationFrame(() => {
@@ -237,12 +271,12 @@ function renderInitialHistory() {
 
     els.chatMsgs.appendChild(fragment);
 
-els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+    els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
 
     setTimeout(() => {
-            els.chatMsgs.style.scrollBehavior = 'smooth';
-            observer.observe(topSentinel);
-        }, 100);
+        els.chatMsgs.style.scrollBehavior = 'smooth';
+        observer.observe(topSentinel);
+    }, 100);
 }
 
 function loadOlderMessages() {
@@ -251,7 +285,7 @@ function loadOlderMessages() {
     if (currentRenderedCount >= fullChatHistory.length) return;
 
     isInternalScroll = true;
-els.chatMsgs.style.scrollBehavior = 'auto';
+    els.chatMsgs.style.scrollBehavior = 'auto';
 
     const nextIndex = fullChatHistory.length - currentRenderedCount;
     const startIndex = Math.max(0, nextIndex - 30);
@@ -322,9 +356,9 @@ function scrollToBottom(force = false) {
             els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
             setTimeout(() => els.chatMsgs.style.scrollBehavior = oldBehavior, 50);
         } else {
-            els.chatMsgs.scrollTo({ 
-                top: els.chatMsgs.scrollHeight, 
-                behavior: 'smooth' 
+            els.chatMsgs.scrollTo({
+                top: els.chatMsgs.scrollHeight,
+                behavior: 'smooth'
             });
         }
     });
@@ -426,9 +460,9 @@ function createFriendElement(friend) {
 }
 
 function sendSocketLauncherEvent(event) {
-    if(event === "open:client") {
+    if (event === "open:client") {
         socket.emit("game:launch");
-    } else if(event === "close:client") {
+    } else if (event === "close:client") {
         socket.emit("game:close");
     }
 }
@@ -537,3 +571,5 @@ window.respondInvite = (requesterNick, accept, btn) => {
 function checkPendingRequests(requests) {
     if (Array.isArray(requests)) requests.forEach(r => showInviteToast(r.from));
 }
+
+initializeSocket();
