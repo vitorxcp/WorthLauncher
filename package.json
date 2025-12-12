@@ -43,14 +43,17 @@
     }
   ],
   "dependencies": {
+    "7zip-bin": "^5.2.0",
     "adm-zip": "^0.5.16",
     "axios": "^1.6.7",
     "discord-rpc": "^4.0.1",
     "electron-store": "^8.1.0",
+    "electron-updater": "^6.6.2",
     "express-session": "^1.18.2",
-    "fs-extra": "^11.2.0",
+    "fs-extra": "^11.3.2",
     "minecraft-launcher-core": "^3.13.0",
     "msmc": "^5.0.2",
+    "node-7z": "^3.0.0",
     "socket.io-client": "^4.8.1",
     "sudo-prompt": "^9.2.1"
   },
@@ -58,7 +61,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
     "concurrently": "^8.2.2",
-    "electron": "^29.1.0",
+    "electron": "^29.4.6",
     "electron-builder": "^24.13.3",
     "postcss": "^8.4.35",
     "react": "^18.2.0",
@@ -70,6 +73,13 @@
   "build": {
     "appId": "com.vitorxp.worthlauncher",
     "productName": "WorthLauncher",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "vitorxcp",
+        "repo": "WorthLauncher"
+      }
+    ],
     "copyright": "Copyright © 2025 vitorxp",
     "directories": {
       "output": "dist-electron"
@@ -93,9 +103,8 @@
       }
     ],
     "win": {
-      "target": "nsis",
-      "icon": "build/assets/Logo-Worth-256x256.ico",
-      "artifactName": "${productName}-Windows-${version}.${ext}"
+      "target": "zip",
+      "icon": "build/assets/Logo-Worth-256x256.ico"
     },
     "linux": {
       "target": [
@@ -135,9 +144,18 @@
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": true,
       "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "WorthLauncher",
+      "installerIcon": "build/assets/Logo-Worth-256x256.ico",
+      "uninstallerIcon": "build/assets/Logo-Worth-256x256.ico",
+      "installerHeader": "build/assets/Logo-Worth-256x256.ico",
+      "installerHeaderIcon": "build/assets/Logo-Worth-256x256.ico",
       "runAfterFinish": true,
-      "include": "build/installer.nsh"
+      "guid": "worthlauncher-4a9b2c1d-8e7f-4032-9876-543210abcdef"
     }
   }
 }
