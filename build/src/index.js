@@ -525,6 +525,7 @@ window.api.onProgress((data) => {
 });
 
 window.api.onGameClosed(() => {
+    closeConnectionSocket();
     addLog("Sessão de jogo finalizada (Exit Code 0).", 'success');
     sendSocketLauncherEvent("close:client");
     btnPlay.disabled = false;
@@ -534,14 +535,12 @@ window.api.onGameClosed(() => {
     progressContainer.style.opacity = "0";
     progressBar.style.width = '0%';
 
-    closeConnectionSocket();
-    currentUser = acc;
-    localStorage.setItem('worth_last_user', JSON.stringify(acc));
-    updateUserUI(acc.user, acc.type);
+    localStorage.setItem('worth_last_user', JSON.stringify(currentUser));
+    updateUserUI(currentUser.user, currentUser.type);
     toggleAccountMenu(false);
     setTimeout(() => {
         openConnectionSocket();
-    }, 500);
+    }, 100);
 });
 
 window.api.onGameStarted(() => {
