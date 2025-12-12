@@ -1,6 +1,6 @@
 {
   "name": "worthlauncher",
-  "version": "1.7.3423-alpha",
+  "version": "1.7.3426-alpha",
   "description": "Launcher Otimizado 1.8.9 com Chat e Auto-Update",
   "main": "WorthLauncher.js",
   "email": "vitor.xp.1958@gmail.com",
@@ -148,9 +148,9 @@
     },
     "nsis": {
       "artifactName": "${productName}-Setup-${version}.${ext}",
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
       "deleteAppDataOnUninstall": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
