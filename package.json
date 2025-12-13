@@ -1,6 +1,6 @@
 {
   "name": "worthlauncher",
-  "version": "1.7.3431-alpha",
+  "version": "1.7.3432-alpha",
   "description": "Launcher Otimizado 1.8.9 com Chat e Auto-Update",
   "main": "WorthLauncher.js",
   "email": "vitor.xp.1958@gmail.com",
@@ -46,17 +46,22 @@
     "7zip-bin": "^5.2.0",
     "adm-zip": "^0.5.16",
     "axios": "^1.6.7",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "discord-rpc": "^4.0.1",
     "electron-log": "^5.4.3",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.6.2",
     "express-session": "^1.18.2",
     "fs-extra": "^11.3.2",
+    "lucide-react": "^0.561.0",
+    "marked": "^17.0.1",
     "minecraft-launcher-core": "^3.13.0",
     "msmc": "^5.0.2",
     "node-7z": "^3.0.0",
     "socket.io-client": "^4.8.1",
-    "sudo-prompt": "^9.2.1"
+    "sudo-prompt": "^9.2.1",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
@@ -69,7 +74,9 @@
     "react-dom": "^18.2.0",
     "socket.io": "^4.7.4",
     "tailwindcss": "^3.4.1",
-    "vite": "^5.1.4"
+    "vite": "^5.1.4",
+    "vite-plugin-ejs": "^1.7.0",
+    "vite-plugin-html-inject": "^1.1.2"
   },
   "build": {
     "appId": "com.vitorxp.worthlauncher",
