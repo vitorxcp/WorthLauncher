@@ -9,534 +9,7 @@
   <script src="../build/src/marked.min.js"></script>
   <script src="../build/src/lucide.min.js"></script>
   <script src="../build/src/socket.io.min.js"></script>
-  <style>
-    #custom-tooltip {
-      pointer-events: none !important;
-    }
-
-    .drag-region {
-      -webkit-app-region: drag;
-    }
-
-    .no-drag {
-      -webkit-app-region: no-drag;
-      pointer-events: auto !important;
-    }
-
-    body {
-      -webkit-font-smoothing: antialiased;
-      user-select: none;
-      font-family: 'Segoe UI', sans-serif;
-    }
-
-    input {
-      -webkit-user-select: text !important;
-      user-select: text !important;
-      -webkit-app-region: no-drag !important;
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: rgba(253, 224, 71, 0.2);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(253, 224, 71, 0.4);
-    }
-
-    .glass {
-      background: rgba(18, 18, 18, 0.65);
-      backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    }
-
-    .glass-dark {
-      background: rgba(5, 5, 5, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-      color: #000;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      filter: brightness(1.15);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px -10px rgba(251, 191, 36, 0.5);
-    }
-
-    .btn-primary:active:not(:disabled) {
-      transform: translateY(0);
-    }
-
-    @keyframes pulse-glow {
-
-      0%,
-      100% {
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
-      }
-
-      50% {
-        box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
-      }
-    }
-
-    .btn-play-glow {
-      animation: pulse-glow 3s infinite;
-    }
-
-    #progress-bar {
-      transition: width 0.3s ease-out;
-    }
-
-    .tab-btn {
-      transition: all 0.2s ease;
-      position: relative;
-    }
-
-    .tab-btn::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 0%;
-      background: #fbbf24;
-      border-radius: 0 4px 4px 0;
-      transition: height 0.2s;
-    }
-
-    .tab-btn.active {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .tab-btn.active::after {
-      height: 60%;
-    }
-
-    .tab-btn:hover:not(.active) {
-      color: #ddd;
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    .fade-enter {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    .fade-enter-active {
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 300ms, transform 300ms;
-    }
-
-    .hidden-force {
-      display: none !important;
-    }
-
-    .dropdown-enter {
-      transform: translateY(-10px);
-      opacity: 0;
-      display: none;
-      pointer-events: none;
-    }
-
-    .dropdown-active {
-      transform: translateY(0);
-      opacity: 1;
-      display: flex;
-      pointer-events: auto;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .news-card {
-      transition: transform 0.2s;
-    }
-
-    .news-card:hover {
-      transform: translateY(-4px);
-    }
-
-    .msg-anim {
-      opacity: 0;
-      transform: translateY(4px);
-      transition: opacity .12s ease-out, transform .12s ease-out;
-    }
-
-    .msg-anim.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    #chat-messages {
-      contain: strict;
-      will-change: scroll-position;
-      overflow-anchor: auto;
-    }
-
-    #custom-tooltip {
-      transition: opacity 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-        transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-      opacity: 0;
-      transform: scale(0.9) translateY(5px);
-
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-
-    #custom-tooltip.tooltip-visible {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-
-    .hidden-force {
-      display: none !important;
-    }
-
-    #modal-contentads h1,
-    #modal-contentads h2,
-    #modal-contentads h3 {
-      color: #fff;
-      font-weight: 700;
-      margin-top: 1.5em;
-      margin-bottom: 0.5em;
-    }
-
-    #modal-contentads h1 {
-      font-size: 2em;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 0.3em;
-    }
-
-    #modal-contentads h2 {
-      font-size: 1.5em;
-      color: #fbbf24;
-    }
-
-    #modal-contentads p {
-      margin-bottom: 1em;
-      line-height: 1.7;
-      font-size: 0.95rem;
-    }
-
-    #modal-contentads ul {
-      list-style: disc;
-      padding-left: 1.5em;
-      margin-bottom: 1em;
-      color: #d4d4d4;
-    }
-
-    #modal-contentads strong {
-      color: #fbbf24;
-    }
-
-    #modal-contentads a {
-      color: #3b82f6;
-      text-decoration: underline;
-    }
-
-    #modal-contentads img {
-      border-radius: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      margin: 1em 0;
-      width: 100%;
-    }
-
-    #modal-contentads blockquote {
-      border-left: 4px solid #fbbf24;
-      padding-left: 1em;
-      color: #a3a3a3;
-      font-style: italic;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 10px;
-      border-radius: 0 8px 8px 0;
-    }
-
-    .fallback-pattern {
-      background-color: #111;
-      background-image: radial-gradient(#222 1px, transparent 1px), radial-gradient(#222 1px, #111 1px);
-      background-size: 20px 20px;
-      background-position: 0 0, 10px 10px;
-    }
-
-    .news-card-img-container {
-      background-color: #0a0a0a;
-    }
-
-    .news-card-base {
-      background-color: #0a0a0a;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-
-    .news-card-base:hover {
-      transform: translateY(-5px);
-      border-color: rgba(234, 179, 8, 0.4);
-      box-shadow: 0 15px 30px rgba(234, 179, 8, 0.1);
-    }
-
-    .artistic-fallback {
-      background:
-        radial-gradient(circle at 100% 0%, rgba(234, 179, 8, 0.05) 0%, transparent 20%),
-        radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 20%),
-        linear-gradient(135deg, #0f0f0f 0%, #050505 100%);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .artistic-fallback::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 30px 30px;
-      mask-image: radial-gradient(circle, black 40%, transparent 100%);
-      opacity: 0.5;
-    }
-
-    .watermark-icon {
-      position: absolute;
-      right: -20px;
-      top: -20px;
-      width: 120px;
-      height: 120px;
-      opacity: 0.05;
-      transform: rotate(15deg);
-      transition: all 0.5s ease;
-      color: white;
-    }
-
-    .news-card-base:hover .watermark-icon {
-      transform: rotate(0deg) scale(1.1);
-      opacity: 0.1;
-      color: #eab308;
-    }
-
-    .readability-gradient {
-      background: linear-gradient(to top, #000000 10%, rgba(0, 0, 0, 0.8) 40%, transparent 100%);
-    }
-
-    #modal-contentads h1 {
-      font-size: 1.5em;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 0.5em;
-    }
-
-    #modal-contentads h2 {
-      font-size: 1.25em;
-      font-weight: 700;
-      color: #facc15;
-      margin-top: 1em;
-      margin-bottom: 0.5em;
-    }
-
-    #modal-contentads h3 {
-      font-size: 1.1em;
-      font-weight: 600;
-      color: #e5e5e5;
-      margin-top: 1em;
-      margin-bottom: 0.5em;
-    }
-
-    #modal-contentads p {
-      margin-bottom: 0.8em;
-      line-height: 1.6;
-      color: #d4d4d4;
-    }
-
-    #modal-contentads ul {
-      list-style-type: disc;
-      padding-left: 1.5em;
-      margin-bottom: 1em;
-    }
-
-    #modal-contentads ol {
-      list-style-type: decimal;
-      padding-left: 1.5em;
-      margin-bottom: 1em;
-    }
-
-    #modal-contentads a {
-      color: #facc15;
-      text-decoration: underline;
-    }
-
-    #modal-contentads blockquote {
-      border-left: 4px solid #facc15;
-      padding-left: 1em;
-      color: #a3a3a3;
-      font-style: italic;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 0.5em;
-      border-radius: 0 4px 4px 0;
-    }
-
-    #modal-contentads code {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 2px 4px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
-      color: #facc15;
-      font-size: 0.9em;
-    }
-
-    #modal-contentads pre {
-      background: #000;
-      padding: 1em;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin-bottom: 1em;
-      border: 1px solid #333;
-    }
-
-    #modal-contentads pre code {
-      background: transparent;
-      color: #e5e5e5;
-      padding: 0;
-    }
-
-    #modal-contentads img {
-      max-width: 100%;
-      border-radius: 8px;
-      margin: 1em 0;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    #modal-contentads hr {
-      border-color: rgba(255, 255, 255, 0.1);
-      margin: 1.5em 0;
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .animate-card {
-      opacity: 0;
-      animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    }
-
-    .news-card-base:hover .watermark-icon {
-      transform: rotate(0deg) scale(1.2);
-      opacity: 0.15;
-      color: #eab308;
-    }
-
-    #modal-contentads a {
-      color: #3b82f6;
-      text-decoration: none;
-      border-bottom: 1px solid rgba(59, 130, 246, 0.3);
-      transition: all 0.2s;
-    }
-
-    #modal-contentads a:hover {
-      color: #60a5fa;
-      border-bottom-color: #60a5fa;
-    }
-
-    @keyframes modalZoomIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes modalZoomOut {
-      from {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      to {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-    }
-
-    .modal-enter {
-      animation: modalZoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    .modal-exit {
-      animation: modalZoomOut 0.2s ease-in forwards;
-    }
-
-    .bg-enter {
-      animation: fadeIn 0.3s forwards;
-    }
-
-    .bg-exit {
-      animation: fadeOut 0.3s forwards;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    @keyframes fadeOut {
-      from {
-        opacity: 1;
-      }
-
-      to {
-        opacity: 0;
-      }
-    }
-
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-  </style>
+  <link rel="stylesheet" href="../build/styles/index.css">
 </head>
 
 <body
@@ -892,10 +365,13 @@
             <div class="grid grid-cols-2 gap-8">
               <div class="space-y-6">
                 <div>
-                  <label class="flex items-center justify-between text-xs font-bold text-gray-300 uppercase mb-3">
+                  <div class="flex w-full justify-between">
+                    <div class="flex items-center justify-between text-xs font-bold text-gray-300 uppercase mb-3 w-[90%]">
                     <span>Alocação de RAM (Java)</span>
                     <span id="ram-display" class="text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded">4G</span>
-                  </label>
+                  </div>
+                  <i data-lucide="info" class="w-4 h-4 text-white/50" title-app="Altere o total de ram que o Client irá poder usar."></i>
+                  </div>
                   <div class="bg-black/40 p-1.5 rounded-xl border border-white/5">
                     <input type="range" id="ram-slider" min="2" max="16" step="1"
                       class="w-full no-drag cursor-pointer h-2 bg-gray-800 rounded-lg appearance-none accent-yellow-500">
@@ -911,7 +387,7 @@
                     </div>
                     <div>
                       <span class="text-sm font-bold text-gray-200 block">Tela Cheia</span>
-                      <span class="text-[10px] text-gray-500">Inicia o jogo maximizado</span>
+                      <span class="text-[10px] text-gray-500">Inicia o Client em tela cheia</span>
                     </div>
                   </div>
                   <div id="toggle-fullscreen"
@@ -948,7 +424,7 @@
                     </div>
                     <div>
                       <span class="text-sm font-bold text-gray-200 block">Fechar ao Jogar</span>
-                      <span class="text-[10px] text-gray-500">Economiza recursos do PC</span>
+                      <span class="text-[10px] text-gray-500">Feche o Launcher assim que o Client iniciar.</span>
                     </div>
                   </div>
                   <div id="toggle-closeLauncher"
@@ -977,7 +453,7 @@
                     </div>
                     <div>
                       <span class="text-sm font-bold text-gray-200 block">Ativar Rich Presence</span>
-                      <span class="text-[10px] text-gray-500">Mostrar a atividade do jogo no Discord</span>
+                      <span class="text-[10px] text-gray-500">Mostrar a atividade do jogo no Discord.</span>
                     </div>
                   </div>
                   <div id="toggle-discord-rich" active=true
@@ -1059,7 +535,7 @@
 
           <div
             class="w-24 h-24 mb-6 flex items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-black rounded-2xl border border-white/5 shadow-2xl shadow-yellow-900/20 group">
-            <img src="./build/assets/icon.png"
+            <img src="../build/assets/icon.png"
               class="w-12 h-12 object-contain drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] transition-transform duration-500 group-hover:scale-110"
               alt="Logo">
           </div>
@@ -1102,105 +578,209 @@
     </div>
   </div>
 
-  <div id="modal-step-1"
-    class="absolute inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center hidden-force no-drag transition-all duration-500"
-    style="transition: opacity 0.3s ease, visibility 0.3s ease;">
+  <div id="error-popup"
+    class="absolute inset-0 z-[9999] bg-black/95 backdrop-blur-2xl flex items-center justify-center hidden-force no-drag transition-opacity duration-700 ease-in-out">
 
-    <div
-      class="relative bg-[#09090b] border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
+    <div class="relative w-full max-w-lg p-[1px] bg-gradient-to-b from-red-500/20 to-transparent rounded-3xl shadow-2xl scale-100 transition-transform duration-500"
+         id="error-card">
 
-      <div
-        class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-yellow-500/10 blur-[80px] rounded-full pointer-events-none">
-      </div>
+        <div class="bg-[#0a0a0a] rounded-3xl p-10 relative overflow-hidden">
 
-      <div class="relative z-10 text-center mb-8">
-        <div class="w-20 h-20 mx-auto mb-4 relative group">
-          <div
-            class="absolute inset-0 bg-yellow-500/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          </div>
-          <img src="./build/assets/icon.png"
-            class="w-full h-full object-contain relative z-10 drop-shadow-2xl transform transition duration-500 hover:scale-110">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-red-600/10 blur-[80px] rounded-full pointer-events-none">
+            </div>
+
+            <div class="relative z-10 flex flex-col items-center text-center">
+
+                <div class="w-24 h-24 mb-6 flex items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-black rounded-2xl border border-red-500/20 shadow-2xl shadow-red-900/20 group relative">
+                    <div class="absolute inset-0 bg-red-500/10 rounded-2xl animate-pulse"></div>
+                    
+                    <i data-lucide="wifi-off" 
+                       class="w-10 h-10 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]"></i>
+                </div>
+
+                <h1 class="text-3xl font-black text-white mb-3 tracking-tight">
+                    Servidor <span class="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-600">Offline</span>
+                </h1>
+
+                <p class="text-gray-400 text-sm mb-8 font-medium leading-relaxed max-w-xs">
+                    Erro ao conectar no servidor. Provavelmente estamos em 
+                    <span class="text-red-400 font-bold">manutenção</span>.
+                    <br><br>
+                    Não se preocupe! Assim que o sistema voltar à ativa, liberaremos o acesso automaticamente.
+                </p>
+
+                <div class="grid grid-cols-2 gap-3 w-full mb-8">
+                    <div class="bg-red-500/5 border border-red-500/10 p-3 rounded-xl flex flex-col items-center gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                            <span class="text-[10px] font-bold text-red-200 uppercase">API Status</span>
+                        </div>
+                        <span class="text-xs text-red-400 font-mono">NO SIGNAL</span>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/5 p-3 rounded-xl flex flex-col items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4 text-gray-400 animate-spin-slow"></i>
+                        <span class="text-[10px] font-bold text-gray-300 uppercase">Reconectando...</span>
+                    </div>
+                </div>
+
+                <button onclick="location.reload()" 
+                        class="group w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-gray-300 font-bold uppercase tracking-widest rounded-xl transition-all no-drag flex items-center justify-center gap-2 text-xs">
+                    <span>Tentar Agora</span>
+                    <i data-lucide="rotate-ccw" class="w-4 h-4 transition-transform group-hover:-rotate-180"></i>
+                </button>
+
+            </div>
         </div>
-
-        <h1 class="text-3xl font-black text-white tracking-tight mb-1">
-          WorthClient
-        </h1>
-
-        <div
-          class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-gray-400 mt-2">
-          <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-          Atualizado para <span class="text-yellow-500 font-bold">v1.0.2-alpha</span>
-        </div>
-        <p class="text-[#fafafa]/50 mt-[5px]">Veja o que há de novo por aqui:</p>
-      </div>
-
-      <div class="space-y-2 mb-8 max-h-[240px] overflow-y-auto custom-scrollbar pr-1">
-        <div
-          class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-green-500/30 transition group">
-          <div class="p-2 rounded-lg bg-green-500/10 text-green-400 shrink-0">
-            <i data-lucide="bug" class="w-4 h-4"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-white mb-0.5">Correções Gerais</h4>
-            <p class="text-[11px] text-gray-400 leading-snug">Resolução de bugs visuais e estabilidade aprimorada.</p>
-          </div>
-        </div>
-        <div
-          class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-yellow-500/30 transition group">
-          <div class="p-2 rounded-lg bg-yellow-500/10 text-yellow-400 shrink-0">
-            <i data-lucide="app-window" class="w-4 h-4"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-white mb-0.5">Rich Presence</h4>
-            <p class="text-[11px] text-gray-400 leading-snug">Adicionado sistema de Rich Presence (configuravél)</p>
-          </div>
-        </div>
-
-        <div
-          class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-yellow-500/30 transition group">
-          <div class="p-2 rounded-lg bg-yellow-500/10 text-yellow-500 shrink-0">
-            <i data-lucide="zap" class="w-4 h-4"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-white mb-0.5">Otimização Extrema</h4>
-            <p class="text-[11px] text-gray-400 leading-snug">Melhorias de FPS e redução no uso de memória RAM
-              melhoradas.</p>
-          </div>
-        </div>
-
-        <div
-          class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-blue-500/30 transition group">
-          <div class="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
-            <i data-lucide="message-square" class="w-4 h-4"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-white mb-0.5">Bate Papo Entre Amigos</h4>
-            <p class="text-[11px] text-gray-400 leading-snug">Sistema de mensagens adicionado para você conversar com
-              seu amigo(a).</p>
-          </div>
-        </div>
-
-        <div
-          class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-pink-500/30 transition group">
-          <div class="p-2 rounded-lg bg-pink-500/10 text-pink-400 shrink-0">
-            <i data-lucide="newspaper" class="w-4 h-4"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-white mb-0.5">Blog</h4>
-            <p class="text-[11px] text-gray-400 leading-snug">Fique por dentro das novidades da Rede Worth na home.</p>
-          </div>
-        </div>
-
-      </div>
-
-      <button id="btn-goto-step2"
-        class="group w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] hover:-translate-y-1 no-drag flex items-center justify-center gap-2">
-        <span>Começar Agora</span>
-        <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
-      </button>
-
     </div>
-  </div>
+</div>
+
+  <div id="modal-step-1" 
+   class="absolute inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center hidden-force no-drag transition-all duration-500"
+   style="transition: opacity 0.3s ease, visibility 0.3s ease;">
+
+   <div
+     class="relative bg-[#09090b] border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
+
+     <div
+       class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-yellow-500/10 blur-[80px] rounded-full pointer-events-none">
+     </div>
+
+     <div class="relative z-10 text-center mb-8">
+       <div class="w-20 h-20 mx-auto mb-4 relative group">
+         <div
+           class="absolute inset-0 bg-yellow-500/30 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+         </div>
+         <img src="../build/assets/icon.png"
+           class="w-full h-full object-contain relative z-10 drop-shadow-2xl transform transition duration-500 hover:scale-110">
+       </div>
+
+       <h1 class="text-3xl font-black text-white tracking-tight mb-1">
+         WorthClient
+       </h1>
+
+       <div
+         class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-gray-400 mt-2">
+         <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+         Nova Versão Disponível
+       </div>
+       <p class="text-[#fafafa]/50 mt-[5px]">Confira o changelog completo:</p>
+     </div>
+
+     <div class="space-y-2 mb-8 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
+
+       <div
+         class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-green-500/30 transition group">
+         <div class="p-2 rounded-lg bg-green-500/10 text-green-400 shrink-0">
+           <i data-lucide="zap" class="w-4 h-4"></i>
+         </div>
+         <div>
+           <h4 class="text-xs font-bold text-white mb-0.5">Performance Extrema</h4>
+           <p class="text-[11px] text-gray-400 leading-snug">Sistema de renderização melhorado com muito mais FPS.</p>
+         </div>
+       </div>
+
+       <div
+         class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-cyan-500/30 transition group">
+         <div class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0">
+           <i data-lucide="wifi" class="w-4 h-4"></i>
+         </div>
+         <div>
+           <h4 class="text-xs font-bold text-white mb-0.5">Conexão Reformada</h4>
+           <p class="text-[11px] text-gray-400 leading-snug">Conexão mais rápida e baixa latência em servidores.</p>
+         </div>
+       </div>
+
+       <div
+         class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-blue-500/30 transition group">
+         <div class="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
+           <i data-lucide="zoom-in" class="w-4 h-4"></i>
+         </div>
+         <div>
+           <h4 class="text-xs font-bold text-white mb-0.5">Novo Zoom</h4>
+           <p class="text-[11px] text-gray-400 leading-snug">Correções aplicadas e animação mais fluida.</p>
+         </div>
+       </div>
+
+       <div
+         class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/30 transition group">
+         <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400 shrink-0">
+           <i data-lucide="eye" class="w-4 h-4"></i>
+         </div>
+         <div>
+           <h4 class="text-xs font-bold text-white mb-0.5">Perspective Mod</h4>
+           <p class="text-[11px] text-gray-400 leading-snug">Sistema 360º otimizado e corrigido.</p>
+         </div>
+       </div>
+
+       <div
+         class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-orange-500/30 transition group">
+         <div class="p-2 rounded-lg bg-orange-500/10 text-orange-400 shrink-0">
+           <i data-lucide="rocket" class="w-4 h-4"></i>
+         </div>
+         <div>
+           <h4 class="text-xs font-bold text-white mb-0.5">Launcher Update</h4>
+           <p class="text-[11px] text-gray-400 leading-snug">Melhorias no sistema de atualização e estabilidade.</p>
+         </div>
+       </div>
+
+        <div
+        class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-pink-500/30 transition group">
+        <div class="p-2 rounded-lg bg-pink-500/10 text-pink-400 shrink-0">
+          <i data-lucide="image" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-white mb-0.5">Tela de Carregamento</h4>
+          <p class="text-[11px] text-gray-400 leading-snug">Novo visual moderno ao iniciar o client.</p>
+        </div>
+      </div>
+
+       <div
+         class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-red-500/30 transition group">
+         <div class="p-2 rounded-lg bg-red-500/10 text-red-400 shrink-0">
+           <i data-lucide="key" class="w-4 h-4"></i>
+         </div>
+         <div>
+           <h4 class="text-xs font-bold text-white mb-0.5">Auto-Login (Crack)</h4>
+           <p class="text-[11px] text-gray-400 leading-snug">Login automático para contas não-originais.</p>
+         </div>
+       </div>
+
+       <div
+         class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-yellow-500/30 transition group">
+         <div class="p-2 rounded-lg bg-yellow-500/10 text-yellow-400 shrink-0">
+           <i data-lucide="message-square-plus" class="w-4 h-4"></i>
+         </div>
+         <div>
+           <h4 class="text-xs font-bold text-white mb-0.5">Auto Text</h4>
+           <p class="text-[11px] text-gray-400 leading-snug">Novo módulo de macros de texto adicionado.</p>
+         </div>
+       </div>
+
+        <div
+        class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition group">
+        <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 shrink-0">
+          <i data-lucide="shield" class="w-4 h-4"></i>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold text-white mb-0.5">Armor HUD</h4>
+          <p class="text-[11px] text-gray-400 leading-snug">Agora você pode mover cada peça individualmente.</p>
+        </div>
+      </div>
+
+     </div>
+
+     <button id="btn-goto-step2"
+       class="group w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] hover:-translate-y-1 no-drag flex items-center justify-center gap-2">
+       <span>Verificar</span>
+       <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
+     </button>
+
+   </div>
+ </div>
 
   <div id="modal-offline"
     class="absolute inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center hidden-force opacity-0 transition-opacity duration-300 no-drag">
@@ -1284,8 +864,15 @@
   </div>
 
   <div id="custom-tooltip"
-    class="hidden-force fixed z-50 px-3 py-2 bg-[#000000]/35 text-white text-xs font-medium rounded-lg shadow-2xl pointer-events-none max-w-xs border border-white/10 tracking-wide"
-    style="z-index: 9999 !important;">
+    class="fixed z-[9999] px-3 py-2
+           bg-[#342914]/30 backdrop-blur-md
+           text-white text-xs font-semibold tracking-wide
+           rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.10)]
+           border border-white/20 ring-1 ring-white/10
+           pointer-events-none max-w-xs
+           opacity-0 scale-95 translate-y-2
+           transition-all duration-300 ease-out origin-bottom"
+    style="will-change: transform, opacity;">
   </div>
   <script src="../build/src/index.js"></script>
   <script src="../build/src/blog.js"></script>
