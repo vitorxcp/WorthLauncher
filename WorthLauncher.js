@@ -728,7 +728,11 @@ autoUpdater.on('update-not-available', () => {
 
 autoUpdater.on('download-progress', (progressObj) => {
     if (splashWindow) {
-        splashWindow.webContents.send("outputPercentUpdate", Math.round(progressObj.percent));
+        splashWindow.webContents.send("outputPercentUpdate", {
+            percent: Math.round(progressObj.percent),
+            transferred: progressObj.transferred,
+            total: progressObj.total
+        });
     }
 });
 
