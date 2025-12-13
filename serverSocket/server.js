@@ -394,6 +394,19 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("chat:typing", ({ state }) => {
+        if (usersDB[nick] && usersDB[nick].friends) {
+            usersDB[nick].friends.forEach(friendNick => {
+                if (onlineUsers[friendNick]) {
+                    io.to(onlineUsers[friendNick]).emit("chat:typing_update", {
+                        from: nick,
+                        state: state
+                    });
+                }
+            });
+        }
+    });
+
     socket.on("disconnect", () => {
         if (usersSessionGames[nick]) {
             delete usersSessionGames[nick];
