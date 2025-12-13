@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import htmlInject from 'vite-plugin-html-inject';
 import { resolve } from 'path'
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        htmlInject()
+    ],
     base: './',
     root: 'ui',
     build: {
@@ -11,10 +13,10 @@ export default defineConfig({
         emptyOutDir: true,
         rollupOptions: {
             input: resolve(__dirname, 'ui/index.html')
-        },
-        server: {
-            port: 5173,
-            strictPort: true
         }
+    },
+    server: {
+        port: 5173,
+        strictPort: true
     }
-})
+});
