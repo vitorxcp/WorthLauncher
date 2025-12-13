@@ -146,10 +146,21 @@
             pending: "Atualização encontrada...",
             downloading: "Baixando atualização",
             extracting: "Extraindo arquivos",
-            success: "Tudo pronto!",
+            success: "Reiniciando Launcher...",
             starting: "Iniciando Launcher...",
             noupdate: "Nenhuma atualização."
         };
+
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return ("0 bytes");
+
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+        }
 
         function setStatus(mode) {
             elSpinner.classList.add('hidden');
@@ -179,15 +190,35 @@
         });
 
         let hasStartedDownload = false;
-        ipcRenderer.on('outputPercentUpdate', (event, percent) => {
+        ipcRenderer.on('outputPercentUpdate', (event, data) => {
             if (!hasStartedDownload) {
                 hasStartedDownload = true;
                 updateText(TEXTS.downloading);
                 setStatus('bar');
             }
+
+            let percent = 0;
+            let transferred = 0;
+            let total = 0;
+
+            if (typeof data === "object") {
+                percent = data.percent;
+                transferred = data.transferred;
+                total = data.total;
+            } else {
+                percent = data;
+            }
             
             elBarFill.style.width = percent + '%';
-            updateText(null, Math.round(percent) + '%');
+
+            if (total > 0) {
+                const transferredStr = formatBytes(transferred);
+                const totalStr = formatBytes(total);
+
+                updateText(null, `${Math.round(percent)}% - ${transferredStr} / ${totalStr}`)
+            } else {
+                updateText(null, Math.round(percent) + '%');
+            }
         });
 
         let hasStartedExtract = false;
