@@ -228,9 +228,9 @@ function createTray() {
         } catch (e) { }
     }
 
-    let iconPath = path.join(__dirname, 'build/assets/icon.png');
+    let iconPath = path.join(__dirname, 'ui/public/assets/icon.png');
     if (!fs.existsSync(iconPath)) {
-        iconPath = path.join(process.resourcesPath, 'build/assets/icon.png');
+        iconPath = path.join(process.resourcesPath, 'ui/public/assets/icon.png');
     }
 
     if (fs.existsSync(iconPath)) {
@@ -273,7 +273,7 @@ function createWindow() {
         minHeight: 650,
         frame: false,
         backgroundColor: '#00000000',
-        icon: path.join(__dirname, 'build/assets/icon.png'),
+        icon: path.join(__dirname, 'ui/public/assets/icon.png'),
         webPreferences: {
             preload: path.join(__dirname, 'build', 'preload.js'),
             contextIsolation: true,
@@ -288,8 +288,8 @@ function createWindow() {
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
     } else {
-        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-    }
+    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+}
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -316,7 +316,7 @@ const createSplashWindow = () => {
         height: 450,
         frame: false,
         backgroundColor: '#00000000',
-        icon: path.join(__dirname, 'build/assets/icon.png'),
+        icon: path.join(__dirname, 'ui/public/assets/icon.png'),
         alwaysOnTop: false,
         resizable: false,
         webPreferences: {
