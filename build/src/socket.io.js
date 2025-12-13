@@ -146,7 +146,6 @@ function initializeSocket() {
 }
 
 function openConnectionSocket() {
-    console.log("A1")
     const newIdentity = getAuthIdentity();
     localStorage.setItem("chat_identity", JSON.stringify(newIdentity));
 
@@ -154,14 +153,10 @@ function openConnectionSocket() {
         if (socket) {
             socket.auth = newIdentity;
             socket.connect();
-    console.log("Asd")
-
         } else {
             initializeSocket();
         }
     } else {
-    console.log("Adas")
-
         socket.auth = newIdentity;
     }
 }
@@ -539,6 +534,10 @@ function updateMyStatusUI(status) {
     const data = map[status] || map["offline"];
     els.myStatusDot.className = `w-2.5 h-2.5 rounded-full ${data[0]}`;
     els.myStatusText.innerText = data[1];
+    const ind = document.getElementById('status-indicator');
+    ind.classList.remove('bg-red-500', 'bg-green-500');
+    ind.setAttribute("title-app", data[1])
+    ind.classList.add(data[0]);
 }
 
 window.changeMyStatus = (s) => {
@@ -574,4 +573,6 @@ function checkPendingRequests(requests) {
     if (Array.isArray(requests)) requests.forEach(r => showInviteToast(r.from));
 }
 
-initializeSocket();
+window.addEventListener("load", () => {
+    initializeSocket();
+})
