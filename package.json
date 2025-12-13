@@ -16,7 +16,7 @@
   "author": "vitorxp",
   "license": "MIT",
   "homepage": "https://github.com/vitorxcp/WorthLauncher",
-  "icon": "build/assets/Logo-Worth-256x256.png",
+  "icon": "ui/assets/Logo-Worth-256x256.png",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitorxcp/WorthLauncher.git"
@@ -115,7 +115,7 @@
         "nsis",
         "zip"
       ],
-      "icon": "build/assets/Logo-Worth-256x256.ico"
+      "icon": "ui/assets/Logo-Worth-256x256.ico"
     },
     "linux": {
       "target": [
@@ -123,7 +123,7 @@
         "deb",
         "rpm"
       ],
-      "icon": "build/assets/Logo-Worth-256x256.png",
+      "icon": "ui/assets/Logo-Worth-256x256.png",
       "category": "Game",
       "description": "Launcher de Minecraft Otimizado para Rede Worth",
       "artifactName": "${productName}-Linux-${version}.${ext}"
@@ -133,7 +133,7 @@
         "dmg",
         "zip"
       ],
-      "icon": "build/assets/icon.icns",
+      "icon": "ui/assets/icon.icns",
       "category": "public.app-category.games",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -162,10 +162,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "WorthLauncher",
-      "installerIcon": "build/assets/Logo-Worth-256x256.ico",
-      "uninstallerIcon": "build/assets/Logo-Worth-256x256.ico",
-      "installerHeader": "build/assets/Logo-Worth-256x256.ico",
-      "installerHeaderIcon": "build/assets/Logo-Worth-256x256.ico",
+      "installerIcon": "ui/assets/Logo-Worth-256x256.ico",
+      "uninstallerIcon": "ui/assets/Logo-Worth-256x256.ico",
+      "installerHeader": "ui/assets/Logo-Worth-256x256.ico",
+      "installerHeaderIcon": "ui/assets/Logo-Worth-256x256.ico",
       "runAfterFinish": true,
       "guid": "worthlauncher-4a9b2c1d-8e7f-4032-9876-543210abcdef"
     }
