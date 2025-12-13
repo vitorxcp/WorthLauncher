@@ -285,11 +285,11 @@ function createWindow() {
     const isDev = !app.isPackaged;
 
 
-if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-} else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-}
+    if (isDev) {
+        mainWindow.loadURL('http://localhost:5173');
+    } else {
+        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    }
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -745,25 +745,25 @@ autoUpdater.on('download-progress', (progressObj) => {
 
 autoUpdater.on('update-downloaded', (info) => {
     console.log("[UPDATE] Download pronto. Preparando instalação...");
-    
-    if(splashWindow) {
+
+    if (splashWindow) {
         splashWindow.webContents.send("updateDonwloadFirst", true);
-        
+
         let fakeProgress = 0;
         const interval = setInterval(() => {
             fakeProgress += 10;
-            if(splashWindow && !splashWindow.isDestroyed()) {
+            if (splashWindow && !splashWindow.isDestroyed()) {
                 splashWindow.webContents.send("outputPercentExtractedFiles", fakeProgress);
             }
 
             if (fakeProgress >= 100) {
                 clearInterval(interval);
-                
+
                 splashWindow.webContents.send("firstUpdate", true);
 
                 setTimeout(() => {
-                    autoUpdater.quitAndInstall(true, true); 
-                }, 1000); 
+                    autoUpdater.quitAndInstall(true, true);
+                }, 1000);
             }
         }, 150);
     }
