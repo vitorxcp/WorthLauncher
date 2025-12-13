@@ -1,0 +1,178 @@
+<section id="view-settings" class="flex-1 hidden-force fade-enter overflow-y-auto">
+    <h2 class="text-3xl font-black text-white mb-6 flex items-center gap-3 uppercase italic">
+        Configurações <span class="text-gray-600">Gerais</span>
+    </h2>
+
+    <div class="h-[calc(100%-4rem)] overflow-y-auto pr-2 space-y-6">
+
+        <div id="toast"
+            class="absolute top-4 right-4 bg-green-500/10 text-green-400 border border-green-500/20 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest opacity-0 transition-opacity duration-500 pointer-events-none flex items-center gap-2 z-50">
+            <i data-lucide="check" class="w-4 h-4"></i> Salvo
+        </div>
+
+        <div class="glass rounded-2xl p-8 border border-white/5">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <i data-lucide="cpu" class="w-4 h-4"></i> Performance & Display
+            </h3>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex w-full justify-between">
+                            <div
+                                class="flex items-center justify-between text-xs font-bold text-gray-300 uppercase mb-3 w-[90%]">
+                                <span>Alocação de RAM (Java)</span>
+                                <span id="ram-display"
+                                    class="text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded">4G</span>
+                            </div>
+                            <i data-lucide="info" class="w-4 h-4 text-white/50"
+                                title-app="Altere o total de ram que o Client irá poder usar."></i>
+                        </div>
+                        <div class="bg-black/40 p-1.5 rounded-xl border border-white/5">
+                            <input type="range" id="ram-slider" min="2" max="16" step="1"
+                                class="w-full no-drag cursor-pointer h-2 bg-gray-800 rounded-lg appearance-none accent-yellow-500">
+                        </div>
+                        <p class="text-[10px] text-gray-600 mt-2">Recomendado: 4GB.</p>
+                    </div>
+                    <div class="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5 cursor-pointer hover:border-yellow-500/30 transition no-drag group"
+                        onclick="toggleSetting('fullscreen')">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 rounded-lg bg-white/5 group-hover:bg-yellow-500/20 transition">
+                                <i data-lucide="monitor"
+                                    class="text-gray-400 group-hover:text-yellow-500 w-5 h-5 transition"></i>
+                            </div>
+                            <div>
+                                <span class="text-sm font-bold text-gray-200 block">Tela Cheia</span>
+                                <span class="text-[10px] text-gray-500">Inicia o Client em tela cheia</span>
+                            </div>
+                        </div>
+                        <div id="toggle-fullscreen"
+                            class="w-10 h-5 bg-gray-700 rounded-full relative transition-colors duration-200">
+                            <div
+                                class="dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-300 uppercase mb-3">Resolução
+                            Personalizada</label>
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <span
+                                    class="text-[9px] text-gray-500 font-bold block mb-1 tracking-wider">LARGURA</span>
+                                <input type="number" id="res-width" value="854"
+                                    class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-yellow-500 focus:outline-none transition placeholder-gray-700">
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-[9px] text-gray-500 font-bold block mb-1 tracking-wider">ALTURA</span>
+                                <input type="number" id="res-height" value="480"
+                                    class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-white font-mono text-sm focus:border-yellow-500 focus:outline-none transition placeholder-gray-700">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5 cursor-pointer hover:border-yellow-500/30 transition no-drag group"
+                        onclick="toggleSetting('closeLauncher')">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 rounded-lg bg-white/5 group-hover:bg-yellow-500/20 transition">
+                                <i data-lucide="door-open"
+                                    class="text-gray-400 group-hover:text-yellow-500 w-5 h-5 transition"></i>
+                            </div>
+                            <div>
+                                <span class="text-sm font-bold text-gray-200 block">Fechar ao Jogar</span>
+                                <span class="text-[10px] text-gray-500">Feche o Launcher assim que o Client
+                                    iniciar.</span>
+                            </div>
+                        </div>
+                        <div id="toggle-closeLauncher"
+                            class="w-10 h-5 bg-gray-700 rounded-full relative transition-colors duration-200">
+                            <div
+                                class="dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="glass rounded-2xl p-8 border border-white/5">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <i data-lucide="bot" class="w-4 h-4"></i> Configurações do Discord
+            </h3>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between bg-black/40 p-4 rounded-xl border border-white/5 cursor-pointer hover:border-yellow-500/30 transition no-drag group"
+                        onclick="toggleSetting('discordRichPresence')">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 rounded-lg bg-white/5 group-hover:bg-yellow-500/20 transition">
+                                <i data-lucide="monitor"
+                                    class="text-gray-400 group-hover:text-yellow-500 w-5 h-5 transition"></i>
+                            </div>
+                            <div>
+                                <span class="text-sm font-bold text-gray-200 block">Ativar Rich Presence</span>
+                                <span class="text-[10px] text-gray-500">Mostrar a atividade do jogo no Discord.</span>
+                            </div>
+                        </div>
+                        <div id="toggle-discord-rich" active=true
+                            class="w-10 h-5 bg-gray-700 rounded-full relative transition-colors duration-200">
+                            <div
+                                class="dot absolute left-1 top-1 w-3 h-3 bg-white rounded-full transition-transform duration-200">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="glass rounded-2xl p-8 border border-white/5">
+            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <i data-lucide="info" class="w-4 h-4"></i> Sobre o Sistema
+            </h3>
+            <div class="flex items-start justify-between gap-8">
+                <div class="flex-1 grid grid-cols-2 gap-4">
+                    <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                        <span class="text-[10px] text-gray-500 uppercase font-bold block mb-1">Versão do Cliente</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-white font-mono text-sm" id="version-app-normal">version</span>
+                            <span
+                                class="bg-green-500/20 text-green-400 text-[9px] px-1.5 py-0.5 rounded font-bold">LATEST</span>
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-3 rounded-xl border border-white/5">
+                        <span class="text-[10px] text-gray-500 uppercase font-bold block mb-1">Build ID</span>
+                        <div class="flex items-center gap-2 group cursor-pointer" title-app="Copiar ID"
+                            id="version-app-build"
+                            onclick="navigator.clipboard.writeText('build-2025.12.12-rc1-1.7.3423-alpha')">
+                            <span class="text-gray-300 font-mono text-xs">version</span>
+                            <i data-lucide="copy" class="w-3 h-3 text-gray-600 group-hover:text-white transition"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-64 flex flex-col justify-between border-l border-white/5 pl-8">
+                    <div class="space-y-2">
+                        <button onclick="window.open('https://discord.gg/TKfuE4ddtp')"
+                            title-app="Entrar no Servidor do Discord da Rede Worth"
+                            class="w-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 text-[#5865F2] border border-[#5865F2]/20 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition no-drag cursor-pointer">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i> Discord Rede Worth
+                        </button>
+                    </div>
+
+                    <div class="mt-4 text-right">
+                        <div class="text-[10px] text-gray-600">Desenvolvido por <span
+                                class="text-yellow-600 font-bold">vitorxp</span></div>
+                        <div class="text-[9px] text-gray-700 mt-0.5">© 2025 Worth Launcher. Todos os direitos
+                            reservados.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-2 pb-4">
+            <button id="btn-reset-settings"
+                class="no-drag text-red-500 hover:text-red-400 text-xs font-bold uppercase tracking-widest flex items-center gap-2 opacity-50 hover:opacity-100 transition">
+                <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Restaurar Padrões
+            </button>
+        </div>
+    </div>
+</section>
