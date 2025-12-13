@@ -301,7 +301,7 @@ function renderAccountsList() {
                     <div class="text-sm font-bold text-white truncate leading-none">${acc.user}</div>
                     <div class="text-[9px] text-gray-500 uppercase font-bold mt-1">${acc.type}</div>
                 </div>
-                <button class="text-gray-600 hover:text-red-500 p-2 rounded-lg hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition btn-remove-acc no-drag">
+                <button title-app="Remover Conta" class="text-gray-600 hover:text-red-500 p-2 rounded-lg hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition btn-remove-acc no-drag">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
             `;
@@ -457,6 +457,10 @@ btnPlay.addEventListener('click', async () => {
         return;
     }
 
+    if (logConsole) logConsole.innerHTML = `
+        <div class="text-gray-500 italic border-b border-white/5 pb-1 mb-2 text-[10px]">Terminal limpo pelo Sistema (novo client iniciando).</div>
+    `;
+
     btnPlay.disabled = true;
     btnPlay.innerHTML = `<span class="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full"></span>`;
     progressContainer.style.opacity = "1";
@@ -540,7 +544,7 @@ window.api.onGameClosed(() => {
     toggleAccountMenu(false);
     setTimeout(() => {
         openConnectionSocket();
-    }, 100);
+    }, 10);
 });
 
 window.api.onGameStarted(() => {
@@ -753,35 +757,28 @@ window.addEventListener("load", () => {
 
     setInterval(async () => {
         await verificarAtualizarVersao();
-    }, 60000)
+    }, 300000)
 })
 
 async function verificarAtualizarVersao() {
     try {
         const response = await fetch('https://api.github.com/repos/vitorxcp/WorthLauncher/releases/latest');
-        if (!response.ok) throw new Error('Falha ao obter versão mais recente.');
+        if (!response.ok) return;
 
         const data = await response.json();
-        if (!data.tag_name) throw new Error('Nenhuma release encontrada no GitHub.');
+        if (!data.tag_name) return;
 
         const versaoMaisRecente = data.tag_name;
         const versaoLocal = `v${window.api.version}`;
 
         if (versaoLocal !== versaoMaisRecente) {
-            if (Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", "")) <= Number(String(versaoLocal).replaceAll(".", "").replace("v", "")))
-                console.log(`\x1b[0;32m[💎] Você já está na versão mais recente, uma que nem existe no meu sistema ainda ;-; (seu abuser)\x1b[0m`);
-            else if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", ""))) <= 3)
-                console.log(`\x1b[0;31m[⚠️] Você se encontra em uma versão muito antiga, recomendo atualizar urgente.\n➡ Baixe aqui a versão ${versaoMaisRecente}: ${data.assets[0]?.browser_download_url}\x1b[0m`);
-            else {
-                console.log(`\x1b[0;33m[⚠️] Nova versão disponível: ${versaoMaisRecente}.\n➡ Baixe aqui: ${data.assets[0]?.browser_download_url}\x1b[0m`);
+            if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", ""))) <= 3) {
+                document.getElementById("f43fd").classList.remove('hidden-force');
+            } else {
                 document.getElementById("f43fd").classList.remove('hidden-force');
             }
-        } else {
-            console.log('\x1b[0;32m[💎] Você já está na versão mais recente.\x1b[0m');
         }
-    } catch (error) {
-        console.log('\x1b[0;31m[❌] Não foi possível verificar a versão mais recente.\x1b[0m');
-    }
+    } catch (error) { }
 }
 
 const checkFirstRun = async () => {
@@ -791,6 +788,41 @@ const checkFirstRun = async () => {
     }
 };
 checkFirstRun();
+
+const CONFIG = {
+    url: 'http://elgae-sp1-b001.elgaehost.com.br:10379/admin/painel/blog',
+    checkInterval: 5000,
+    timeout: 3000
+};
+
+async function checkWebStatus() {
+    const errorPage = document.getElementById('error-popup');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CONFIG.timeout);
+
+    try {
+        const response = await fetch(CONFIG.url, {
+            method: 'HEAD',
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+            if (!errorPage.className.includes("hidden-force")) {
+                loadBlogFeed();
+            }
+            errorPage.classList.add('hidden-force');
+        } else {
+            errorPage.classList.remove('hidden-force');
+        }
+    } catch (error) {
+        errorPage.classList.remove('hidden-force');
+    }
+}
+
+setInterval(checkWebStatus, CONFIG.checkInterval);
+checkWebStatus();
 
 document.getElementById('btn-goto-step2').addEventListener('click', () => {
     const step1 = document.getElementById('modal-step-1');
