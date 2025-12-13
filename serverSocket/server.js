@@ -18,7 +18,7 @@ const ADMINS_FILE = path.join(__dirname, 'admins.json');
 let blogDB = [];
 let usersDB = {};
 let chatsDB = {};
-let adminsDB = [];
+let adminsDB = []
 
 function makeid(length) {
     let result = '';
@@ -52,7 +52,7 @@ function saveData(type) {
 loadData();
 
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost' }));
+app.use(cors());
 app.enable('trust proxy');
 app.engine('html', ejs.renderFile);
 
@@ -281,8 +281,6 @@ io.on("connection", (socket) => {
     let nick = socket.handshake.auth.nick || socket.handshake.query.nick;
     let uuid = socket.handshake.auth.uuid || socket.handshake.query.uuid;
     let status = socket.handshake.auth.status || socket.handshake.query.status;
-
-    // if(onlineUsers[nick]) return;
 
     if (!nick) return socket.disconnect();
 
