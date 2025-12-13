@@ -1,0 +1,27 @@
+<div class="h-10 flex items-center justify-between px-4 drag-region bg-[#050505] border-b border-white/5 z-50">
+    <div class="flex items-center gap-3">
+        <div class="w-5 h-5 bg-[url('./assets/icon.png')] bg-cover bg-center top-[13px] absolute"></div>
+        <img src="./assets/logo_launcher.png" alt="WorthClient"
+            class="w-[180px] mt-[-88px] ml-[15px] mr-[-15px] drop-shadow-2xl object-contain select-none mt-[-80px] mb-[-90px]" />
+        <span title-app="Total de pessoas online no Launcher"
+            class="no-drag ml-2 inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-[12px] font-semibold backdrop-blur-sm"
+            id="count-total-online">
+            <span class="relative flex h-2.5 w-2.5">
+                <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
+            </span>0</span>
+        </span>
+    </div>
+    <div class="no-drag flex items-center gap-2">
+        <span title-app="Baixar nova versão."
+            class="p-[4px] p-1.5 rounded-md hover:bg-white/10 text-gray-400 hover:text-white transition cursor-pointer active:scale-[0.9] hidden-force"
+            id="f43fd"><i data-lucide="arrow-down-to-line" class="w-5 h-5" style="color: #49bb52"></i></span>
+        <button id="min-btn" title-app="Minimizar Launcher"
+            class="p-1.5 rounded-md hover:bg-white/10 text-gray-400 hover:text-white transition active:scale-[0.9]"><i
+                data-lucide="minus" class="w-4 h-4"></i></button>
+        <button id="close-btn" title-app="Fechar Launcher"
+            class="p-1.5 rounded-md hover:bg-red-500/90 hover:text-white text-gray-400 transition active:scale-[0.9]"><i
+                data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+</div>
