@@ -6,7 +6,7 @@
   "email": "vitor.xp.1958@gmail.com",
   "scripts": {
     "start": "electron .",
-    "dev": "concurrently \"vite\" \"electron .\"",
+    "dev": "concurrently -k \"vite\" \"electron .\"",
     "server": "node serverSocket/server.js",
     "build": "vite build && electron-builder",
     "build:win": "vite build && electron-builder --win",
@@ -16,7 +16,7 @@
   "author": "vitorxp",
   "license": "MIT",
   "homepage": "https://github.com/vitorxcp/WorthLauncher",
-  "icon": "ui/assets/Logo-Worth-256x256.png",
+  "icon": "ui/public/assets/Logo-Worth-256x256.png",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/vitorxcp/WorthLauncher.git"
@@ -115,7 +115,7 @@
         "nsis",
         "zip"
       ],
-      "icon": "ui/assets/Logo-Worth-256x256.ico"
+      "icon": "ui/public/assets/Logo-Worth-256x256.ico"
     },
     "linux": {
       "target": [
@@ -123,7 +123,7 @@
         "deb",
         "rpm"
       ],
-      "icon": "ui/assets/Logo-Worth-256x256.png",
+      "icon": "ui/public/assets/Logo-Worth-256x256.png",
       "category": "Game",
       "description": "Launcher de Minecraft Otimizado para Rede Worth",
       "artifactName": "${productName}-Linux-${version}.${ext}"
@@ -133,7 +133,7 @@
         "dmg",
         "zip"
       ],
-      "icon": "ui/assets/icon.icns",
+      "icon": "ui/public/assets/icon.icns",
       "category": "public.app-category.games",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -162,10 +162,10 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "WorthLauncher",
-      "installerIcon": "ui/assets/Logo-Worth-256x256.ico",
-      "uninstallerIcon": "ui/assets/Logo-Worth-256x256.ico",
-      "installerHeader": "ui/assets/Logo-Worth-256x256.ico",
-      "installerHeaderIcon": "ui/assets/Logo-Worth-256x256.ico",
+      "installerIcon": "ui/public/assets/Logo-Worth-256x256.ico",
+      "uninstallerIcon": "ui/public/assets/Logo-Worth-256x256.ico",
+      "installerHeader": "ui/public/assets/Logo-Worth-256x256.ico",
+      "installerHeaderIcon": "ui/public/assets/Logo-Worth-256x256.ico",
       "runAfterFinish": true,
       "guid": "worthlauncher-4a9b2c1d-8e7f-4032-9876-543210abcdef"
     }
