@@ -49,6 +49,12 @@ function saveData(type) {
     } catch (e) { console.error("Erro ao salvar DB:", e); }
 }
 
+const ARCHIVE_DIR = path.join(__dirname, 'historicos-removed');
+
+if (!fs.existsSync(ARCHIVE_DIR)) {
+    fs.mkdirSync(ARCHIVE_DIR, { recursive: true });
+}
+
 loadData();
 
 app.use(express.json());
@@ -282,7 +288,30 @@ io.on("connection", (socket) => {
     let uuid = socket.handshake.auth.uuid || socket.handshake.query.uuid;
     let status = socket.handshake.auth.status || socket.handshake.query.status;
 
-    if (!nick) return socket.disconnect();
+    if (!nick || !uuid) {
+        socket.emit("error", "Nick e UUID são obrigatórios.");
+        return socket.disconnect();
+    }
+
+    nick = nick.trim();
+
+    if (usersDB[nick]) {
+        if (usersDB[nick].uuid !== uuid) {
+            console.log(`[SEGURANÇA] Tentativa de invasão em ${nick}. UUID recebido: ${uuid} | Esperado: ${usersDB[nick].uuid}`);
+            
+            socket.emit("auth_error", { 
+                message: "Este Nick pertence a outra pessoa." 
+            });
+            
+            return socket.disconnect();
+        }
+        
+        usersDB[nick].status = status;
+    } else {
+        console.log(`[NOVO] Registrando usuário ${nick} com UUID ${uuid}`);
+        usersDB[nick] = { uuid, friends: [], requests: [], status };
+        saveData('users');
+    }
 
     if (!usersDB[nick]) {
         usersDB[nick] = { uuid, friends: [], requests: [], status };
@@ -310,6 +339,33 @@ io.on("connection", (socket) => {
 
     usersDB[nick].friends.forEach(friend => {
         if (onlineUsers[friend]) io.to(onlineUsers[friend]).emit("friend:status_update", { nick, status });
+    });
+
+    socket.on("chat:history_cleared", (friendNick) => {
+    if (currentChatFriend === friendNick) {
+        fullChatHistory = [];
+        const msgsContainer = document.getElementById("chat-messages");
+        if(msgsContainer) msgsContainer.innerHTML = "";
+        
+        const notice = document.createElement("div");
+        notice.className = "text-center text-xs text-zinc-600 italic mt-4 mb-4";
+        notice.innerText = "Este histórico foi arquivado e limpo.";
+        msgsContainer.appendChild(notice);
+    }
+});
+
+    socket.on("friend:remove", (targetNick) => {
+        usersDB[nick].friends = usersDB[nick].friends.filter(f => f !== targetNick);
+        
+        if (usersDB[targetNick]) {
+            usersDB[targetNick].friends = usersDB[targetNick].friends.filter(f => f !== nick);
+        }
+        
+        saveData('users');
+        
+        if (onlineUsers[targetNick]) {
+            io.to(onlineUsers[targetNick]).emit("friend:removed", nick);
+        }
     });
 
     socket.on("friend:add", (targetNick) => {
@@ -378,6 +434,38 @@ io.on("connection", (socket) => {
         usersDB[nick].friends.forEach(f => {
             if (onlineUsers[f]) io.to(onlineUsers[f]).emit("friend:status_update", { nick, status });
         });
+    });
+
+    socket.on("chat:clear_history", (targetNick) => {
+        const chatID = getChatID(nick, targetNick);
+
+        if (!chatsDB[chatID] || chatsDB[chatID].length === 0) {
+            return socket.emit("error", "Não há histórico para limpar.");
+        }
+
+        try {
+            const filename = `${chatID}_${Date.now()}.json`;
+            const filePath = path.join(ARCHIVE_DIR, filename);
+
+            fs.writeFileSync(filePath, JSON.stringify(chatsDB[chatID], null, 2));
+            console.log(`[BACKUP] Histórico salvo em: ${filename}`);
+
+            chatsDB[chatID] = [];
+            saveData('chats');
+
+            socket.emit("success", "Histórico arquivado e limpo!");
+            
+            socket.emit("chat:history_cleared", targetNick);
+
+            // if (onlineUsers[targetNick]) {
+            //     io.to(onlineUsers[targetNick]).emit("chat:history_cleared", nick);
+            //     io.to(onlineUsers[targetNick]).emit("notification:msg", { from: "Sistema", text: "O histórico foi limpo." });
+            // }
+
+        } catch (error) {
+            console.error("Erro ao arquivar chat:", error);
+            socket.emit("error", "Erro ao tentar salvar o backup.");
+        }
     });
 
     socket.on("chat:mark_read", (friendNick) => {
