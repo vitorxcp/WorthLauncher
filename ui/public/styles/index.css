@@ -1,0 +1,633 @@
+#custom-tooltip {
+    pointer-events: none !important;
+}
+
+.drag-region {
+    -webkit-app-region: drag;
+}
+
+.no-drag {
+    -webkit-app-region: no-drag;
+    pointer-events: auto !important;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+input {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    -webkit-app-region: no-drag !important;
+}
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(253, 224, 71, 0.2);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(253, 224, 71, 0.4);
+}
+
+.glass {
+    background: rgba(18, 18, 18, 0.65);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-dark {
+    background: rgba(5, 5, 5, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    color: #000;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary:hover:not(:disabled) {
+    filter: brightness(1.15);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -10px rgba(251, 191, 36, 0.5);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+@keyframes pulse-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+    }
+}
+
+.btn-play-glow {
+    animation: pulse-glow 3s infinite;
+}
+
+#progress-bar {
+    transition: width 0.3s ease-out;
+}
+
+.tab-btn {
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.tab-btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0%;
+    background: #fbbf24;
+    border-radius: 0 4px 4px 0;
+    transition: height 0.2s;
+}
+
+.tab-btn.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tab-btn.active::after {
+    height: 60%;
+}
+
+.tab-btn:hover:not(.active) {
+    color: #ddd;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.fade-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+}
+
+.hidden-force {
+    display: none !important;
+}
+
+.dropdown-enter {
+    transform: translateY(-10px);
+    opacity: 0;
+    display: none;
+    pointer-events: none;
+}
+
+.dropdown-active {
+    transform: translateY(0);
+    opacity: 1;
+    display: flex;
+    pointer-events: auto;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.news-card {
+    transition: transform 0.2s;
+}
+
+.news-card:hover {
+    transform: translateY(-4px);
+}
+
+.msg-anim {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .12s ease-out, transform .12s ease-out;
+}
+
+.msg-anim.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#chat-messages {
+    contain: strict;
+    will-change: scroll-position;
+    overflow-anchor: auto;
+}
+
+#custom-tooltip {
+    transition: opacity 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+        transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    opacity: 0;
+    transform: scale(0.9) translateY(5px);
+
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+#custom-tooltip.tooltip-visible {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+.hidden-force {
+    display: none !important;
+}
+
+#modal-contentads h1,
+#modal-contentads h2,
+#modal-contentads h3 {
+    color: #fff;
+    font-weight: 700;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+#modal-contentads h1 {
+    font-size: 2em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.3em;
+}
+
+#modal-contentads h2 {
+    font-size: 1.5em;
+    color: #fbbf24;
+}
+
+#modal-contentads p {
+    margin-bottom: 1em;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+#modal-contentads ul {
+    list-style: disc;
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+    color: #d4d4d4;
+}
+
+#modal-contentads strong {
+    color: #fbbf24;
+}
+
+#modal-contentads a {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+#modal-contentads img {
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 1em 0;
+    width: 100%;
+}
+
+#modal-contentads blockquote {
+    border-left: 4px solid #fbbf24;
+    padding-left: 1em;
+    color: #a3a3a3;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 0 8px 8px 0;
+}
+
+.fallback-pattern {
+    background-color: #111;
+    background-image: radial-gradient(#222 1px, transparent 1px), radial-gradient(#222 1px, #111 1px);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+}
+
+.news-card-img-container {
+    background-color: #0a0a0a;
+}
+
+.news-card-base {
+    background-color: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.news-card-base:hover {
+    transform: translateY(-5px);
+    border-color: rgba(234, 179, 8, 0.4);
+    box-shadow: 0 15px 30px rgba(234, 179, 8, 0.1);
+}
+
+.artistic-fallback {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(234, 179, 8, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.03) 0%, transparent 20%),
+        linear-gradient(135deg, #0f0f0f 0%, #050505 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.artistic-fallback::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+    mask-image: radial-gradient(circle, black 40%, transparent 100%);
+    opacity: 0.5;
+}
+
+.watermark-icon {
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 120px;
+    height: 120px;
+    opacity: 0.05;
+    transform: rotate(15deg);
+    transition: all 0.5s ease;
+    color: white;
+}
+
+.news-card-base:hover .watermark-icon {
+    transform: rotate(0deg) scale(1.1);
+    opacity: 0.1;
+    color: #eab308;
+}
+
+.readability-gradient {
+    background: linear-gradient(to top, #000000 10%, rgba(0, 0, 0, 0.8) 40%, transparent 100%);
+}
+
+#modal-contentads h1 {
+    font-size: 1.5em;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 0.5em;
+}
+
+#modal-contentads h2 {
+    font-size: 1.25em;
+    font-weight: 700;
+    color: #facc15;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+#modal-contentads h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #e5e5e5;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+#modal-contentads p {
+    margin-bottom: 0.8em;
+    line-height: 1.6;
+    color: #d4d4d4;
+}
+
+#modal-contentads ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+#modal-contentads ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+#modal-contentads a {
+    color: #facc15;
+    text-decoration: underline;
+}
+
+#modal-contentads blockquote {
+    border-left: 4px solid #facc15;
+    padding-left: 1em;
+    color: #a3a3a3;
+    font-style: italic;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5em;
+    border-radius: 0 4px 4px 0;
+}
+
+#modal-contentads code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    color: #facc15;
+    font-size: 0.9em;
+}
+
+#modal-contentads pre {
+    background: #000;
+    padding: 1em;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-bottom: 1em;
+    border: 1px solid #333;
+}
+
+#modal-contentads pre code {
+    background: transparent;
+    color: #e5e5e5;
+    padding: 0;
+}
+
+#modal-contentads img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 1em 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#modal-contentads hr {
+    border-color: rgba(255, 255, 255, 0.1);
+    margin: 1.5em 0;
+}
+
+@keyframes float-tooltip {
+
+    0%,
+    100% {
+        transform: translateY(0px) scale(1);
+    }
+
+    50% {
+        transform: translateY(-4px) scale(1);
+    }
+}
+
+.tooltip-active {
+    opacity: 1 !important;
+    transform: translateY(0) scale(1) !important;
+    animation: float-tooltip 3s ease-in-out infinite 0.3s;
+    /* Delay para não quebrar a entrada */
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-card {
+    opacity: 0;
+    animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.news-card-base:hover .watermark-icon {
+    transform: rotate(0deg) scale(1.2);
+    opacity: 0.15;
+    color: #eab308;
+}
+
+#modal-contentads a {
+    color: #3b82f6;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+    transition: all 0.2s;
+}
+
+#modal-contentads a:hover {
+    color: #60a5fa;
+    border-bottom-color: #60a5fa;
+}
+
+@keyframes modalZoomIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes modalZoomOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+.modal-enter {
+    animation: modalZoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.modal-exit {
+    animation: modalZoomOut 0.2s ease-in forwards;
+}
+
+.bg-enter {
+    animation: fadeIn 0.3s forwards;
+}
+
+.bg-exit {
+    animation: fadeOut 0.3s forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.fade-enter {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#typing-indicator {
+    position: absolute;
+    bottom: 80px;
+    left: 20px;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 20;
+}
+
+#typing-indicator.visible {
+    opacity: 1;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 2px;
+    margin-right: 4px;
+}
+
+.typing-dot {
+    width: 4px;
+    height: 4px;
+    background: #eab308;
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes typingBounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
