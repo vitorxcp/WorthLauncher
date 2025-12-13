@@ -1,0 +1,31 @@
+<aside class="w-20 z-10 flex flex-col items-center py-6 gap-2 border-r border-white/5 bg-black/40 backdrop-blur-md">
+    <button onclick="switchTab('home')" title-app="Menu Principal" id="tab-home"
+        class="tab-btn active w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
+        <i data-lucide="gamepad-2" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold">JOGAR</span>
+    </button>
+    <button onclick="switchTab('store')" title-app="Loja" id="tab-store"
+        class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
+        <i data-lucide="shirt" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold">LOJA</span>
+    </button>
+    <button onclick="switchTab('social')" title-app="Amigos" id="tab-social"
+        class="relative tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
+        <i data-lucide="users" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold">AMIGOS</span>
+        <div id="social-ping"
+            class="hidden-force absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0a0a0a] animate-pulse pointer-events-none">
+        </div>
+    </button>
+    <button onclick="switchTab('console')" title-app="Logs do Sistema" id="tab-console"
+        class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag transition-all hover:bg-yellow-500/10 hover:text-yellow-500">
+        <i data-lucide="terminal-square" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold">CONSOLE</span>
+    </button>
+    <div class="flex-1"></div>
+    <button onclick="switchTab('settings')" title-app="Configurações" id="tab-settings"
+        class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
+        <i data-lucide="settings" class="w-6 h-6"></i>
+        <span class="text-[9px] font-bold">OPÇÕES</span>
+    </button>
+</aside>
