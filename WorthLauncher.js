@@ -278,7 +278,7 @@ function createWindow() {
             preload: path.join(__dirname, 'build', 'preload.js'),
             contextIsolation: true,
             nodeIntegration: true,
-            devTools: true
+            devTools: !app.isPackaged
         }
     });
 
@@ -288,8 +288,8 @@ function createWindow() {
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
     } else {
-    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
-}
+        mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    }
 
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
@@ -308,6 +308,12 @@ function createWindow() {
         shell.openExternal(url);
         return { action: 'deny' };
     });
+
+    if (app.isPackaged) {
+        mainWindow.webContents.on("devtools-opened", () => {
+            mainWindow.webContents.closeDevTools();
+        });
+    }
 }
 
 const createSplashWindow = () => {
