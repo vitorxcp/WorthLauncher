@@ -1181,6 +1181,8 @@ function selectFriend(nick, status) {
     socket.emit("chat:select", nick);
 
     btnScrollBottom.classList.remove('visible');
+
+    els.chatInput.focus();
 }
 
 function createFriendElement(friend) {
