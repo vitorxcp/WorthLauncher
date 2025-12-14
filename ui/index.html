@@ -10,12 +10,20 @@
   <script src="./js/lucide.min.js"></script>
   <script src="./js/socket.io.min.js"></script>
   <link rel="stylesheet" href="./styles/index.css">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-J75FLT254J"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-J75FLT254J');
+  </script>
 </head>
 
 <body
   class="bg-transparent h-screen w-screen overflow-hidden flex flex-col rounded-xl border border-white/10 shadow-2xl">
 
-  <load src="./components/header.html"/>
+  <load src="./components/header.html" />
 
   <div class="flex flex-1 overflow-hidden bg-[#0a0a0a] relative">
     <div class="absolute inset-0 z-0">
