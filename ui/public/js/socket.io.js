@@ -21,14 +21,17 @@ function initChatMenu() {
     const menuDropdown = document.getElementById("menu-chat-dropdown");
 
     if (btnOptions && menuDropdown) {
-        btnOptions.onclick = (e) => {
+        const newBtn = btnOptions.cloneNode(true);
+        btnOptions.parentNode.replaceChild(newBtn, btnOptions);
+
+        newBtn.onclick = (e) => {
             e.stopPropagation();
             menuDropdown.classList.toggle("hidden");
         };
 
         document.addEventListener("click", (e) => {
             if (!menuDropdown.classList.contains("hidden")) {
-                if (!menuDropdown.contains(e.target) && e.target !== btnOptions) {
+                if (!menuDropdown.contains(e.target) && e.target !== newBtn) {
                     menuDropdown.classList.add("hidden");
                 }
             }
@@ -602,6 +605,7 @@ const els = {
     btnAddFriend: document.getElementById("btn-add-friend"),
     headerNick: document.getElementById("chat-header-nick"),
     headerStatus: document.getElementById("chat-header-status"),
+    headerStatusDot: document.getElementById("chat-header-status-dot"),
     headerAvatar: document.getElementById("chat-header-avatar"),
     placeholder: document.getElementById("chat-placeholder"),
     myStatusDot: document.getElementById("my-status-dot"),
@@ -657,6 +661,14 @@ els.chatMsgs.addEventListener('scroll', () => {
     } else {
         btnScrollBottom.classList.remove('visible');
     }
+
+    const menuDropdown = document.getElementById("menu-chat-dropdown");
+    if (menuDropdown && !menuDropdown.classList.contains("hidden")) {
+        menuDropdown.classList.add("hidden");
+    }
+
+    const emojiPicker = document.getElementById("emoji-picker");
+    if (emojiPicker && !emojiPicker.classList.contains("hidden")) emojiPicker.classList.add("hidden");
 });
 
 let currentChatFriend = null;
@@ -859,18 +871,62 @@ function requestNotificationPermission() {
 function sendDesktopNotification(sender, text) {
     if (!("Notification" in window)) return;
 
-    if (Notification.permission === "granted") {
-        const notif = new Notification(`Mensagem de ${sender}`, {
-            body: text,
-            icon: `https://mc-heads.net/avatar/${sender}`,
-            silent: false
-        });
+    const myStatus = localStorage.getItem('status-account');
+    if (myStatus === 'ausente' || myStatus === 'ocupado') {
+        return;
+    }
 
-        notif.onclick = () => {
-            window.focus();
-            const friendData = document.getElementById(`status-dot-${sender}`)?.getAttribute('title-app');
-            selectFriend(sender, friendData || 'offline');
-        };
+    if (Notification.permission !== "denied") {
+        try {
+            const title = `💬 ${sender} diz:`;
+
+            const notif = new Notification(title, {
+                body: text,
+                icon: `https://mc-heads.net/avatar/${sender}`,
+                silent: false,
+                tag: sender,
+                renotify: true,
+                requireInteraction: true
+            });
+
+            notif.onclick = () => {
+                window.focus();
+
+                const quickReply = prompt(`Responder para ${sender}:`);
+
+                if (quickReply && quickReply.trim() !== "") {
+                    if (socket && socket.connected) {
+                        socket.emit("chat:send", { targetNick: sender, text: quickReply });
+
+                        if (currentChatFriend === sender) {
+                            const myMsg = {
+                                sender: socket.auth.nick,
+                                text: quickReply,
+                                timestamp: Date.now(),
+                                read: false
+                            };
+                            fullChatHistory.push(myMsg);
+                            appendSingleMessage(myMsg, true);
+                        }
+
+                        showToast(`Enviado para ${sender}`, "success");
+                    }
+                } else {
+                    const friendData = document.getElementById(`status-dot-${sender}`)?.getAttribute('title-app');
+                    if (typeof selectFriend === 'function') {
+                        selectFriend(sender, friendData || 'offline');
+                    }
+                    setTimeout(() => {
+                        document.getElementById("chat-input")?.focus();
+                    }, 100);
+                }
+
+                notif.close();
+            };
+
+        } catch (error) {
+            console.error("Erro na notificação:", error);
+        }
     }
 }
 
@@ -891,7 +947,17 @@ function renderInitialHistory() {
     const initialBatch = fullChatHistory.slice(-30);
     const fragment = document.createDocumentFragment();
 
+    let lastRenderedDay = null;
+
     initialBatch.forEach(msg => {
+        const msgTimestamp = msg.timestamp || Date.now();
+        const currentDay = getDayKey(msgTimestamp);
+
+        if (currentDay !== lastRenderedDay) {
+            fragment.appendChild(createDateSeparator(msgTimestamp));
+            lastRenderedDay = currentDay;
+        }
+
         fragment.appendChild(createMessageElement(msg, false));
     });
 
@@ -906,7 +972,7 @@ function renderInitialHistory() {
 }
 
 function loadOlderMessages() {
-    const currentRenderedCount = els.chatMsgs.children.length - 1;
+    const currentRenderedCount = els.chatMsgs.querySelectorAll('.msg-item').length;
 
     if (currentRenderedCount >= fullChatHistory.length) return;
 
@@ -922,10 +988,40 @@ function loadOlderMessages() {
         return;
     }
 
+    const lastMsgOfNewBatch = olderBatch[olderBatch.length - 1];
+    const firstMsgOfCurrentView = fullChatHistory[nextIndex];
+
+    if (lastMsgOfNewBatch && firstMsgOfCurrentView) {
+        const dateNew = getDayKey(lastMsgOfNewBatch.timestamp || Date.now());
+        const dateOld = getDayKey(firstMsgOfCurrentView.timestamp || Date.now());
+
+        if (dateNew === dateOld) {
+            const existingSeparator = topSentinel.nextElementSibling;
+            if (existingSeparator && existingSeparator.classList.contains('date-separator')) {
+                console.log("[DATA] Removendo separador duplicado na junção do scroll");
+                existingSeparator.remove();
+            }
+        }
+    }
+
     const prevHeight = els.chatMsgs.scrollHeight;
     const fragment = document.createDocumentFragment();
+    let lastRenderedDay = null;
+
+    if (startIndex > 0) {
+        const msgBeforeBatch = fullChatHistory[startIndex - 1];
+        lastRenderedDay = getDayKey(msgBeforeBatch.timestamp || Date.now());
+    }
 
     olderBatch.forEach(msg => {
+        const msgTimestamp = msg.timestamp || Date.now();
+        const currentDay = getDayKey(msgTimestamp);
+
+        if (currentDay !== lastRenderedDay) {
+            fragment.appendChild(createDateSeparator(msgTimestamp));
+            lastRenderedDay = currentDay;
+        }
+
         fragment.appendChild(createMessageElement(msg, false));
     });
 
@@ -941,8 +1037,28 @@ function loadOlderMessages() {
 
 function appendSingleMessage(msg, animate = true) {
     const isMe = msg.sender === socket.auth.nick;
-
     const wasAtBottom = isUserAtBottom();
+    const currentIndex = fullChatHistory.length - 1;
+    const prevIndex = currentIndex - 1;
+
+    let shouldAddSeparator = false;
+
+    if (prevIndex < 0) {
+        shouldAddSeparator = true;
+    } else {
+        const prevMsg = fullChatHistory[prevIndex];
+        const prevDay = getDayKey(prevMsg.timestamp || Date.now());
+        const currentDay = getDayKey(msg.timestamp || Date.now());
+
+        if (prevDay !== currentDay) {
+            shouldAddSeparator = true;
+        }
+    }
+
+    if (shouldAddSeparator) {
+        const separator = createDateSeparator(msg.timestamp || Date.now());
+        els.chatMsgs.appendChild(separator);
+    }
 
     const el = createMessageElement(msg, animate);
     els.chatMsgs.appendChild(el);
@@ -1050,7 +1166,9 @@ function selectFriend(nick, status) {
     els.placeholder?.classList.add("hidden-force");
     els.headerNick.innerText = nick;
     els.headerStatus.innerText = status ?? "OFFLINE";
-    if (els.headerAvatar) els.headerAvatar.src = `https://mc-heads.net/avatar/${nick}`;
+    if (els.headerStatusDot) {
+        els.headerStatusDot.className = `w-2 h-2 rounded-full ${getStatusColor(status || "offline")}`;
+    } if (els.headerAvatar) els.headerAvatar.src = `https://mc-heads.net/avatar/${nick}`;
     document.getElementById(`badge-${nick}`)?.classList.add("hidden-force");
 
     checkGlobalNotification();
@@ -1139,13 +1257,40 @@ els.btnAddFriend.onclick = () => {
     setTimeout(() => { els.btnAddFriend.innerHTML = old; els.friendInput.value = ""; }, 500);
 };
 
+function getDayKey(timestamp) {
+    const d = new Date(timestamp);
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function createDateSeparator(timestamp) {
+    const dateStr = new Date(timestamp).toLocaleDateString('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    const div = document.createElement("div");
+    div.className = "date-separator flex items-center justify-center my-6 opacity-60 select-none fade-in w-full px-4";
+    div.innerHTML = `
+        <div class="h-px bg-white/20 flex-1"></div>
+        <span class="px-4 text-[10px] font-bold text-white/50 uppercase tracking-widest whitespace-nowrap">${dateStr}</span>
+        <div class="h-px bg-white/20 flex-1"></div>
+    `;
+    return div;
+}
+
 function updateFriendStatusUI(nick, status) {
     const dot = document.getElementById(`status-dot-${nick}`);
     const text = document.getElementById(`status-text-${nick}`);
     if (dot) dot.className = `absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#121212] ${getStatusColor(status)}`;
     if (dot) dot.setAttribute("title-app", status);
     if (text) text.innerText = status;
-    if (currentChatFriend === nick) els.headerStatus.innerText = status;
+    if (currentChatFriend === nick) {
+        els.headerStatus.innerText = status;
+        if (els.headerStatusDot) {
+            els.headerStatusDot.className = `w-2 h-2 rounded-full ${getStatusColor(status || "offline")}`;
+        }
+    }
 }
 
 function showNotificationBadge(nick) {
