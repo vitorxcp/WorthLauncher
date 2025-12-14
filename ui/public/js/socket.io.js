@@ -16,14 +16,36 @@ if (btnOptions && menuDropdown) {
     });
 }
 
+function initChatMenu() {
+    const btnOptions = document.getElementById("btn-chat-options");
+    const menuDropdown = document.getElementById("menu-chat-dropdown");
+
+    if (btnOptions && menuDropdown) {
+        btnOptions.onclick = (e) => {
+            e.stopPropagation();
+            menuDropdown.classList.toggle("hidden");
+        };
+
+        document.addEventListener("click", (e) => {
+            if (!menuDropdown.classList.contains("hidden")) {
+                if (!menuDropdown.contains(e.target) && e.target !== btnOptions) {
+                    menuDropdown.classList.add("hidden");
+                }
+            }
+        });
+    }
+}
+
 window.actionClearChat = () => {
     if (!currentChatFriend) return;
-    
-    if(!confirm("Tem certeza que deseja limpar o histórico desta conversa?\n⚠️ AVISO: Fazer isso irá apagar o historico para a outra pessoa!")) return;
 
-    fullChatHistory = []; 
+    if (!confirm("Tem certeza que deseja limpar o histórico desta conversa?\n⚠️ AVISO: Fazer isso irá apagar o historico para a outra pessoa!")) return;
+
+    fullChatHistory = [];
     els.chatMsgs.innerHTML = "";
-    menuDropdown.classList.add("hidden");
+
+    document.getElementById("menu-chat-dropdown")?.classList.add("hidden");
+
     socket.emit("chat:clear_history", currentChatFriend);
     showToast("Histórico limpo.", "success");
 };
@@ -31,16 +53,17 @@ window.actionClearChat = () => {
 window.actionRemoveFriend = () => {
     if (!currentChatFriend) return;
 
-    if(!confirm(`Tem certeza que deseja remover ${currentChatFriend} da sua lista de amigos?`)) return;
+    if (!confirm(`Tem certeza que deseja remover ${currentChatFriend} da sua lista de amigos?`)) return;
 
     socket.emit("friend:remove", currentChatFriend);
-    
+
     const friendItem = document.getElementById(`friend-item-${currentChatFriend}`);
     if (friendItem) friendItem.remove();
-    
+
     currentChatFriend = null;
     els.placeholder?.classList.remove("hidden-force");
-    menuDropdown.classList.add("hidden");
+
+    document.getElementById("menu-chat-dropdown")?.classList.add("hidden");
 
     showToast("Amigo removido.", "success");
 };
@@ -83,13 +106,13 @@ const EMOJI_DATA = {
         icon: "smile",
         label: "Carinhas",
         emojis: [
-            "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", 
-            "🥰", "😍", "🤩", "😘", "😗", "☺", "😙", "😚", "😋", "😛", "😜", "🤪", "😝", 
-            "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄", 
-            "😬", "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢", "🤮", "🤧", 
-            "🥵", "🥶", "🥴", "😵", "🤯", "🤠", "🥳", "😎", "🤓", "🧐", "😕", "😟", "🙁", 
-            "☹", "😮", "😯", "😲", "😳", "🥺", "😦", "😧", "😨", "😰", "😥", "😢", "😭", 
-            "😱", "😖", "😣", "😞", "😓", "😩", "😫", "🥱", "😤", "😡", "😠", "🤬", "😈", 
+            "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇",
+            "🥰", "😍", "🤩", "😘", "😗", "☺", "😙", "😚", "😋", "😛", "😜", "🤪", "😝",
+            "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", "😐", "😑", "😶", "😏", "😒", "🙄",
+            "😬", "🤥", "😌", "😔", "😪", "🤤", "😴", "😷", "🤒", "🤕", "🤢", "🤮", "🤧",
+            "🥵", "🥶", "🥴", "😵", "🤯", "🤠", "🥳", "😎", "🤓", "🧐", "😕", "😟", "🙁",
+            "☹", "😮", "😯", "😲", "😳", "🥺", "😦", "😧", "😨", "😰", "😥", "😢", "😭",
+            "😱", "😖", "😣", "😞", "😓", "😩", "😫", "🥱", "😤", "😡", "😠", "🤬", "😈",
             "👿", "💀", "☠", "💩", "🤡", "👹", "👺", "👻", "👽", "👾", "🤖"
         ]
     },
@@ -97,13 +120,13 @@ const EMOJI_DATA = {
         icon: "hand",
         label: "Gestos e Pessoas",
         emojis: [
-            "👋", "🤚", "🖐", "✋", "🖖", "👌", "🤏", "✌", "🤞", "🤟", "🤘", "🤙", "👈", 
-            "👉", "👆", "🖕", "👇", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐", 
-            "🤲", "🤝", "🙏", "✍", "💅", "🤳", "💪", "🧠", "🦴", "👀", "👁", "👅", "👄", 
-            "💋", "💘", "💝", "💖", "💗", "💓", "💞", "💕", "💟", "❣", "💔", "❤", "🧡", 
-            "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "👶", "🧒", "👦", "👧", "🧑", "👱", 
-            "👨", "🧔", "👩", "🧓", "👴", "👵", "👮", "🕵", "💂", "👷", "🤴", "👸", "👳", 
-            "👲", "🧕", "🤵", "👰", "🤰", "🤱", "👼", "🎅", "🤶", "🦸", "🦹", "🧙", "🧚", 
+            "👋", "🤚", "🖐", "✋", "🖖", "👌", "🤏", "✌", "🤞", "🤟", "🤘", "🤙", "👈",
+            "👉", "👆", "🖕", "👇", "👍", "👎", "✊", "👊", "🤛", "🤜", "👏", "🙌", "👐",
+            "🤲", "🤝", "🙏", "✍", "💅", "🤳", "💪", "🧠", "🦴", "👀", "👁", "👅", "👄",
+            "💋", "💘", "💝", "💖", "💗", "💓", "💞", "💕", "💟", "❣", "💔", "❤", "🧡",
+            "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "👶", "🧒", "👦", "👧", "🧑", "👱",
+            "👨", "🧔", "👩", "🧓", "👴", "👵", "👮", "🕵", "💂", "👷", "🤴", "👸", "👳",
+            "👲", "🧕", "🤵", "👰", "🤰", "🤱", "👼", "🎅", "🤶", "🦸", "🦹", "🧙", "🧚",
             "🧛", "🧜", "🧝", "🧞", "🧟", "🚶", "🏃", "💃", "🕺", "👯", "🧖", "🧗", "🧘"
         ]
     },
@@ -111,20 +134,20 @@ const EMOJI_DATA = {
         icon: "cat",
         label: "Natureza",
         emojis: [
-            "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷", 
-            "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🐤", "🐣", "🐥", 
-            "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌", "🐞", 
-            "🐜", "🦟", "🦗", "🕷", "🕸", "🦂", "🐢", "🐍", "🦎", "🦖", "🦕", "🐙", "🦑", 
-            "🦐", "🦞", "🦀", "🐡", "🐠", "🐟", "🐬", "🐳", "🐋", "🦈", "🐊", "🐅", "🐆", 
-            "🦓", "🦍", "🦧", "🐘", "🦛", "🦏", "🐪", "🐫", "🦒", "🦘", "🐃", "🐂", "🐄", 
-            "🐎", "🐖", "🐏", "🐑", "🦙", "🐐", "🦌", "🐕", "🐩", "🦮", "🐕‍🦺", "🐈", "🐓", 
-            "🦃", "🦚", "🦜", "🦢", "🦩", "🕊", "🐇", "🦝", "🦨", "🦡", "🦦", "🦥", "🐁", 
-            "🐀", "🐿", "🦔", "🐾", "🐉", "🐲", "🌵", "🎄", "🌲", "🌳", "🌴", "🌱", "🌿", 
-            "☘", "🍀", "🎍", "🎋", "🍃", "🍂", "🍁", "🍄", "🐚", "🌾", "💐", "🌷", "🌹", 
-            "🥀", "🌺", "🌸", "🌼", "🌻", "🌞", "🌝", "🌛", "🌜", "🌚", "🌕", "🌖", "🌗", 
-            "🌘", "🌑", "🌒", "🌓", "🌔", "🌙", "🌎", "🌍", "🌏", "🪐", "💫", "⭐", "🌟", 
-            "✨", "⚡", "☄", "💥", "🔥", "🌪", "🌈", "☀", "🌤", "⛅", "🌥", "☁", "🌦", 
-            "🌧", "⛈", "🌩", "🌨", "❄", "☃", "⛄", "🌬", "💨", "💧", "💦", "☔", "☂", 
+            "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐷",
+            "🐽", "🐸", "🐵", "🙈", "🙉", "🙊", "🐒", "🐔", "🐧", "🐦", "🐤", "🐣", "🐥",
+            "🦆", "🦅", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌", "🐞",
+            "🐜", "🦟", "🦗", "🕷", "🕸", "🦂", "🐢", "🐍", "🦎", "🦖", "🦕", "🐙", "🦑",
+            "🦐", "🦞", "🦀", "🐡", "🐠", "🐟", "🐬", "🐳", "🐋", "🦈", "🐊", "🐅", "🐆",
+            "🦓", "🦍", "🦧", "🐘", "🦛", "🦏", "🐪", "🐫", "🦒", "🦘", "🐃", "🐂", "🐄",
+            "🐎", "🐖", "🐏", "🐑", "🦙", "🐐", "🦌", "🐕", "🐩", "🦮", "🐕‍🦺", "🐈", "🐓",
+            "🦃", "🦚", "🦜", "🦢", "🦩", "🕊", "🐇", "🦝", "🦨", "🦡", "🦦", "🦥", "🐁",
+            "🐀", "🐿", "🦔", "🐾", "🐉", "🐲", "🌵", "🎄", "🌲", "🌳", "🌴", "🌱", "🌿",
+            "☘", "🍀", "🎍", "🎋", "🍃", "🍂", "🍁", "🍄", "🐚", "🌾", "💐", "🌷", "🌹",
+            "🥀", "🌺", "🌸", "🌼", "🌻", "🌞", "🌝", "🌛", "🌜", "🌚", "🌕", "🌖", "🌗",
+            "🌘", "🌑", "🌒", "🌓", "🌔", "🌙", "🌎", "🌍", "🌏", "🪐", "💫", "⭐", "🌟",
+            "✨", "⚡", "☄", "💥", "🔥", "🌪", "🌈", "☀", "🌤", "⛅", "🌥", "☁", "🌦",
+            "🌧", "⛈", "🌩", "🌨", "❄", "☃", "⛄", "🌬", "💨", "💧", "💦", "☔", "☂",
             "🌊", "🌫"
         ]
     },
@@ -132,27 +155,27 @@ const EMOJI_DATA = {
         icon: "gamepad-2",
         label: "Objetos",
         emojis: [
-            "🎮", "🕹", "🎲", "🎯", "👾", "🎳", "🎧", "🎤", "🎬", "🎨", "🎰", "🚗", "🚕", 
-            "🚙", "🚌", "🏎", "🚓", "🚑", "🚒", "🚐", "🚚", "🚛", "🚜", "🏍", "🛵", "🚲", 
-            "🛴", "🚀", "🛸", "🚁", "🛶", "⛵", "🚤", "🚢", "🛳", "⚓", "⛽", "🚧", "🚦", 
-            "🚥", "🚏", "🗺", "🗿", "🗽", "🗼", "🏰", "🏯", "🏟", "🎡", "🎢", "🎠", "⛲", 
-            "⛱", "🏖", "🏝", "🏜", "🌋", "⛰", "🏔", "🗻", "🏕", "⛺", "🏠", "🏡", "🏘", 
-            "🏚", "🏗", "🏭", "🏢", "🏬", "🏣", "🏤", "🏥", "🏦", "🏨", "🏪", "🏫", "🏩", 
-            "💒", "🏛", "⛪", "🕌", "🕍", "🕋", "⛩", "⌚", "📱", "📲", "💻", "⌨", "🖥", 
-            "🖨", "🖱", "🖲", "🕹", "🗜", "💽", "💾", "💿", "📀", "📼", "📷", "📸", "📹", 
-            "🎥", "📽", "🎞", "📞", "☎", "📟", "📠", "📺", "📻", "🎙", "🎚", "🎛", "🧭", 
-            "⏱", "⏲", "⏰", "🕰", "⌛", "⏳", "📡", "🔋", "🔌", "💡", "🔦", "🕯", "🪔", 
-            "🧯", "🛢", "💸", "💵", "💴", "💶", "💷", "💰", "💳", "💎", "⚖", "🧰", "🔧", 
-            "🔨", "⚒", "🛠", "⛏", "🔩", "⚙", "🧱", "⛓", "🧲", "🔫", "💣", "🧨", "🪓", 
-            "🔪", "🗡", "⚔", "🛡", "🚬", "⚰", "⚱", "🏺", "🔮", "📿", "🧿", "💈", "⚗", 
-            "🔭", "🔬", "🕳", "🩹", "🩺", "💊", "💉", "🩸", "🧬", "🦠", "🧼", "🧽", "🧹", 
-            "🧺", "🧻", "🚽", "🚰", "🚿", "🛁", "🛀", "🛁", "🛎", "🔑", "🗝", "🚪", "🪑", 
-            "🛋", "🛏", "🛌", "🧸", "🖼", "🛍", "🛒", "🎁", "🎈", "🎏", "🎀", "🎊", "🎉", 
-            "🎎", "🏮", "🎐", "🧧", "✉", "📩", "📨", "📧", "💌", "📥", "📤", "📦", "🏷", 
-            "📪", "📫", "📬", "📭", "📮", "📯", "📜", "📃", "📄", "📑", "🧾", "📊", "📈", 
-            "📉", "🗒", "🗓", "📆", "📅", "🗑", "📇", "🗃", "🗳", "🗄", "📋", "📁", "📂", 
-            "🗂", "🗞", "📰", "📓", "📔", "📒", "📕", "📗", "📘", "📙", "📚", "📖", "🔖", 
-            "🧷", "🔗", "📎", "🖇", "📐", "📏", "🧮", "📌", "📍", "✂", "🖊", "🖋", "✒", 
+            "🎮", "🕹", "🎲", "🎯", "👾", "🎳", "🎧", "🎤", "🎬", "🎨", "🎰", "🚗", "🚕",
+            "🚙", "🚌", "🏎", "🚓", "🚑", "🚒", "🚐", "🚚", "🚛", "🚜", "🏍", "🛵", "🚲",
+            "🛴", "🚀", "🛸", "🚁", "🛶", "⛵", "🚤", "🚢", "🛳", "⚓", "⛽", "🚧", "🚦",
+            "🚥", "🚏", "🗺", "🗿", "🗽", "🗼", "🏰", "🏯", "🏟", "🎡", "🎢", "🎠", "⛲",
+            "⛱", "🏖", "🏝", "🏜", "🌋", "⛰", "🏔", "🗻", "🏕", "⛺", "🏠", "🏡", "🏘",
+            "🏚", "🏗", "🏭", "🏢", "🏬", "🏣", "🏤", "🏥", "🏦", "🏨", "🏪", "🏫", "🏩",
+            "💒", "🏛", "⛪", "🕌", "🕍", "🕋", "⛩", "⌚", "📱", "📲", "💻", "⌨", "🖥",
+            "🖨", "🖱", "🖲", "🕹", "🗜", "💽", "💾", "💿", "📀", "📼", "📷", "📸", "📹",
+            "🎥", "📽", "🎞", "📞", "☎", "📟", "📠", "📺", "📻", "🎙", "🎚", "🎛", "🧭",
+            "⏱", "⏲", "⏰", "🕰", "⌛", "⏳", "📡", "🔋", "🔌", "💡", "🔦", "🕯", "🪔",
+            "🧯", "🛢", "💸", "💵", "💴", "💶", "💷", "💰", "💳", "💎", "⚖", "🧰", "🔧",
+            "🔨", "⚒", "🛠", "⛏", "🔩", "⚙", "🧱", "⛓", "🧲", "🔫", "💣", "🧨", "🪓",
+            "🔪", "🗡", "⚔", "🛡", "🚬", "⚰", "⚱", "🏺", "🔮", "📿", "🧿", "💈", "⚗",
+            "🔭", "🔬", "🕳", "🩹", "🩺", "💊", "💉", "🩸", "🧬", "🦠", "🧼", "🧽", "🧹",
+            "🧺", "🧻", "🚽", "🚰", "🚿", "🛁", "🛀", "🛁", "🛎", "🔑", "🗝", "🚪", "🪑",
+            "🛋", "🛏", "🛌", "🧸", "🖼", "🛍", "🛒", "🎁", "🎈", "🎏", "🎀", "🎊", "🎉",
+            "🎎", "🏮", "🎐", "🧧", "✉", "📩", "📨", "📧", "💌", "📥", "📤", "📦", "🏷",
+            "📪", "📫", "📬", "📭", "📮", "📯", "📜", "📃", "📄", "📑", "🧾", "📊", "📈",
+            "📉", "🗒", "🗓", "📆", "📅", "🗑", "📇", "🗃", "🗳", "🗄", "📋", "📁", "📂",
+            "🗂", "🗞", "📰", "📓", "📔", "📒", "📕", "📗", "📘", "📙", "📚", "📖", "🔖",
+            "🧷", "🔗", "📎", "🖇", "📐", "📏", "🧮", "📌", "📍", "✂", "🖊", "🖋", "✒",
             "🖌", "🖍", "📝", "✏", "🔍", "🔎", "🔏", "🔐", "🔒", "🔓"
         ]
     }
@@ -220,14 +243,14 @@ function renderEmojiTabs() {
         btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all relative group ${index === 0 ? 'text-yellow-500 bg-white/5' : ''}`;
         btn.title = category.label;
         btn.innerHTML = `<i data-lucide="${category.icon}" class="w-4 h-4"></i>`;
-        
+
         if (index === 0) btn.innerHTML += `<div class="absolute bottom-0 left-1 right-1 h-0.5 bg-yellow-500 rounded-t-full active-indicator"></div>`;
 
         btn.onclick = () => {
             emojiSearchInput.value = "";
             document.getElementById("btn-clear-search")?.classList.add("hidden");
             renderEmojiContent();
-            
+
             setTimeout(() => {
                 const section = document.getElementById(`emoji-cat-${key}`);
                 if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -255,22 +278,22 @@ function renderEmojiContent() {
 
     Object.keys(EMOJI_DATA).forEach(key => {
         const category = EMOJI_DATA[key];
-        
-        if(key === 'recents' && category.emojis.length === 0) return;
+
+        if (key === 'recents' && category.emojis.length === 0) return;
 
         const title = document.createElement("div");
         title.id = `emoji-cat-${key}`;
         title.className = "text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 mt-2 px-1 pt-1 sticky top-0 bg-[#202020]/95 backdrop-blur-sm z-10 flex justify-between items-center";
         title.innerText = category.label;
-        
-        if(key === 'recents') {
-             const clearRecentsBtn = document.createElement("button");
-             clearRecentsBtn.innerHTML = "Limpar";
-             clearRecentsBtn.className = "text-[9px] bg-white/5 hover:bg-red-500/20 hover:text-red-400 px-1.5 py-0.5 rounded transition cursor-pointer";
-             clearRecentsBtn.onclick = (e) => { e.preventDefault(); clearAllRecents(); };
-             title.appendChild(clearRecentsBtn);
+
+        if (key === 'recents') {
+            const clearRecentsBtn = document.createElement("button");
+            clearRecentsBtn.innerHTML = "Limpar";
+            clearRecentsBtn.className = "text-[9px] bg-white/5 hover:bg-red-500/20 hover:text-red-400 px-1.5 py-0.5 rounded transition cursor-pointer";
+            clearRecentsBtn.onclick = (e) => { e.preventDefault(); clearAllRecents(); };
+            title.appendChild(clearRecentsBtn);
         }
-        
+
         fragment.appendChild(title);
 
         const grid = document.createElement("div");
@@ -293,7 +316,7 @@ function renderEmojiContent() {
 
 function renderSearchResults(term) {
     emojiScrollArea.innerHTML = "";
-    
+
     let results = new Set();
 
     for (const [keywords, emojiList] of Object.entries(KEYWORD_DB)) {
@@ -303,13 +326,13 @@ function renderSearchResults(term) {
     }
 
     Object.values(EMOJI_DATA).forEach(cat => {
-        if(cat.label.toLowerCase().includes(term)) {
+        if (cat.label.toLowerCase().includes(term)) {
             cat.emojis.forEach(e => results.add(e));
         }
     });
 
     const fragment = document.createDocumentFragment();
-    
+
     const title = document.createElement("div");
     title.className = "text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 px-1";
     title.innerText = `Resultados para "${term}"`;
@@ -318,12 +341,15 @@ function renderSearchResults(term) {
     if (results.size === 0) {
         const noRes = document.createElement("div");
         noRes.className = "flex flex-col items-center justify-center mt-10 opacity-50";
-        noRes.innerHTML = `<i data-lucide="search-x" class="w-8 h-8 mb-2"></i><span class="text-xs">Nada encontrado</span>`;
+        noRes.innerHTML = `
+        <i data-lucide="search-x" class="w-8 h-8 mb-2 text-white/75"></i>
+        <span class="text-xs text-white/75">Nada encontrado</span>
+        `;
         fragment.appendChild(noRes);
     } else {
         const grid = document.createElement("div");
         grid.className = "grid grid-cols-7 gap-1 mb-4";
-        
+
         results.forEach(emoji => {
             const btn = document.createElement("button");
             btn.innerText = emoji;
@@ -355,13 +381,13 @@ function loadRecents() {
 
 function addToRecents(emoji) {
     let current = EMOJI_DATA.recents.emojis.filter(e => e !== emoji);
-    
+
     current.unshift(emoji);
-    
+
     if (current.length > MAX_RECENTS) {
         current = current.slice(0, MAX_RECENTS);
     }
-    
+
     EMOJI_DATA.recents.emojis = current;
     localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(current));
 }
@@ -378,27 +404,73 @@ function handleEmojiClick(emoji) {
 }
 
 function insertEmoji(emoji) {
-    const input = document.getElementById("chat-input"); 
-    if(!input) return;
+    const input = document.getElementById("chat-input");
+    if (!input) return;
 
     const start = input.selectionStart;
     const end = input.selectionEnd;
     const text = input.value;
-    
+
     input.value = text.substring(0, start) + emoji + text.substring(end);
     input.focus();
     input.selectionStart = input.selectionEnd = start + emoji.length;
 }
 
-if (btnEmojiToggle) {
-    btnEmojiToggle.onclick = (e) => {
-        e.stopPropagation();
-        emojiPicker.classList.toggle("hidden");
-        
-        if (!emojiPicker.classList.contains("hidden")) {
-            initEmojiSystem();
-        }
-    };
+function initEmojiToggle() {
+    const btnToggle = document.getElementById("btn-emoji-toggle");
+    const picker = document.getElementById("emoji-picker");
+
+    if (btnToggle && picker) {
+
+        btnToggle.onclick = (e) => {
+            e.stopPropagation();
+
+            const isHidden = picker.classList.contains("hidden");
+
+            if (isHidden) {
+                picker.classList.remove("hidden");
+
+                if (!document.getElementById("emoji-header-tabs")) {
+                    initEmojiSystem();
+                }
+
+                const rect = btnToggle.getBoundingClientRect();
+                const pickerWidth = 320;
+                const pickerHeight = 384;
+                const margin = 12;
+
+                let left = rect.right - pickerWidth;
+                let top = rect.top - pickerHeight - margin;
+
+                if (top < 10) {
+                    top = rect.bottom + margin;
+                }
+
+                if (left < 10) left = 10;
+
+                picker.style.left = `${left}px`;
+                picker.style.top = `${top}px`;
+
+            } else {
+                picker.classList.add("hidden");
+            }
+        };
+
+        document.addEventListener("click", (e) => {
+            if (!picker.classList.contains("hidden")) {
+                if (!picker.contains(e.target) && !btnToggle.contains(e.target)) {
+                    picker.classList.add("hidden");
+                }
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (!picker.classList.contains("hidden")) picker.classList.add("hidden");
+        });
+
+    } else {
+        console.warn("[EMOJI] Botão ou Picker não encontrados no HTML.");
+    }
 }
 
 document.addEventListener("click", (e) => {
@@ -406,6 +478,12 @@ document.addEventListener("click", (e) => {
         if (!emojiPicker.contains(e.target) && e.target !== btnEmojiToggle) {
             emojiPicker.classList.add("hidden");
         }
+    }
+});
+
+window.addEventListener('resize', () => {
+    if (!emojiPicker.classList.contains("hidden")) {
+        emojiPicker.classList.add("hidden");
     }
 });
 
@@ -473,7 +551,6 @@ styleParams.innerHTML = `
         animation: pulse 2s infinite;
     }
 
-    /* ESTILO DO DIGITANDO */
     #typing-indicator {
         position: absolute;
         bottom: 90px; /* Acima do input */
@@ -688,13 +765,13 @@ function setupSocketEvents() {
     });
 
     socket.on("friend:removed", (removedNick) => {
-    const el = document.getElementById(`friend-item-${removedNick}`);
-    if(el) el.remove();
-    if(currentChatFriend === removedNick) {
-         currentChatFriend = null;
-         els.placeholder?.classList.remove("hidden-force");
-    }
-});
+        const el = document.getElementById(`friend-item-${removedNick}`);
+        if (el) el.remove();
+        if (currentChatFriend === removedNick) {
+            currentChatFriend = null;
+            els.placeholder?.classList.remove("hidden-force");
+        }
+    });
 
     socket.on("auth_error", (data) => {
         socketinf = false;
@@ -702,7 +779,7 @@ function setupSocketEvents() {
         alert(`ACESSO NEGADO: ${data.message}`);
         if (currentUser?.user) {
             updateUserUI('Convidado', 'none');
-                localStorage.setItem('worth_last_user', null);
+            localStorage.setItem('worth_last_user', null);
             savedAccounts = savedAccounts.filter(account => account.user !== currentUser.user);
             saveAccountsToStorage();
         }
@@ -800,6 +877,8 @@ function sendDesktopNotification(sender, text) {
 window.addEventListener("load", () => {
     initializeSocket();
     requestNotificationPermission();
+    initChatMenu();
+    initEmojiToggle();
 });
 
 function renderInitialHistory() {
@@ -1115,15 +1194,27 @@ function showInviteToast(from) {
     const toast = document.createElement("div");
     toast.className = "fixed bottom-5 right-5 bg-[#121212] border border-white/10 p-4 rounded-xl shadow-2xl z-50 flex flex-col gap-2 w-64 animate-in slide-in-from-bottom fade-in duration-300";
     toast.innerHTML = `
-        <div class="flex items-center gap-2"><img src="https://mc-heads.net/avatar/${from}" class="w-6 h-6 rounded bg-black/50"><div><div class="text-sm text-white font-bold">Solicitação</div><div class="text-xs text-gray-400">de <span class="text-yellow-500">${from}</span></div></div></div>
-        <div class="flex gap-2 mt-1"><button onclick="respondInvite('${from}', true, this)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-1.5 rounded-lg text-xs font-bold transition">Aceitar</button><button onclick="respondInvite('${from}', false, this)" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white py-1.5 rounded-lg text-xs font-bold transition">Recusar</button></div>`;
+        <div class="flex items-center gap-2">
+            <img src="https://mc-heads.net/avatar/${from}" class="w-6 h-6 rounded bg-black/50">
+            <div>
+                <div class="text-sm text-white font-bold">Solicitação</div>
+                <div class="text-xs text-gray-400">de <span class="text-yellow-500">${from}</span></div>
+            </div>
+        </div>
+        <div class="flex gap-2 mt-1">
+            <button onclick="respondInvite('${from}', true, this)" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-1.5 rounded-lg text-xs font-bold transition">Aceitar</button>
+            <button onclick="respondInvite('${from}', false, this)" class="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white py-1.5 rounded-lg text-xs font-bold transition">Recusar</button>
+        </div>`;
     document.body.appendChild(toast);
 }
 
 window.respondInvite = (requesterNick, accept, btn) => {
     socket.emit("friend:respond", { requesterNick, accept });
     const box = btn.closest("div.fixed");
-    if (box) { box.style.opacity = "0"; setTimeout(() => box.remove(), 300); }
+    if (box) {
+        box.style.opacity = "0";
+        setTimeout(() => box.remove(), 300);
+    }
 };
 
 function checkPendingRequests(requests) {
