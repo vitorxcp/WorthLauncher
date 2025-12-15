@@ -312,13 +312,57 @@ function renderAccountsList() {
 
         div.querySelector('.btn-remove-acc').addEventListener('click', (e) => {
             e.stopPropagation();
-            if (confirm(`Remover conta ${acc.user}?`)) removeAccount(idx);
+
+            openDeleteModal(idx, acc.user);
         });
 
         accountsListEl.appendChild(div);
     });
     lucide.createIcons();
 }
+
+let pendingDeleteIndex = null;
+
+const modalDelete = document.getElementById('modal-delete-account');
+const modalDeleteContent = document.getElementById('modal-delete-content');
+const targetNameSpan = document.getElementById('delete-target-name');
+
+
+function openDeleteModal(idx, username) {
+    pendingDeleteIndex = idx;
+    targetNameSpan.innerText = username;
+
+    modalDelete.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        modalDelete.classList.remove('opacity-0');
+        modalDeleteContent.classList.remove('scale-95');
+        modalDeleteContent.classList.add('scale-100');
+    });
+}
+
+function closeDeleteModal() {
+    pendingDeleteIndex = null;
+
+    modalDelete.classList.add('opacity-0');
+    modalDeleteContent.classList.remove('scale-100');
+    modalDeleteContent.classList.add('scale-95');
+
+    setTimeout(() => {
+        modalDelete.classList.add('hidden');
+    }, 300);
+}
+
+document.getElementById('btn-cancel-delete').addEventListener('click', closeDeleteModal);
+document.getElementById('btn-confirm-delete').addEventListener('click', () => {
+    if (pendingDeleteIndex !== null) {
+        removeAccount(pendingDeleteIndex);
+        closeDeleteModal();
+    }
+});
+
+modalDelete.addEventListener('click', (e) => {
+    if (e.target === modalDelete) closeDeleteModal();
+});
 
 function toggleAccountMenu(show) {
     if (show) {
