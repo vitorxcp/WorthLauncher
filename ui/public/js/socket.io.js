@@ -855,7 +855,6 @@ function setupSocketEvents() {
         } 
         else if (currentSocialTab === 'tickets') {
             if (currentTicketId) {
-                console.log("[DEBUG] Histórico do Ticket carregado:", messages.length, "mensagens");
                 fullChatHistory = messages || [];
             }
         }
@@ -1095,7 +1094,8 @@ function renderInitialHistory() {
     observer.unobserve(topSentinel);
 
     els.chatMsgs.style.visibility = 'hidden';
-    els.chatMsgs.style.scrollBehavior = 'auto';
+    els.chatMsgs.style.scrollBehavior = 'auto'; 
+    
     els.chatMsgs.innerHTML = "";
     els.chatMsgs.appendChild(topSentinel);
 
@@ -1134,15 +1134,14 @@ function renderInitialHistory() {
     requestAnimationFrame(() => {
         if (targetScrollElementId) {
             const el = document.getElementById(targetScrollElementId);
-            if (el) {
-                el.scrollIntoView({ block: "center", behavior: "auto" });
-                setupUnreadRemover();
-            }
+            if (el) el.scrollIntoView({ block: "center", behavior: "auto" });
         } else {
             els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
         }
 
         els.chatMsgs.style.visibility = 'visible';
+        
+        if (targetScrollElementId) setupUnreadRemover();
 
         if (!hasInsertedUnreadSeparator) {
             if (currentSocialTab === 'friends' && currentChatFriend) {
@@ -1156,9 +1155,11 @@ function renderInitialHistory() {
         }
 
         setTimeout(() => {
+            if (!targetScrollElementId) els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+            
             els.chatMsgs.style.scrollBehavior = 'smooth';
             observer.observe(topSentinel);
-        }, 300);
+        }, 200);
     });
 }
 
@@ -1176,6 +1177,11 @@ function setupUnreadRemover() {
 
     const removeAction = () => {
         const sep = document.getElementById("unread-separator-line");
+        
+        els.chatMsgs.removeEventListener("scroll", scrollHandler);
+        els.chatInput.removeEventListener("click", removeAction);
+        els.chatInput.removeEventListener("keydown", removeAction);
+
         if (sep) {
             sep.style.animation = "fadeOutSeparator 0.5s ease forwards";
             
@@ -1192,10 +1198,6 @@ function setupUnreadRemover() {
 
             setTimeout(() => sep.remove(), 500);
         }
-        
-        els.chatMsgs.removeEventListener("scroll", scrollHandler);
-        els.chatInput.removeEventListener("click", removeAction);
-        els.chatInput.removeEventListener("keydown", removeAction);
     };
 
     els.chatInput.addEventListener("click", removeAction, { once: true });
@@ -1236,7 +1238,6 @@ function loadOlderMessages() {
         if (dateNew === dateOld) {
             const existingSeparator = topSentinel.nextElementSibling;
             if (existingSeparator && existingSeparator.classList.contains('date-separator')) {
-                console.log("[DATA] Removendo separador duplicado na junção do scroll");
                 existingSeparator.remove();
             }
         }
@@ -1325,19 +1326,22 @@ function isUserAtBottom() {
 }
 
 function scrollToBottom(force = false) {
-    requestAnimationFrame(() => {
-        if (force) {
-            const oldBehavior = els.chatMsgs.style.scrollBehavior;
-            els.chatMsgs.style.scrollBehavior = 'auto';
-            els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
-            setTimeout(() => els.chatMsgs.style.scrollBehavior = oldBehavior, 50);
-        } else {
-            els.chatMsgs.scrollTo({
-                top: els.chatMsgs.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
-    });
+    if (force) {
+        els.chatMsgs.style.scrollBehavior = 'auto';
+    }
+
+    const scrollLogic = () => {
+        els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+    };
+
+    requestAnimationFrame(scrollLogic);
+
+    if (force) {
+        setTimeout(() => {
+            scrollLogic();
+            els.chatMsgs.style.scrollBehavior = 'smooth';
+        }, 100);
+    }
 }
 
 function createMessageElement(msg, animate = true) {
@@ -1662,6 +1666,11 @@ window.openNewTicketModal = () => {
     }
 };
 
+window.setTicketFilter = (filter) => {
+    currentTicketFilter = filter;
+    if(socket && socket.connected) socket.emit('ticket:list');
+};
+
 window.confirmCreateTicket = () => {
     const input = document.getElementById('input-ticket-subject');
     const subject = input.value.trim();
@@ -1718,53 +1727,86 @@ window.actionCloseTicket = (id) => {
 
 function updateMessagesToRead() {
     const readIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>`;
+
     const pendingMsgs = document.querySelectorAll('.msg-status-sent');
+    
     pendingMsgs.forEach(el => {
         el.innerHTML = readIconSVG;
         el.classList.remove('msg-status-sent');
         el.classList.add('msg-status-read');
-        el.parentElement.setAttribute('title-app', 'Lida');
+        if(el.parentElement) el.parentElement.setAttribute('title-app', 'Lida');
     });
 }
+
+let currentTicketFilter = 'all';
+
+window.setTicketFilter = (filter) => {
+    currentTicketFilter = filter;
+    if(socket && socket.connected) socket.emit('ticket:list');
+};
 
 function renderTicketList(tickets) {
     const list = document.getElementById('tickets-list');
     if (!list) return;
 
-    list.innerHTML = "";
+    const filteredTickets = tickets.filter(t => {
+        if (currentTicketFilter === 'all') return true;
+        return t.status === currentTicketFilter;
+    });
 
-    if (!tickets || tickets.length === 0) {
-        list.innerHTML = `
-            <div class="flex flex-col items-center justify-center h-40 text-zinc-700 gap-4 opacity-60">
-                <i data-lucide="ticket" class="w-6 h-6 stroke-[1.5]"></i>
-                <span class="text-xs font-medium">Nenhum ticket aberto</span>
-            </div>`;
+    list.innerHTML = "";
+    
+    const filterHeader = document.createElement("div");
+    filterHeader.className = "flex gap-1 mb-2 px-1";
+    filterHeader.innerHTML = `
+        <button onclick="setTicketFilter('all')" class="flex-1 py-1 rounded text-[10px] font-bold transition ${currentTicketFilter === 'all' ? 'bg-white/10 text-white' : 'text-zinc-600 hover:text-zinc-400'}">Todos</button>
+        <button onclick="setTicketFilter('open')" class="flex-1 py-1 rounded text-[10px] font-bold transition ${currentTicketFilter === 'open' ? 'bg-emerald-500/20 text-emerald-400' : 'text-zinc-600 hover:text-emerald-500/50'}">Abertos</button>
+        <button onclick="setTicketFilter('closed')" class="flex-1 py-1 rounded text-[10px] font-bold transition ${currentTicketFilter === 'closed' ? 'bg-red-500/20 text-red-400' : 'text-zinc-600 hover:text-red-500/50'}">Fechados</button>
+    `;
+    list.appendChild(filterHeader);
+
+    if (filteredTickets.length === 0) {
+        const emptyDiv = document.createElement("div");
+        emptyDiv.className = "flex flex-col items-center justify-center h-40 text-zinc-700 gap-4 opacity-60";
+        emptyDiv.innerHTML = `
+            <i data-lucide="inbox" class="w-6 h-6 stroke-[1.5]"></i>
+            <span class="text-xs font-medium">Nada aqui</span>
+        `;
+        list.appendChild(emptyDiv);
         if (window.lucide) window.lucide.createIcons();
         return;
     }
 
     const fragment = document.createDocumentFragment();
 
-    tickets.forEach(ticket => {
+    filteredTickets.forEach(ticket => {
         const div = document.createElement("div");
         div.id = `ticket-item-${ticket.id}`;
-        div.className = "group relative p-3 rounded-2xl cursor-pointer transition-all duration-100 border border-transparent hover:bg-white/5 hover:border-white/5 flex items-center gap-4 mb-1 ticket-item";
+        div.className = `group relative p-3 rounded-2xl cursor-pointer transition-all duration-100 border border-transparent hover:bg-white/5 hover:border-white/5 flex items-center gap-4 mb-1 ticket-item ${currentTicketId === ticket.id ? 'bg-white/10 border-yellow-500/50' : ''}`;
+        
         div.onclick = () => selectTicket(ticket);
 
         const statusColor = ticket.status === 'open' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-red-500';
-        const iconColor = ticket.status === 'open' ? 'text-zinc-400' : 'text-zinc-600';
+        const iconColor = ticket.status === 'open' ? 'text-emerald-500' : 'text-red-500';
+        const dateStr = new Date(ticket.timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+        let badgeHtml = '';
 
         div.innerHTML = `
             <div class="relative shrink-0">
                 <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center shadow-md">
-                    <i data-lucide="life-buoy" class="w-5 h-5 ${iconColor}"></i>
+                    <i data-lucide="${ticket.status === 'open' ? 'life-buoy' : 'lock'}" class="w-5 h-5 ${iconColor}"></i>
                 </div>
                 <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#18181b] ${statusColor}"></div>
             </div>
             <div class="flex-1 min-w-0 flex flex-col justify-center">
-                <h4 class="text-sm font-bold text-gray-200 truncate group-hover:text-yellow-500 transition-colors">Ticket #${ticket.id}</h4>
+                <div class="flex justify-between items-center w-full">
+                    <h4 class="text-sm font-bold text-gray-200 truncate group-hover:text-yellow-500 transition-colors w-24">Ticket #${ticket.id}</h4>
+                    <span class="text-[9px] text-zinc-600 font-mono">${dateStr}</span>
+                </div>
                 <p class="text-[10px] text-zinc-500 font-medium truncate">${ticket.subject}</p>
             </div>
+            ${badgeHtml}
         `;
         fragment.appendChild(div);
     });
