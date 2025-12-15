@@ -291,6 +291,11 @@ function updateOnlineCount() {
 
 console.log(`[SOCKET] Servidor Social rodando na porta ${PORT}`);
 
+function isSocketInRoom(socketId, roomId) {
+    const room = io.sockets.adapter.rooms.get(roomId);
+    return room && room.has(socketId);
+}
+
 io.on("connection", (socket) => {
     let nick = socket.handshake.auth.nick || socket.handshake.query.nick;
     let uuid = socket.handshake.auth.uuid || socket.handshake.query.uuid;
@@ -361,6 +366,25 @@ io.on("connection", (socket) => {
         socket.emit('ticket:list_update', myTickets);
     });
 
+    socket.on('ticket:join', (ticketId) => {
+        const ticket = ticketsDB.find(t => t.id === ticketId);
+
+        if (!ticket) {
+            return socket.emit('error', 'Ticket não encontrado.');
+        }
+
+        if (ticket.author !== nick && !isUserStaff(nick)) {
+            return socket.emit('error', 'Sem permissão para este ticket.');
+        }
+
+        socket.join(`ticket_${ticketId}`);
+
+        socket.emit('chat:history', {
+            friend: `Ticket #${ticketId}`,
+            messages: ticket.messages || []
+        });
+    });
+
     socket.on('ticket:create', ({ subject }) => {
         const ticket = {
             id: makeid(6),
@@ -384,48 +408,73 @@ io.on("connection", (socket) => {
         });
     });
 
-    socket.on('ticket:join', (ticketId) => {
-        const ticket = ticketsDB.find(t => t.id === ticketId);
-        if(!ticket) return;
-
-        if (ticket.author !== nick && !isUserStaff(nick)) {
-            return socket.emit('error', 'Sem permissão para este ticket.');
-        }
-
-        socket.join(`ticket_${ticketId}`);
-        socket.emit('chat:history', { 
-        friend: `Ticket #${ticketId}`, 
-        messages: ticket.messages 
-    });
-    });
-
     socket.on('ticket:send', ({ ticketId, text }) => {
         const ticket = ticketsDB.find(t => t.id === ticketId);
         if (!ticket) return;
         if (ticket.status === 'closed') return socket.emit('error', 'Este ticket está fechado.');
 
-        const msg = { sender: nick, text, timestamp: Date.now(), read: false, isStaff: isUserStaff(nick) };
+        const isSenderStaff = isUserStaff(nick);
+
+        if (!isSenderStaff) {
+            if (ticket.author !== nick) return socket.emit("error", "Você não é dono desse Ticket!");
+        }
+
+        const msg = {
+            sender: nick,
+            text,
+            timestamp: Date.now(),
+            read: false,
+            isStaff: isSenderStaff,
+            ticketId: ticketId
+        };
+
         ticket.messages.push(msg);
         saveData('tickets');
 
-        io.to(`ticket_${ticketId}`).emit('ticket:receive', { ticketId, ...msg });
-        
-        if (ticket.author !== nick && onlineUsers[ticket.author]) {
-             io.to(onlineUsers[ticket.author]).emit('ticket:receive', { ticketId, ...msg });
+        const roomName = `ticket_${ticketId}`;
+
+        io.to(roomName).emit('ticket:receive', msg);
+
+        if (isSenderStaff) {
+            let authorSocketID = onlineUsers[ticket.author];
+
+            if (!authorSocketID) {
+                const targetAuthorLower = ticket.author.toLowerCase().trim();
+                const foundKey = Object.keys(onlineUsers).find(k => k.toLowerCase().trim() === targetAuthorLower);
+                if (foundKey) {
+                    authorSocketID = onlineUsers[foundKey];
+                }
+            }
+
+            if (authorSocketID) {
+                if (!isSocketInRoom(authorSocketID, roomName)) {
+                    io.to(authorSocketID).emit('ticket:receive', msg);
+                }
+            }
+        } else {
+            Object.keys(onlineUsers).forEach(onlineNick => {
+                if (isUserStaff(onlineNick) && onlineNick !== nick) {
+                    const staffSocketID = onlineUsers[onlineNick];
+
+                    if (!isSocketInRoom(staffSocketID, roomName)) {
+                        io.to(staffSocketID).emit('ticket:receive', msg);
+                    }
+                }
+            });
         }
     });
 
     socket.on('ticket:close', (ticketId) => {
         const ticket = ticketsDB.find(t => t.id === ticketId);
-        if(!ticket) return;
-        
+        if (!ticket) return;
+
         if (ticket.author !== nick && !isUserStaff(nick)) return;
 
         ticket.status = 'closed';
         saveData('tickets');
-        
+
         io.to(`ticket_${ticketId}`).emit('success', 'Este ticket foi encerrado.');
-        
+
         const isStaff = isUserStaff(nick);
         socket.emit('ticket:list_update', isStaff ? ticketsDB : ticketsDB.filter(t => t.author === nick));
     });
@@ -573,13 +622,53 @@ io.on("connection", (socket) => {
                     changed = true;
                 }
             });
-            
+
             if (changed) {
                 saveData('chats');
-                
+
                 if (onlineUsers[friendNick]) {
                     io.to(onlineUsers[friendNick]).emit("chat:read_confirm", { by: nick });
                 }
+            }
+        }
+    });
+
+    socket.on("ticket:mark_read", (ticketId) => {
+        const ticket = ticketsDB.find(t => t.id === ticketId);
+        if (ticket) {
+            let changed = false;
+            ticket.messages.forEach(m => {
+                if (m.sender !== nick && !m.read) {
+                    m.read = true;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                saveData('tickets');
+                io.to(`ticket_${ticketId}`).emit("chat:read_confirm", { by: nick, ticketId });
+            }
+        }
+    });
+
+    socket.on("chat:typing", ({ target, state, isTicket }) => {
+        if (isTicket) {
+            socket.to(target).emit("chat:typing_update", { 
+                from: nick,
+                state: state,
+                isTicket: true,
+                ticketId: target.replace('ticket_', '')
+            });
+        } else {
+            if (usersDB[nick] && usersDB[nick].friends) {
+                usersDB[nick].friends.forEach(friendNick => {
+                    if (onlineUsers[friendNick]) {
+                        io.to(onlineUsers[friendNick]).emit("chat:typing_update", {
+                            from: nick,
+                            state: state
+                        });
+                    }
+                });
             }
         }
     });
