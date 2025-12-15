@@ -1,0 +1,33 @@
+<div id="modal-auth-error" 
+     class="fixed inset-0 z-[999] bg-black/95 backdrop-blur-xl flex items-center justify-center hidden opacity-0 transition-all duration-300 select-none">
+    
+    <div class="relative bg-[#0f0f10] border border-red-500/20 p-8 rounded-[2rem] w-96 shadow-[0_0_50px_rgba(220,38,38,0.15)] transform scale-95 transition-all duration-300 group overflow-hidden">
+        
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-red-500/10 to-transparent pointer-events-none"></div>
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-red-600/20 rounded-full blur-[80px] pointer-events-none animate-pulse"></div>
+
+        <div class="relative z-10 flex flex-col items-center text-center">
+            
+            <div class="w-20 h-20 bg-[#1a1010] rounded-3xl flex items-center justify-center mb-6 border border-red-500/30 shadow-[0_0_20px_rgba(220,38,38,0.2)] relative group-hover:scale-110 transition-transform duration-500">
+                <i data-lucide="shield-alert" class="w-10 h-10 text-red-500 relative z-10"></i>
+                <div class="absolute inset-0 bg-red-500/20 blur-xl rounded-full opacity-50 animate-pulse"></div>
+            </div>
+
+            <h3 class="text-2xl font-black text-white mb-2 tracking-tight">Acesso Negado</h3>
+            
+            <p class="text-xs font-bold text-red-400 uppercase tracking-widest mb-4 border border-red-500/20 px-2 py-1 rounded bg-red-500/5">
+                Erro de Autenticação
+            </p>
+
+            <p id="auth-error-msg" class="text-sm text-zinc-400 mb-8 leading-relaxed font-medium">
+                Sua sessão expirou ou é inválida.
+            </p>
+
+            <button onclick="closeModal('modal-auth-error')" 
+                class="w-full py-4 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_25px_rgba(220,38,38,0.4)] hover:shadow-[0_0_40px_rgba(220,38,38,0.6)] active:scale-95 flex items-center justify-center gap-2 group/btn">
+                <i data-lucide="log-out" class="w-4 h-4 group-hover/btn:-translate-x-1 transition-transform"></i>
+                Entendi, Deslogar
+            </button>
+        </div>
+    </div>
+</div>
