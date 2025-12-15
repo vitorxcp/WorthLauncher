@@ -264,7 +264,7 @@ function createWindow() {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();
         return;
-    }
+    } 
 
     mainWindow = new BrowserWindow({
         width: 1100,
