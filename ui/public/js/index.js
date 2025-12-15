@@ -6,7 +6,6 @@ let savedAccounts = JSON.parse(localStorage.getItem('worth_accounts')) || [];
 let donwoadversionapp = "";
 
 try {
-    a
     const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 854, height: 480, discordRichPresence: true };
     const logConsole = document.getElementById('log-console');
     const btnPlay = document.getElementById('btn-play');
@@ -902,7 +901,6 @@ try {
             });
 
             clearTimeout(timeoutId);
-
             if (response.ok) {
                 if (!errorPage.className.includes("hidden-force")) {
                     loadBlogFeed();
@@ -912,6 +910,7 @@ try {
                 errorPage.classList.remove('hidden-force');
             }
         } catch (error) {
+            console.log(error)
             errorPage.classList.remove('hidden-force');
         }
     }
@@ -935,20 +934,7 @@ try {
 
     addLog("WorthLauncher carregado e pronto.");
 } catch (e) {
-    function showCrashPopup(errorMessage, url, line) {
-        const popup = document.getElementById('crash-popup');
-        const logText = document.getElementById('crash-log-text');
-
-        if (popup && logText) {
-            const cleanMsg = errorMessage.replace('Uncaught ', '');
-            logText.innerText = `[ERRO] ${cleanMsg}\n[LINHA] ${line || '?'}`;
-
-            popup.classList.remove('hidden-force');
-
-            if (window.lucide) window.lucide.createIcons();
-        }
-    }
-
+    console.log(e);
     window.onerror = function (message, source, lineno, colno, error) {
         showCrashPopup(message, source, lineno);
         console.warn("CRASH DETECTADO:", message);
@@ -966,3 +952,17 @@ try {
         if (icon) icon.style.color = '#4ade80';
     };
 }
+
+function showCrashPopup(errorMessage, url, line) {
+        const popup = document.getElementById('crash-popup');
+        const logText = document.getElementById('crash-log-text');
+
+        if (popup && logText) {
+            const cleanMsg = errorMessage.replace('Uncaught ', '');
+            logText.innerText = `[ERRO] ${cleanMsg}\n[LINHA] ${line || '?'}`;
+
+            popup.classList.remove('hidden-force');
+
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }
