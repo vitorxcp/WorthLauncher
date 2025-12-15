@@ -14,11 +14,13 @@ const USERS_FILE = path.join(__dirname, 'users.json');
 const CHATS_FILE = path.join(__dirname, 'chats.json');
 const BLOG_FILE = path.join(__dirname, 'blog.json');
 const ADMINS_FILE = path.join(__dirname, 'admins.json');
+const TICKETS_FILE = path.join(__dirname, 'tickets.json');
 
 let blogDB = [];
 let usersDB = {};
 let chatsDB = {};
 let adminsDB = []
+let ticketsDB = [];
 
 function makeid(length) {
     let result = '';
@@ -38,6 +40,7 @@ function loadData() {
         if (fs.existsSync(CHATS_FILE)) chatsDB = JSON.parse(fs.readFileSync(CHATS_FILE));
         if (fs.existsSync(BLOG_FILE)) blogDB = JSON.parse(fs.readFileSync(BLOG_FILE));
         if (fs.existsSync(ADMINS_FILE)) adminsDB = JSON.parse(fs.readFileSync(ADMINS_FILE));
+        if (fs.existsSync(TICKETS_FILE)) ticketsDB = JSON.parse(fs.readFileSync(TICKETS_FILE));
     } catch (e) { console.error("Erro ao carregar DB:", e); }
 }
 
@@ -46,7 +49,12 @@ function saveData(type) {
         if (type === 'users') fs.writeFileSync(USERS_FILE, JSON.stringify(usersDB, null, 2));
         if (type === 'chats') fs.writeFileSync(CHATS_FILE, JSON.stringify(chatsDB, null, 2));
         if (type === 'blog') fs.writeFileSync(BLOG_FILE, JSON.stringify(blogDB, null, 2));
+        if (type === 'tickets') fs.writeFileSync(TICKETS_FILE, JSON.stringify(ticketsDB, null, 2));
     } catch (e) { console.error("Erro ao salvar DB:", e); }
+}
+
+function isUserStaff(nick) {
+    return adminsDB.some(admin => admin.nick === nick);
 }
 
 const ARCHIVE_DIR = path.join(__dirname, 'historicos-removed');
@@ -297,27 +305,13 @@ io.on("connection", (socket) => {
 
     if (usersDB[nick]) {
         if (usersDB[nick].uuid !== uuid) {
-            console.log(`[SEGURANÇA] Tentativa de invasão em ${nick}. UUID recebido: ${uuid} | Esperado: ${usersDB[nick].uuid}`);
-            
-            socket.emit("auth_error", { 
-                message: "Este Nick pertence a outra pessoa." 
-            });
-            
+            socket.emit("auth_error", { message: "Este Nick pertence a outra pessoa." });
             return socket.disconnect();
         }
-        
         usersDB[nick].status = status;
     } else {
-        console.log(`[NOVO] Registrando usuário ${nick} com UUID ${uuid}`);
         usersDB[nick] = { uuid, friends: [], requests: [], status };
         saveData('users');
-    }
-
-    if (!usersDB[nick]) {
-        usersDB[nick] = { uuid, friends: [], requests: [], status };
-        saveData('users');
-    } else {
-        usersDB[nick].status = status;
     }
 
     onlineUsers[nick] = socket.id;
@@ -342,27 +336,128 @@ io.on("connection", (socket) => {
     });
 
     socket.on("chat:history_cleared", (friendNick) => {
-    if (currentChatFriend === friendNick) {
-        fullChatHistory = [];
-        const msgsContainer = document.getElementById("chat-messages");
-        if(msgsContainer) msgsContainer.innerHTML = "";
+        if (currentChatFriend === friendNick) {
+            fullChatHistory = [];
+            const msgsContainer = document.getElementById("chat-messages");
+            if (msgsContainer) msgsContainer.innerHTML = "";
+
+            const notice = document.createElement("div");
+            notice.className = "text-center text-xs text-zinc-600 italic mt-4 mb-4";
+            notice.innerText = "Este histórico foi arquivado e limpo.";
+            msgsContainer.appendChild(notice);
+        }
+    });
+
+    socket.on('ticket:list', () => {
+        const isStaff = isUserStaff(nick);
+        let myTickets;
+
+        if (isStaff) {
+            myTickets = ticketsDB;
+        } else {
+            myTickets = ticketsDB.filter(t => t.author === nick);
+        }
+
+        socket.emit('ticket:list_update', myTickets);
+    });
+
+    socket.on('ticket:create', ({ subject }) => {
+        const ticket = {
+            id: makeid(6),
+            author: nick,
+            subject: subject,
+            status: 'open',
+            messages: [],
+            timestamp: Date.now()
+        };
+
+        ticketsDB.push(ticket);
+        saveData('tickets');
+
+        socket.emit('ticket:list_update', ticketsDB.filter(t => t.author === nick));
+
+        Object.keys(onlineUsers).forEach(onlineNick => {
+            if (isUserStaff(onlineNick)) {
+                io.to(onlineUsers[onlineNick]).emit('ticket:list_update', ticketsDB);
+                io.to(onlineUsers[onlineNick]).emit('success', `Novo ticket de ${nick}: ${subject}`);
+            }
+        });
+    });
+
+    socket.on('ticket:join', (ticketId) => {
+        const ticket = ticketsDB.find(t => t.id === ticketId);
+        if(!ticket) return;
+
+        if (ticket.author !== nick && !isUserStaff(nick)) {
+            return socket.emit('error', 'Sem permissão para este ticket.');
+        }
+
+        socket.join(`ticket_${ticketId}`);
+        socket.emit('chat:history', { 
+        friend: `Ticket #${ticketId}`, 
+        messages: ticket.messages 
+    });
+    });
+
+    socket.on('ticket:send', ({ ticketId, text }) => {
+        const ticket = ticketsDB.find(t => t.id === ticketId);
+        if (!ticket) return;
+        if (ticket.status === 'closed') return socket.emit('error', 'Este ticket está fechado.');
+
+        const msg = { sender: nick, text, timestamp: Date.now(), read: false, isStaff: isUserStaff(nick) };
+        ticket.messages.push(msg);
+        saveData('tickets');
+
+        io.to(`ticket_${ticketId}`).emit('ticket:receive', { ticketId, ...msg });
         
-        const notice = document.createElement("div");
-        notice.className = "text-center text-xs text-zinc-600 italic mt-4 mb-4";
-        notice.innerText = "Este histórico foi arquivado e limpo.";
-        msgsContainer.appendChild(notice);
-    }
-});
+        if (ticket.author !== nick && onlineUsers[ticket.author]) {
+             io.to(onlineUsers[ticket.author]).emit('ticket:receive', { ticketId, ...msg });
+        }
+    });
+
+    socket.on('ticket:close', (ticketId) => {
+        const ticket = ticketsDB.find(t => t.id === ticketId);
+        if(!ticket) return;
+        
+        if (ticket.author !== nick && !isUserStaff(nick)) return;
+
+        ticket.status = 'closed';
+        saveData('tickets');
+        
+        io.to(`ticket_${ticketId}`).emit('success', 'Este ticket foi encerrado.');
+        
+        const isStaff = isUserStaff(nick);
+        socket.emit('ticket:list_update', isStaff ? ticketsDB : ticketsDB.filter(t => t.author === nick));
+    });
+
+    socket.on('chat:staff_send', ({ text }) => {
+        if (!isUserStaff(nick)) {
+            return socket.emit('error', 'Comando desconhecido ou sem permissão.');
+        }
+
+        const msg = {
+            sender: nick,
+            text: text,
+            timestamp: Date.now(),
+            isStaffChat: true
+        };
+
+        Object.keys(onlineUsers).forEach(onlineNick => {
+            if (isUserStaff(onlineNick)) {
+                io.to(onlineUsers[onlineNick]).emit('chat:staff_broadcast', msg);
+            }
+        });
+    });
 
     socket.on("friend:remove", (targetNick) => {
         usersDB[nick].friends = usersDB[nick].friends.filter(f => f !== targetNick);
-        
+
         if (usersDB[targetNick]) {
             usersDB[targetNick].friends = usersDB[targetNick].friends.filter(f => f !== nick);
         }
-        
+
         saveData('users');
-        
+
         if (onlineUsers[targetNick]) {
             io.to(onlineUsers[targetNick]).emit("friend:removed", nick);
         }
@@ -454,13 +549,13 @@ io.on("connection", (socket) => {
             saveData('chats');
 
             socket.emit("success", "Histórico arquivado e limpo!");
-            
+
             socket.emit("chat:history_cleared", targetNick);
 
-            // if (onlineUsers[targetNick]) {
-            //     io.to(onlineUsers[targetNick]).emit("chat:history_cleared", nick);
-            //     io.to(onlineUsers[targetNick]).emit("notification:msg", { from: "Sistema", text: "O histórico foi limpo." });
-            // }
+            if (onlineUsers[targetNick]) {
+                io.to(onlineUsers[targetNick]).emit("chat:history_cleared", nick);
+                io.to(onlineUsers[targetNick]).emit("notification:msg", { from: "Sistema", text: "O histórico foi limpo." });
+            }
 
         } catch (error) {
             console.error("Erro ao arquivar chat:", error);
@@ -478,7 +573,14 @@ io.on("connection", (socket) => {
                     changed = true;
                 }
             });
-            if (changed) saveData('chats');
+            
+            if (changed) {
+                saveData('chats');
+                
+                if (onlineUsers[friendNick]) {
+                    io.to(onlineUsers[friendNick]).emit("chat:read_confirm", { by: nick });
+                }
+            }
         }
     });
 
