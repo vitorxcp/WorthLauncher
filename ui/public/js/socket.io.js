@@ -1,3 +1,15 @@
+let currentSocialTab = 'friends';
+let currentTicketId = null;
+
+const PERF_CONFIG = {
+    MAX_DOM_NODES: 60,
+    MAX_HISTORY_MEMORY: 300,
+    SCROLL_THROTTLE: 100
+};
+
+let socket = null;
+let socketinf = false;
+
 const btnOptions = document.getElementById("btn-chat-options");
 const menuDropdown = document.getElementById("menu-chat-dropdown");
 
@@ -498,9 +510,6 @@ window.addEventListener('resize', () => {
     }
 });
 
-let socket = null;
-let socketinf = false;
-
 const styleParams = document.createElement('style');
 styleParams.innerHTML = `
     #chat-messages {
@@ -709,25 +718,30 @@ els.chatInput.addEventListener('input', () => {
 });
 
 els.chatMsgs.addEventListener('scroll', () => {
-    const distanceToBottom = els.chatMsgs.scrollHeight - els.chatMsgs.scrollTop - els.chatMsgs.clientHeight;
-    if (distanceToBottom > 1000) {
-        btnScrollBottom.classList.add('visible');
-    } else {
-        btnScrollBottom.classList.remove('visible');
-    }
+    if (isScrollThrottled) return;
+    isScrollThrottled = true;
 
-    const menuDropdown = document.getElementById("menu-chat-dropdown");
-    if (menuDropdown && !menuDropdown.classList.contains("hidden")) {
-        menuDropdown.classList.add("hidden");
-    }
+    setTimeout(() => {
+        const distanceToBottom = els.chatMsgs.scrollHeight - els.chatMsgs.scrollTop - els.chatMsgs.clientHeight;
 
-    const emojiPicker = document.getElementById("emoji-picker");
-    if (emojiPicker && !emojiPicker.classList.contains("hidden")) emojiPicker.classList.add("hidden");
+        if (distanceToBottom > 500) {
+            btnScrollBottom.classList.add('visible');
+        } else {
+            btnScrollBottom.classList.remove('visible');
+            btnScrollBottom.classList.remove('new-message-alert');
+        }
+
+        const menuDropdown = document.getElementById("menu-chat-dropdown");
+        if (menuDropdown && !menuDropdown.classList.contains("hidden")) menuDropdown.classList.add("hidden");
+
+        isScrollThrottled = false;
+    }, PERF_CONFIG.SCROLL_THROTTLE);
 });
 
 let currentChatFriend = null;
 let fullChatHistory = [];
 let isInternalScroll = false;
+let isScrollThrottled = false;
 
 const ICONS = {
     check: `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-50"><polyline points="20 6 9 17 4 12"/></svg>`,
@@ -735,15 +749,14 @@ const ICONS = {
 };
 
 const topSentinel = document.createElement("div");
-topSentinel.style.height = "20px";
+topSentinel.style.height = "10px";
 topSentinel.style.width = "100%";
-topSentinel.style.opacity = "0";
 
 const observer = new IntersectionObserver((entries) => {
     if (entries[0].isIntersecting && currentChatFriend && !isInternalScroll) {
-        loadOlderMessages();
+        if (!isInternalScroll) loadOlderMessages();
     }
-}, { root: els.chatMsgs, rootMargin: "200px 0px 0px 0px" });
+}, { root: els.chatMsgs, rootMargin: "100px 0px 0px 0px" });
 
 function getAuthIdentity() {
     return {
@@ -754,14 +767,18 @@ function getAuthIdentity() {
 }
 
 function initializeSocket() {
-    if (socket) return socket;
+    if (socket && socket.connected) return socket;
 
-    socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
-        auth: getAuthIdentity(),
-        transports: ["websocket"],
-        reconnection: true,
-        autoConnect: true
-    });
+    if (!socket) {
+        socket = io("http://elgae-sp1-b001.elgaehost.com.br:9099", {
+            auth: getAuthIdentity(),
+            transports: ["websocket"],
+            reconnection: true,
+            autoConnect: true
+        });
+    } else {
+        socket.connect();
+    }
 
     setupSocketEvents();
     return socket;
@@ -793,9 +810,12 @@ function closeConnectionSocket() {
 
 
 function setupSocketEvents() {
+    socket.removeAllListeners();
+
     socket.on("connect", () => {
         socketinf = true;
         updateMyStatusUI(localStorage.getItem('status-account') || "online")
+        socket.emit('ticket:list');
     });
     socket.on("disconnect", () => { });
 
@@ -807,14 +827,39 @@ function setupSocketEvents() {
         });
     });
 
+    socket.on('ticket:list_update', (tickets) => {
+    if (currentSocialTab === 'tickets') {
+        renderTicketList(tickets);
+    }
+});
+
     socket.on("friend:request_received", (req) => showInviteToast(req.from));
     socket.on("friend:new", (friend) => addFriendToUI(friend));
     socket.on("friend:status_update", ({ nick, status }) => updateFriendStatusUI(nick, status));
 
     socket.on("chat:history", ({ friend, messages }) => {
+        if (currentSocialTab === 'friends' && currentChatFriend === friend) {
         if (currentChatFriend !== friend) return;
         fullChatHistory = messages || [];
+        if (fullChatHistory.length > PERF_CONFIG.MAX_HISTORY_MEMORY) {
+            fullChatHistory = fullChatHistory.slice(-PERF_CONFIG.MAX_HISTORY_MEMORY);
+        }
+    }
+
+    if (currentSocialTab === 'tickets') {
+            const expectedTitle = `Ticket #${currentTicketId}`;
+            if (friend === expectedTitle) {
+                fullChatHistory = messages || [];
+            }
+        }
+
         renderInitialHistory();
+    });
+
+    socket.on("chat:read_confirm", ({ by }) => {
+        if (currentChatFriend === by) {
+            updateMessagesToRead();
+        }
     });
 
     socket.on("chat:typing_update", ({ from, state }) => {
@@ -836,6 +881,8 @@ function setupSocketEvents() {
         if (currentChatFriend === removedNick) {
             currentChatFriend = null;
             els.placeholder?.classList.remove("hidden-force");
+            els.chatMsgs.innerHTML = "";
+            fullChatHistory = [];
         }
     });
 
@@ -853,15 +900,28 @@ function setupSocketEvents() {
 
     socket.on("error", (mensagem) => {
         console.warn("Erro do Servidor:", mensagem);
-        alert(mensagem);
     });
 
     socket.on("chat:receive", (msg) => {
+        if (currentTicketId === msg.ticketId) {
+            fullChatHistory.push(msg);
+            appendSingleMessage(msg, true);
+            scrollToBottom(true);
+        } else {
+            showToast(`Nova mensagem no Ticket #${msg.ticketId}`, 'info');
+        }
+
         const isChatOpen = currentChatFriend === msg.sender || msg.sender === socket.auth.nick;
 
         if (isChatOpen) {
             typingIndicator.classList.remove("visible");
+
             fullChatHistory.push(msg);
+
+            if (fullChatHistory.length > PERF_CONFIG.MAX_HISTORY_MEMORY) {
+                fullChatHistory.shift();
+            }
+
             appendSingleMessage(msg, true);
         } else {
             showNotificationBadge(msg.sender);
@@ -1172,7 +1232,7 @@ function loadOlderMessages() {
 }
 
 function appendSingleMessage(msg, animate = true) {
-    const isMe = msg.sender === socket.auth.nick;
+    const isMe = msg.sender === (socket.auth.nick || "");
     const wasAtBottom = isUserAtBottom();
     const currentIndex = fullChatHistory.length - 1;
     const prevIndex = currentIndex - 1;
@@ -1211,12 +1271,18 @@ function appendSingleMessage(msg, animate = true) {
 }
 
 function trimExcessMessages() {
-    const MAX_DOM_NODES = 150;
-
-    if (els.chatMsgs.children.length > MAX_DOM_NODES) {
-        for (let i = 0; i < 5; i++) {
-            const node = topSentinel.nextElementSibling;
-            if (node) node.remove();
+    const msgs = els.chatMsgs.querySelectorAll('.msg-item');
+    if (msgs.length > PERF_CONFIG.MAX_DOM_NODES) {
+        const toRemove = msgs.length - PERF_CONFIG.MAX_DOM_NODES;
+        if (isUserAtBottom()) {
+            let removedCount = 0;
+            let node = topSentinel.nextElementSibling;
+            while (node && removedCount < toRemove) {
+                const next = node.nextElementSibling;
+                node.remove();
+                node = next;
+                if (node && node.classList.contains('msg-item')) removedCount++;
+            }
         }
     }
 }
@@ -1263,7 +1329,7 @@ function createMessageElement(msg, animate = true) {
     const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-40"><polyline points="20 6 9 17 4 12"/></svg>`;
     const readIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>`;
     const statusIcon = msg.read ? readIcon : checkIcon;
-
+    const statusClass = msg.read ? "msg-status-read" : "msg-status-sent";
     const bubbleStyle = isMe
         ? "bg-[#2f2e1b] border border-white/5 text-gray-100 rounded-2xl rounded-tr-sm"
         : "bg-zinc-800 border border-white/5 text-gray-100 rounded-2xl rounded-tl-sm";
@@ -1274,7 +1340,7 @@ function createMessageElement(msg, animate = true) {
             <span class="break-words text-sm leading-relaxed font-medium block drop-shadow-sm">${msg.text}</span>
             <div class="text-[10px] mt-1.5 text-right font-bold font-mono flex items-center justify-end gap-1 select-none ${isMe ? 'text-[#dfdfdf66]' : 'text-white/30'}">
                 <span title-app="${fullDate}">${time}</span> 
-                <span title-app="${msg.read ? "Lida" : "Enviada"}">${isMe ? statusIcon : ""}</span>
+                <span title-app="${msg.read ? "Lida" : "Enviada"}" class="${isMe ? statusClass : ''}">${isMe ? statusIcon : ""}</span>
             </div>
         </div>
     `;
@@ -1285,6 +1351,7 @@ function selectFriend(nick, status) {
     if (currentChatFriend === nick) return;
 
     fullChatHistory = [];
+    els.chatMsgs.innerHTML = "";
     isInternalScroll = false;
     observer.unobserve(topSentinel);
 
@@ -1515,3 +1582,206 @@ window.respondInvite = (requesterNick, accept, btn) => {
 function checkPendingRequests(requests) {
     if (Array.isArray(requests)) requests.forEach(r => showInviteToast(r.from));
 }
+
+window.switchSocialTab = (tab) => {
+    currentSocialTab = tab;
+    
+    const btnFriends = document.getElementById('tab-btn-friends');
+    const btnTickets = document.getElementById('tab-btn-tickets');
+    const contentFriends = document.getElementById('tab-content-friends');
+    const contentTickets = document.getElementById('tab-content-tickets');
+    const activeClass = "text-black bg-yellow-500 shadow-lg shadow-yellow-500/10";
+    const inactiveClass = "text-zinc-500 hover:text-white hover:bg-white/5";
+    const baseClass = "flex-1 py-2 text-xs font-bold rounded-xl transition-all";
+    
+    els.chatMsgs.innerHTML = "";
+    els.placeholder?.classList.remove("hidden-force");
+    els.headerNick.innerText = "...";
+    els.headerStatus.innerText = "";
+    els.headerAvatar.src = "";
+    
+    if (tab === 'friends') {
+        btnFriends.className = `${baseClass} ${activeClass}`;
+        btnTickets.className = `${baseClass} ${inactiveClass}`;
+        contentFriends.classList.remove('hidden');
+        contentTickets.classList.add('hidden');
+        
+        currentTicketId = null;
+        currentChatFriend = null; 
+
+    } else {
+        btnTickets.className = `${baseClass} ${activeClass}`;
+        btnFriends.className = `${baseClass} ${inactiveClass}`;
+        contentTickets.classList.remove('hidden');
+        contentFriends.classList.add('hidden');
+        
+        currentChatFriend = null;
+        currentTicketId = null;
+        
+        if(socket && socket.connected) socket.emit('ticket:list');
+    }
+};
+
+window.openNewTicketModal = () => {
+    const modal = document.getElementById('modal-new-ticket');
+    if(modal) {
+        modal.classList.remove('hidden');
+        document.getElementById('input-ticket-subject')?.focus();
+    }
+};
+
+window.confirmCreateTicket = () => {
+    const input = document.getElementById('input-ticket-subject');
+    const subject = input.value.trim();
+    
+    if (!subject) return showToast("Digite um assunto!", "error");
+    
+    socket.emit('ticket:create', { subject });
+    
+    document.getElementById('modal-new-ticket').classList.add('hidden');
+    input.value = "";
+    showToast("Criando ticket...", "info");
+};
+
+function selectTicket(ticket) {
+    if (currentTicketId === ticket.id) return;
+    
+    currentChatFriend = null; 
+    currentTicketId = ticket.id;
+    fullChatHistory = []; 
+    els.chatMsgs.innerHTML = "";
+    
+    document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('bg-white/10', 'border-yellow-500/50'));
+    document.getElementById(`ticket-item-${ticket.id}`)?.classList.add('bg-white/10', 'border-yellow-500/50');
+    
+    els.placeholder?.classList.add("hidden-force");
+    els.headerNick.innerText = `Ticket #${ticket.id}`;
+    els.headerStatus.innerText = ticket.subject;
+    els.headerAvatar.src = "https://cdn-icons-png.flaticon.com/512/4961/4961759.png";
+    els.headerAvatar.className = "relative w-11 h-11 rounded-xl object-cover border border-white/10 shadow-lg p-1.5 bg-yellow-500";
+    
+    if (els.headerStatusDot) {
+        els.headerStatusDot.className = `w-2 h-2 rounded-full ${ticket.status === 'open' ? 'bg-green-500' : 'bg-red-500'}`;
+    }
+
+    const menuDropdown = document.getElementById("menu-chat-dropdown");
+    if(menuDropdown) {
+        menuDropdown.innerHTML = `
+            <button onclick="actionCloseTicket('${ticket.id}')" class="w-full text-left px-3 py-2.5 text-xs font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-xl flex items-center gap-3 transition-colors group">
+                <i data-lucide="x-circle" class="w-4 h-4 text-rose-500/50 group-hover:text-rose-400"></i> Fechar Ticket
+            </button>
+        `;
+    }
+
+    socket.emit('ticket:join', ticket.id);
+    
+    els.chatInput.focus();
+}
+
+window.actionCloseTicket = (id) => {
+    if(confirm("Deseja encerrar este atendimento?")) {
+        socket.emit('ticket:close', id);
+    }
+};
+
+function updateMessagesToRead() {
+    const readIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>`;
+
+    const pendingMsgs = document.querySelectorAll('.msg-status-sent');
+    
+    pendingMsgs.forEach(el => {
+        el.innerHTML = readIconSVG;
+        el.classList.remove('msg-status-sent');
+        el.classList.add('msg-status-read');
+        el.parentElement.setAttribute('title-app', 'Lida');
+    });
+}
+
+function renderTicketList(tickets) {
+    const list = document.getElementById('tickets-list');
+    if(!list) return;
+    
+    list.innerHTML = "";
+    
+    if(!tickets || tickets.length === 0) {
+        list.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-40 text-zinc-700 gap-4 opacity-60">
+                <i data-lucide="ticket" class="w-6 h-6 stroke-[1.5]"></i>
+                <span class="text-xs font-medium">Nenhum ticket aberto</span>
+            </div>`;
+        if(window.lucide) window.lucide.createIcons();
+        return;
+    }
+    
+    const fragment = document.createDocumentFragment();
+
+    tickets.forEach(ticket => {
+        const div = document.createElement("div");
+        div.id = `ticket-item-${ticket.id}`;
+        div.className = "group relative p-3 rounded-2xl cursor-pointer transition-all duration-100 border border-transparent hover:bg-white/5 hover:border-white/5 flex items-center gap-4 mb-1 ticket-item";
+        div.onclick = () => selectTicket(ticket);
+        
+        const statusColor = ticket.status === 'open' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-red-500';
+        const iconColor = ticket.status === 'open' ? 'text-zinc-400' : 'text-zinc-600';
+        
+        div.innerHTML = `
+            <div class="relative shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-center shadow-md">
+                    <i data-lucide="life-buoy" class="w-5 h-5 ${iconColor}"></i>
+                </div>
+                <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#18181b] ${statusColor}"></div>
+            </div>
+            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                <h4 class="text-sm font-bold text-gray-200 truncate group-hover:text-yellow-500 transition-colors">Ticket #${ticket.id}</h4>
+                <p class="text-[10px] text-zinc-500 font-medium truncate">${ticket.subject}</p>
+            </div>
+        `;
+        fragment.appendChild(div);
+    });
+    
+    list.appendChild(fragment);
+    if(window.lucide) window.lucide.createIcons();
+}
+
+els.chatForm.onsubmit = (e) => {
+    e.preventDefault();
+    const text = els.chatInput.value.trim();
+    if (!text) return;
+
+    if (text.toLowerCase().startsWith('chatstaff:')) {
+        const message = text.substring(10).trim();
+        if(message) {
+            socket.emit('chat:staff_send', { text: message });
+            showToast("Enviado para Staff Chat", "success");
+            
+            appendSingleMessage({ sender: 'Você (Staff Chat)', text: message, timestamp: Date.now() }, true);
+        }
+        els.chatInput.value = "";
+        return;
+    }
+
+    if (currentSocialTab === 'tickets') {
+        if (currentTicketId) {
+            socket.emit('ticket:send', { ticketId: currentTicketId, text });
+            scrollToBottom(true);
+        } else {
+            showToast("Selecione um ticket primeiro.", "error");
+        }
+        els.chatInput.value = "";
+        els.chatInput.focus();
+        return;
+    }
+
+    if (!currentChatFriend) {
+        return; 
+    }
+    
+    isTyping = false;
+    clearTimeout(typingTimeout);
+    socket.emit('chat:typing', { target: currentChatFriend, state: false });
+
+    scrollToBottom(true);
+    socket.emit("chat:send", { targetNick: currentChatFriend, text });
+    els.chatInput.value = "";
+    els.chatInput.focus();
+};
