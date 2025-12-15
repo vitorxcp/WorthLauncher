@@ -772,7 +772,8 @@ async function verificarAtualizarVersao() {
         const versaoLocal = `v${window.api.version}`;
 
         if (versaoLocal !== versaoMaisRecente) {
-            if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", ""))) <= 3) {
+            if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "").replace("-alpha", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", "").replace("-alpha", ""))) <= 3) {
+                if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "").replace("-alpha", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", "").replace("-alpha", ""))) === 0) return;
                 document.getElementById("f43fd").classList.remove('hidden-force');
             } else {
                 document.getElementById("f43fd").classList.remove('hidden-force');
