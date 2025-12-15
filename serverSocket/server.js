@@ -415,16 +415,18 @@ io.on("connection", (socket) => {
         });
     });
 
-    socket.on('ticket:send', ({ ticketId, text }) => {
+    socket.on('ticket:send', ({ ticketId, text }, callback) => {
         const ticket = ticketsDB.find(t => t.id === ticketId);
         if (!ticket) return;
-        if (ticket.status === 'closed') return socket.emit('error', 'Este ticket está fechado.');
+        if (ticket.status === 'closed') return callback({ 'error': 'Este ticket está fechado.' });
 
         const isSenderStaff = isUserStaff(nick);
 
         if (!isSenderStaff) {
-            if (ticket.author !== nick) return socket.emit("error", "Você não é dono desse Ticket!");
+            if (ticket.author !== nick) return callback({ "error": "Você não é dono desse Ticket!" });
         }
+
+        callback({ "sucess": "Foi!" })
 
         const msg = {
             sender: nick,
@@ -486,9 +488,9 @@ io.on("connection", (socket) => {
         socket.emit('ticket:list_update', isStaff ? ticketsDB : ticketsDB.filter(t => t.author === nick));
     });
 
-    socket.on('chat:staff_send', ({ text }) => {
+    socket.on('chat:staff_send', ({ text }, callback) => {
         if (!isUserStaff(nick)) {
-            return socket.emit('error', 'Comando desconhecido ou sem permissão.');
+            return callback({ 'error': 'Comando desconhecido ou sem permissão.' });
         }
 
         const msg = {
@@ -503,6 +505,8 @@ io.on("connection", (socket) => {
                 io.to(onlineUsers[onlineNick]).emit('chat:staff_broadcast', msg);
             }
         });
+
+        callback({ "sucess": "Foi!" })
     });
 
     socket.on("friend:remove", (targetNick) => {
@@ -660,7 +664,7 @@ io.on("connection", (socket) => {
 
     socket.on("chat:typing", ({ target, state, isTicket }) => {
         if (isTicket) {
-            socket.to(target).emit("chat:typing_update", { 
+            socket.to(target).emit("chat:typing_update", {
                 from: nick,
                 state: state,
                 isTicket: true,
