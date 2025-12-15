@@ -358,10 +358,17 @@ io.on("connection", (socket) => {
         let myTickets;
 
         if (isStaff) {
-            myTickets = ticketsDB;
+            myTickets = [...ticketsDB];
         } else {
             myTickets = ticketsDB.filter(t => t.author === nick);
         }
+
+        myTickets.sort((a, b) => {
+            if (a.status === b.status) {
+                return b.timestamp - a.timestamp;
+            }
+            return a.status === 'open' ? -1 : 1;
+        });
 
         socket.emit('ticket:list_update', myTickets);
     });
