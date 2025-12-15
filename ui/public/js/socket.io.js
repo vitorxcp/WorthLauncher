@@ -914,16 +914,27 @@ function setupSocketEvents() {
     });
 
     socket.on("auth_error", (data) => {
-        socketinf = false;
-        let usersssss = [];
-        alert(`ACESSO NEGADO: ${data.message}`);
-        if (currentUser?.user) {
-            updateUserUI('Convidado', 'none');
-            localStorage.setItem('worth_last_user', null);
+    socketinf = false;
+    
+    const msgElement = document.getElementById("auth-error-msg");
+    if (msgElement) {
+        msgElement.innerText = data.message || "Sua conexão foi recusada pelo servidor.";
+    }
+
+    if (currentUser?.user) {
+        updateUserUI('Convidado', 'none');
+        localStorage.setItem('worth_last_user', null);
+        
+        if (typeof savedAccounts !== 'undefined') {
             savedAccounts = savedAccounts.filter(account => account.user !== currentUser.user);
             saveAccountsToStorage();
         }
-    });
+    }
+
+    openModal("modal-auth-error");
+    
+    if (window.lucide) window.lucide.createIcons();
+});
 
     socket.on("error", (mensagem) => {
         console.warn("Erro do Servidor:", mensagem);
