@@ -6,11 +6,15 @@
         <span title-app="Total de pessoas online no Launcher"
             class="no-drag ml-2 inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-[12px] font-semibold backdrop-blur-sm"
             id="count-total-online">
-            <span class="relative flex h-2.5 w-2.5">
-                <span
-                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+            <div class="flex items-center gap-2 px-2 py-1 rounded-lg transition-colors hover:bg-white/5 cursor-help group">
+            <span class="relative flex h-2.5 w-2.5 shrink-0">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
-            </span>0</span>
+            </span>
+            <span class="text-xs font-bold text-gray-200 font-mono tracking-tight group-hover:text-white transition-colors">
+                0 <span class="text-gray-500 font-normal">Online</span>
+            </span>
+        </div>
         </span>
     </div>
     <div class="no-drag flex items-center gap-2">
