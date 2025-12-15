@@ -3,10 +3,9 @@ lucide.createIcons();
 let currentUser = null;
 let userSelect = null;
 let savedAccounts = JSON.parse(localStorage.getItem('worth_accounts')) || [];
+let donwoadversionapp = "";
 
 const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 854, height: 480, discordRichPresence: true };
-let settings = JSON.parse(localStorage.getItem('worth_settings')) || defaultSettings;
-
 const logConsole = document.getElementById('log-console');
 const btnPlay = document.getElementById('btn-play');
 const progressBar = document.getElementById('progress-bar');
@@ -18,6 +17,8 @@ const inputNick = document.getElementById('offline-nick');
 const accountsListEl = document.getElementById('accounts-list');
 const modalWelcome = document.getElementById('modal-welcome');
 const isFirstRun = !localStorage.getItem('setup_complete');
+
+let settings = JSON.parse(localStorage.getItem('worth_settings')) || defaultSettings;
 
 const getTimestamp = () => {
     const now = new Date();
@@ -796,13 +797,56 @@ window.addEventListener("load", () => {
     verificarAtualizarVersao();
 
     document.getElementById("f43fd").onclick = () => {
-        window.api.updateLauncher();
+        showUpdateModal(donwoadversionapp);
     }
 
     setInterval(async () => {
         await verificarAtualizarVersao();
     }, 300000)
 })
+
+const modalUpdate = document.getElementById('modal-update');
+const modalUpdateContent = document.getElementById('modal-update-content');
+const versionTag = document.getElementById('update-version-tag');
+
+function showUpdateModal(versionName) {
+    if (versionTag) versionTag.innerText = versionName;
+
+    modalUpdate.classList.remove('hidden');
+
+    requestAnimationFrame(() => {
+        modalUpdate.classList.remove('opacity-0');
+        modalUpdateContent.classList.remove('scale-95');
+        modalUpdateContent.classList.add('scale-100');
+    });
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function closeUpdateModal() {
+    modalUpdate.classList.add('opacity-0');
+    modalUpdateContent.classList.remove('scale-100');
+    modalUpdateContent.classList.add('scale-95');
+
+    setTimeout(() => {
+        modalUpdate.classList.add('hidden');
+    }, 300);
+}
+
+document.getElementById('btn-update-later').addEventListener('click', () => {
+    closeUpdateModal();
+});
+
+document.getElementById('btn-update-now').addEventListener('click', () => {
+    const btn = document.getElementById('btn-update-now');
+
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = `<span class="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full mr-2"></span> Iniciando...`;
+    btn.disabled = true;
+    btn.classList.add('opacity-80', 'cursor-not-allowed');
+
+    window.api.updateLauncher();
+});
 
 async function verificarAtualizarVersao() {
     try {
@@ -819,8 +863,12 @@ async function verificarAtualizarVersao() {
             if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "").replace("-alpha", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", "").replace("-alpha", ""))) <= 3) {
                 if ((Number(String(versaoLocal).replaceAll(".", "").replace("v", "").replace("-alpha", "")) - Number(String(versaoMaisRecente).replaceAll(".", "").replace("v", "").replace("-alpha", ""))) === 0) return;
                 document.getElementById("f43fd").classList.remove('hidden-force');
+                donwoadversionapp = data.tag_name;
+                showUpdateModal(donwoadversionapp);
             } else {
+                donwoadversionapp = data.tag_name;
                 document.getElementById("f43fd").classList.remove('hidden-force');
+                showUpdateModal(donwoadversionapp);
             }
         }
     } catch (error) { }
