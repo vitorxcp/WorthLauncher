@@ -954,15 +954,33 @@ try {
 }
 
 function showCrashPopup(errorMessage, url, line) {
-        const popup = document.getElementById('crash-popup');
-        const logText = document.getElementById('crash-log-text');
+    const popup = document.getElementById('crash-popup');
+    const logText = document.getElementById('crash-log-text');
 
-        if (popup && logText) {
-            const cleanMsg = errorMessage.replace('Uncaught ', '');
-            logText.innerText = `[ERRO] ${cleanMsg}\n[LINHA] ${line || '?'}`;
+    if (popup && logText) {
+        const cleanMsg = errorMessage.replace('Uncaught ', '');
+        logText.innerText = `[ERRO] ${cleanMsg}\n[LINHA] ${line || '?'}`;
 
-            popup.classList.remove('hidden-force');
+        popup.classList.remove('hidden-force');
 
-            if (window.lucide) window.lucide.createIcons();
-        }
+        if (window.lucide) window.lucide.createIcons();
     }
+}
+
+const loadingScreen = document.getElementById('modal-loadPage');
+
+function hideLoading() {
+    loadingScreen.classList.remove('modal-visible');
+    loadingScreen.classList.add('modal-hidden');
+}
+
+function showLoading() {
+    requestAnimationFrame(() => {
+        loadingScreen.classList.remove('modal-hidden');
+        loadingScreen.classList.add('modal-visible');
+    });
+}
+
+setTimeout(() => {
+    hideLoading();
+}, 1000);
