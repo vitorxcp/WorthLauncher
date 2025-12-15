@@ -16,6 +16,8 @@ if (btnOptions && menuDropdown) {
     });
 }
 
+let isChatMenuInitialized = false;
+
 function initChatMenu() {
     const btnOptions = document.getElementById("btn-chat-options");
     const menuDropdown = document.getElementById("menu-chat-dropdown");
@@ -29,13 +31,19 @@ function initChatMenu() {
             menuDropdown.classList.toggle("hidden");
         };
 
-        document.addEventListener("click", (e) => {
-            if (!menuDropdown.classList.contains("hidden")) {
-                if (!menuDropdown.contains(e.target) && e.target !== newBtn) {
-                    menuDropdown.classList.add("hidden");
+        if (!isChatMenuInitialized) {
+            document.addEventListener("click", (e) => {
+                const menu = document.getElementById("menu-chat-dropdown");
+                const btn = document.getElementById("btn-chat-options");
+
+                if (menu && !menu.classList.contains("hidden")) {
+                    if (!menu.contains(e.target) && e.target !== btn) {
+                        menu.classList.add("hidden");
+                    }
                 }
-            }
-        });
+            });
+            isChatMenuInitialized = true;
+        }
     }
 }
 
@@ -496,17 +504,20 @@ let socketinf = false;
 const styleParams = document.createElement('style');
 styleParams.innerHTML = `
     #chat-messages {
-        contain: strict;
-        content-visibility: auto; 
-        contain-intrinsic-size: 0 500px;
-        will-change: scroll-position;
-        overflow-anchor: auto;
-        scroll-behavior: smooth;
+        contain: layout style paint;
+        will-change: transform;
+        content-visibility: auto;
         height: 100%; 
         overflow-y: auto;
+        scroll-behavior: smooth;
+        box-shadow: none !important;
     }
     
-    .msg-item { contain: content; }
+    .msg-item {
+        contain: layout style;
+        content-visibility: auto; 
+        contain-intrinsic-size: 0 60px;
+    }
     .show { opacity: 1 !important; transform: translateY(0) !important; }
 
     #btn-scroll-bottom {
@@ -540,6 +551,37 @@ styleParams.innerHTML = `
         color: black;
         transform: scale(1.1);
         border-color: #eab308;
+    }
+    .unread-separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 24px 0;
+        position: relative;
+        width: 100%;
+        animation: fadeIn 0.3s ease;
+    }
+    .unread-separator::before, .unread-separator::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.5), transparent);
+    }
+    .unread-badge {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 99px;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        margin: 0 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
+    }
+    @keyframes fadeOutSeparator {
+        to { opacity: 0; height: 0; margin: 0; transform: scaleY(0); }
     }
     #btn-scroll-bottom.new-message-alert::after {
         content: '';
@@ -593,6 +635,17 @@ styleParams.innerHTML = `
         40% { transform: scale(1.2); opacity: 1; }
     }
     @keyframes pulse { 0% { transform: scale(0.95); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.8; } 100% { transform: scale(0.95); opacity: 1; } }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { bg: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+.   custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #eab308; }
+
+    @keyframes msgPop {
+        0% { opacity: 0; transform: translateY(10px) scale(0.98); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .msg-anim { animation: msgPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 `;
 document.head.appendChild(styleParams);
 
@@ -610,6 +663,7 @@ const els = {
     placeholder: document.getElementById("chat-placeholder"),
     myStatusDot: document.getElementById("my-status-dot"),
     myStatusText: document.getElementById("my-status-text"),
+    myStatusDescription: document.getElementById("my-status-description"),
     chatContainer: document.getElementById("chat-messages").parentElement
 };
 
@@ -937,19 +991,34 @@ window.addEventListener("load", () => {
     initEmojiToggle();
 });
 
+function createNewMessageSeparator() {
+    const div = document.createElement("div");
+    div.id = "unread-separator-line";
+    div.className = "unread-separator select-none";
+    div.innerHTML = `<span class="unread-badge">Novas Mensagens</span>`;
+    return div;
+}
+
 function renderInitialHistory() {
     observer.unobserve(topSentinel);
 
+    els.chatMsgs.style.visibility = 'hidden';
     els.chatMsgs.style.scrollBehavior = 'auto';
+
     els.chatMsgs.innerHTML = "";
     els.chatMsgs.appendChild(topSentinel);
 
-    const initialBatch = fullChatHistory.slice(-30);
+    const initialBatch = fullChatHistory.slice(-50);
     const fragment = document.createDocumentFragment();
 
     let lastRenderedDay = null;
+    let hasInsertedUnreadSeparator = false;
+    let targetScrollElementId = null;
 
-    initialBatch.forEach(msg => {
+    const myNick = socket.auth.nick || JSON.parse(localStorage.getItem("chat_identity") || "{}").nick;
+
+    for (let i = 0; i < initialBatch.length; i++) {
+        const msg = initialBatch[i];
         const msgTimestamp = msg.timestamp || Date.now();
         const currentDay = getDayKey(msgTimestamp);
 
@@ -958,17 +1027,84 @@ function renderInitialHistory() {
             lastRenderedDay = currentDay;
         }
 
-        fragment.appendChild(createMessageElement(msg, false));
-    });
+        if (!hasInsertedUnreadSeparator && !msg.read && msg.sender !== myNick) {
+            const sep = createNewMessageSeparator();
+            fragment.appendChild(sep);
+            hasInsertedUnreadSeparator = true;
+            targetScrollElementId = "unread-separator-line";
+        }
+
+        const msgEl = createMessageElement(msg, false);
+        fragment.appendChild(msgEl);
+    }
 
     els.chatMsgs.appendChild(fragment);
 
-    els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+    if (targetScrollElementId) {
+        const el = document.getElementById(targetScrollElementId);
+        if (el) el.scrollIntoView({ block: "center", behavior: "auto" });
+        setupUnreadRemover();
+    } else {
+        els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+    }
 
-    setTimeout(() => {
-        els.chatMsgs.style.scrollBehavior = 'smooth';
-        observer.observe(topSentinel);
-    }, 100);
+    requestAnimationFrame(() => {
+        els.chatMsgs.style.visibility = 'visible';
+
+        if (!targetScrollElementId) {
+            els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
+        }
+
+        if (!hasInsertedUnreadSeparator && currentChatFriend) {
+            socket.emit("chat:mark_read", currentChatFriend);
+        }
+
+        setTimeout(() => {
+            els.chatMsgs.style.scrollBehavior = 'smooth';
+            observer.observe(topSentinel);
+        }, 300);
+    });
+}
+
+function createNewMessageSeparator() {
+    const div = document.createElement("div");
+    div.id = "unread-separator-line";
+    div.className = "unread-separator select-none";
+    div.innerHTML = `<span class="unread-badge">Novas Mensagens</span>`;
+    return div;
+}
+
+function setupUnreadRemover() {
+    const separator = document.getElementById("unread-separator-line");
+    if (!separator) return;
+
+    const removeAction = () => {
+        if (document.getElementById("unread-separator-line")) {
+            const sep = document.getElementById("unread-separator-line");
+            sep.style.animation = "fadeOutSeparator 0.5s ease forwards";
+
+            if (currentChatFriend) {
+                socket.emit("chat:mark_read", currentChatFriend);
+                document.getElementById(`badge-${currentChatFriend}`)?.classList.add("hidden-force");
+            }
+
+            setTimeout(() => sep.remove(), 500);
+        }
+
+        els.chatMsgs.removeEventListener("scroll", scrollHandler);
+        els.chatInput.removeEventListener("click", removeAction);
+        els.chatInput.removeEventListener("keydown", removeAction);
+    };
+
+    els.chatInput.addEventListener("click", removeAction, { once: true });
+    els.chatInput.addEventListener("keydown", removeAction, { once: true });
+
+    let scrollTimeout;
+    const scrollHandler = () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(removeAction, 1500);
+    };
+    els.chatMsgs.addEventListener("scroll", scrollHandler, { once: true });
 }
 
 function loadOlderMessages() {
@@ -1113,37 +1249,32 @@ function createMessageElement(msg, animate = true) {
     const time = new Date(msg.timestamp || Date.now())
         .toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const fullDate = new Date(msg.timestamp || Date.now())
-        .toLocaleString('pt-BR', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        .toLocaleString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
     const div = document.createElement("div");
-    div.className = `flex ${isMe ? "justify-end" : "justify-start"} mb-1 msg-item`;
+    div.className = `flex ${isMe ? "justify-end" : "justify-start"} mb-2 group msg-item w-full`;
 
     if (!animate) {
         div.classList.add("show");
     } else {
         div.classList.add("msg-anim");
-        requestAnimationFrame(() => div.classList.add("show"));
     }
 
-    const statusIcon = msg.read ? ICONS.checkRead : ICONS.check;
+    const checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-40"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const readIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>`;
+    const statusIcon = msg.read ? readIcon : checkIcon;
+
+    const bubbleStyle = isMe
+        ? "bg-[#2f2e1b] border border-white/5 text-gray-100 rounded-2xl rounded-tr-sm"
+        : "bg-zinc-800 border border-white/5 text-gray-100 rounded-2xl rounded-tl-sm";
 
     div.innerHTML = `
-        <div class="max-w-[85%] min-w-[60px]
-            ${isMe
-            ? "bg-yellow-500/10 border border-yellow-500/20 text-yellow-50"
-            : "bg-white/5 border border-white/10 text-gray-200"}
-            rounded-2xl px-3 py-2 text-sm shadow-sm backdrop-blur-md">
-            ${!isMe ? `<span class="text-[10px] text-yellow-500/90 block mb-0.5 font-bold tracking-wide">${msg.sender}</span>` : ""}
-            <span class="break-words leading-snug block">${msg.text}</span>
-            <div class="text-[9px] mt-1 text-right font-mono flex items-center justify-end gap-1 select-none text-gray-400">
-                <span title-app="${fullDate}">${time}</span> <span title-app="${msg.read ? "Visualizada" : "Não Visualizada"}">${isMe ? statusIcon : ""}</span>
+        <div class="max-w-[75%] min-w-[80px] ${bubbleStyle} px-4 py-2.5 relative transition-transform hover:scale-[1.01]">
+            ${!isMe ? `<span class="text-[10px] text-yellow-500/90 block mb-0.5 font-extrabold tracking-wider uppercase opacity-80 select-none">${msg.sender}</span>` : ""}
+            <span class="break-words text-sm leading-relaxed font-medium block drop-shadow-sm">${msg.text}</span>
+            <div class="text-[10px] mt-1.5 text-right font-bold font-mono flex items-center justify-end gap-1 select-none ${isMe ? 'text-[#dfdfdf66]' : 'text-white/30'}">
+                <span title-app="${fullDate}">${time}</span> 
+                <span title-app="${msg.read ? "Lida" : "Enviada"}">${isMe ? statusIcon : ""}</span>
             </div>
         </div>
     `;
@@ -1155,6 +1286,7 @@ function selectFriend(nick, status) {
 
     fullChatHistory = [];
     isInternalScroll = false;
+    observer.unobserve(topSentinel);
 
     if (currentChatFriend) {
         document.getElementById(`friend-item-${currentChatFriend}`)?.classList.remove("bg-white/10", "border-yellow-500/50");
@@ -1166,21 +1298,20 @@ function selectFriend(nick, status) {
     els.placeholder?.classList.add("hidden-force");
     els.headerNick.innerText = nick;
     els.headerStatus.innerText = status ?? "OFFLINE";
+
     if (els.headerStatusDot) {
         els.headerStatusDot.className = `w-2 h-2 rounded-full ${getStatusColor(status || "offline")}`;
-    } if (els.headerAvatar) els.headerAvatar.src = `https://mc-heads.net/avatar/${nick}`;
-    document.getElementById(`badge-${nick}`)?.classList.add("hidden-force");
-
-    checkGlobalNotification();
+    }
+    if (els.headerAvatar) {
+        els.headerAvatar.src = `https://mc-heads.net/avatar/${nick}`;
+    }
 
     els.chatMsgs.innerHTML = `<div class="h-full flex items-center justify-center"><span class="animate-spin h-5 w-5 border-2 border-yellow-500 rounded-full border-t-transparent"></span></div>`;
 
     typingIndicator.classList.remove("visible");
-
-    socket.emit("chat:mark_read", nick);
-    socket.emit("chat:select", nick);
-
     btnScrollBottom.classList.remove('visible');
+
+    socket.emit("chat:select", nick);
 
     els.chatInput.focus();
 }
@@ -1188,21 +1319,34 @@ function selectFriend(nick, status) {
 function createFriendElement(friend) {
     const div = document.createElement("div");
     div.id = `friend-item-${friend.nick}`;
-    div.className = "p-2 rounded-xl cursor-pointer transition flex items-center gap-3 group relative mb-1 border border-transparent hover:bg-white/5";
+    div.className = "group relative p-3 rounded-2xl cursor-pointer transition-all duration-100 border border-transparent hover:bg-white/5 hover:border-white/5 flex items-center gap-4 mb-1 overflow-hidden";
+
     div.onclick = () => selectFriend(friend.nick, friend.status);
 
-    const statusColor = getStatusColor(friend.status);
+    const statusColors = {
+        online: "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]",
+        ocupado: "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]",
+        ausente: "bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]",
+        offline: "bg-zinc-600"
+    };
+    const statusClass = statusColors[friend.status] || statusColors.offline;
 
     div.innerHTML = `
+        <div class="absolute inset-0 bg-gradient-to-r from-yellow-500/0 via-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
         <div class="relative shrink-0">
-            <img src="https://mc-heads.net/avatar/${friend.nick}" title-app="${friend.nick}" class="w-9 h-9 rounded-lg bg-black/30 shadow-sm" loading="lazy">
-            <div id="status-dot-${friend.nick}" class="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#121212] ${statusColor}" title-app="${friend.status || "offline"}"></div>
+            <img src="https://mc-heads.net/avatar/${friend.nick}" class="w-10 h-10 rounded-xl bg-zinc-900 shadow-md group-hover:scale-105 transition-transform duration-300" loading="lazy">
+            <div id="status-dot-${friend.nick}" class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-[3px] border-[#18181b] ${statusClass} transition-all" title-app="${friend.status || "offline"}"></div>
         </div>
-        <div class="flex-1 min-w-0">
-            <h4 class="text-sm font-bold text-gray-200 truncate leading-tight">${friend.nick}</h4>
-            <p id="status-text-${friend.nick}" class="text-[10px] text-gray-500 uppercase truncate font-semibold tracking-wide">${friend.status || "OFFLINE"}</p>
+        
+        <div class="flex-1 min-w-0 flex flex-col justify-center">
+            <h4 class="text-sm font-bold text-gray-200 truncate group-hover:text-yellow-400 transition-colors">${friend.nick}</h4>
+            <p id="status-text-${friend.nick}" class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">${friend.status || "OFFLINE"}</p>
         </div>
-        <div id="badge-${friend.nick}" class="${friend.hasUnread ? "" : "hidden-force"} w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#121212] animate-pulse mr-1"></div>
+        
+        <div id="badge-${friend.nick}" class="${friend.hasUnread ? "" : "hidden-force"} absolute right-3 w-2.5 h-2.5 bg-yellow-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.8)]"></div>
+        
+        <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-600 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
     `;
     return div;
 }
@@ -1313,14 +1457,18 @@ function getStatusColor(status) {
 
 function updateMyStatusUI(status) {
     localStorage.setItem('status-account', status);
-    const map = { online: ["bg-green-500", "Online"], ocupado: ["bg-red-500", "Ocupado"], ausente: ["bg-yellow-500", "Ausente"], offline: ["bg-gray-500", "Offline"] };
+    const map = { online: ["bg-green-500", "Online", "Visível para todos"], ocupado: ["bg-red-500", "Ocupado", "Visível para todos (sem receber notificações)"], ausente: ["bg-yellow-500", "Ausente", "Visível para todos"], offline: ["bg-gray-500", "Offline", "Invisível para todos"] };
     const data = map[status] || map["offline"];
     els.myStatusDot.className = `w-2.5 h-2.5 rounded-full ${data[0]}`;
     els.myStatusText.innerText = data[1];
     const ind = document.getElementById('status-indicator');
-    ind.classList.remove('bg-red-500', 'bg-green-500');
     ind.setAttribute("title-app", data[1])
+    ind.classList.remove('bg-red-500', 'bg-green-500');
     ind.classList.add(data[0]);
+    els.myStatusDescription.innerText = data[2];
+    setTimeout(() => {
+        ind.classList.add(data[0]);
+    }, 500);
 }
 
 window.changeMyStatus = (s) => {
