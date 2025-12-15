@@ -264,7 +264,7 @@ function createWindow() {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.focus();
         return;
-    } 
+    }
 
     mainWindow = new BrowserWindow({
         width: 1100,
@@ -274,6 +274,8 @@ function createWindow() {
         frame: false,
         backgroundColor: '#00000000',
         icon: path.join(__dirname, 'ui/public/assets/icon.png'),
+        maximizable: false,
+        fullscreenable: false,
         webPreferences: {
             preload: path.join(__dirname, 'build', 'preload.js'),
             contextIsolation: true,
