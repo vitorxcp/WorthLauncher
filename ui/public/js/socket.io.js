@@ -40,7 +40,13 @@ function initChatMenu() {
 
         newBtn.onclick = (e) => {
             e.stopPropagation();
-            menuDropdown.classList.toggle("hidden");
+
+            if (menuDropdown.classList.contains("hidden")) {
+                updateChatOptionsContent();
+                menuDropdown.classList.remove("hidden");
+            } else {
+                menuDropdown.classList.add("hidden");
+            }
         };
 
         if (!isChatMenuInitialized) {
@@ -704,7 +710,7 @@ let isTyping = false;
 
 els.chatInput.addEventListener('input', () => {
     if (!socket) return;
-    
+
     if (!currentChatFriend && !currentTicketId) return;
 
     if (!isTyping) {
@@ -852,7 +858,7 @@ function setupSocketEvents() {
             if (currentChatFriend === friend) {
                 fullChatHistory = messages || [];
             }
-        } 
+        }
         else if (currentSocialTab === 'tickets') {
             if (currentTicketId) {
                 fullChatHistory = messages || [];
@@ -883,7 +889,7 @@ function setupSocketEvents() {
         } else {
             isTarget = (currentSocialTab === 'friends' && currentChatFriend === from);
         }
-        
+
         if (isTarget) {
             const textEl = document.getElementById("typing-text");
             if (state) {
@@ -925,7 +931,7 @@ function setupSocketEvents() {
 
     socket.on("ticket:receive", (msg) => {
         const myNick = socket.auth?.nick || "";
-        
+
         if (msg.sender === myNick) return;
 
         if (currentSocialTab === 'tickets' && currentTicketId === msg.ticketId) {
@@ -951,7 +957,7 @@ function setupSocketEvents() {
             typingIndicator.classList.remove("visible");
             fullChatHistory.push(msg);
             if (fullChatHistory.length > PERF_CONFIG.MAX_HISTORY_MEMORY) fullChatHistory.shift();
-            
+
             appendSingleMessage(msg, true);
             scrollToBottom(true);
         } else {
@@ -1041,23 +1047,23 @@ function sendDesktopNotification(titleOrSender, text) {
 
             notif.onclick = () => {
                 window.focus();
-                
+
                 if (titleOrSender.startsWith("Ticket #")) {
                     const matches = titleOrSender.match(/Ticket #([a-zA-Z0-9]+)/);
                     if (matches && matches[1]) {
                         const ticketId = matches[1];
-                        
+
                         if (typeof switchSocialTab === 'function') switchSocialTab('tickets');
-                        
+
                         setTimeout(() => {
                             if (typeof selectTicket === 'function') {
-                                selectTicket({ id: ticketId, subject: 'Carregando...', status: 'open' }); 
+                                selectTicket({ id: ticketId, subject: 'Carregando...', status: 'open' });
                             }
                         }, 50);
                     }
                 } else {
                     if (typeof switchSocialTab === 'function') switchSocialTab('friends');
-                    
+
                     setTimeout(() => {
                         if (typeof selectFriend === 'function') {
                             const friendData = document.getElementById(`status-dot-${titleOrSender}`)?.getAttribute('title-app');
@@ -1094,8 +1100,8 @@ function renderInitialHistory() {
     observer.unobserve(topSentinel);
 
     els.chatMsgs.style.visibility = 'hidden';
-    els.chatMsgs.style.scrollBehavior = 'auto'; 
-    
+    els.chatMsgs.style.scrollBehavior = 'auto';
+
     els.chatMsgs.innerHTML = "";
     els.chatMsgs.appendChild(topSentinel);
 
@@ -1140,7 +1146,7 @@ function renderInitialHistory() {
         }
 
         els.chatMsgs.style.visibility = 'visible';
-        
+
         if (targetScrollElementId) setupUnreadRemover();
 
         if (!hasInsertedUnreadSeparator) {
@@ -1150,13 +1156,13 @@ function renderInitialHistory() {
             if (currentSocialTab === 'tickets' && currentTicketId) {
                 socket.emit("ticket:mark_read", currentTicketId);
                 const badge = document.querySelector(`#ticket-item-${currentTicketId} .ticket-badge`);
-                if(badge) badge.remove();
+                if (badge) badge.remove();
             }
         }
 
         setTimeout(() => {
             if (!targetScrollElementId) els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
-            
+
             els.chatMsgs.style.scrollBehavior = 'smooth';
             observer.observe(topSentinel);
         }, 200);
@@ -1177,23 +1183,23 @@ function setupUnreadRemover() {
 
     const removeAction = () => {
         const sep = document.getElementById("unread-separator-line");
-        
+
         els.chatMsgs.removeEventListener("scroll", scrollHandler);
         els.chatInput.removeEventListener("click", removeAction);
         els.chatInput.removeEventListener("keydown", removeAction);
 
         if (sep) {
             sep.style.animation = "fadeOutSeparator 0.5s ease forwards";
-            
+
             if (currentSocialTab === 'friends' && currentChatFriend) {
                 socket.emit("chat:mark_read", currentChatFriend);
                 document.getElementById(`badge-${currentChatFriend}`)?.classList.add("hidden-force");
             }
-            
+
             if (currentSocialTab === 'tickets' && currentTicketId) {
                 socket.emit("ticket:mark_read", currentTicketId);
                 const ticketBadge = document.querySelector(`#ticket-item-${currentTicketId} .ticket-badge`);
-                if(ticketBadge) ticketBadge.remove();
+                if (ticketBadge) ticketBadge.remove();
             }
 
             setTimeout(() => sep.remove(), 500);
@@ -1277,13 +1283,13 @@ function loadOlderMessages() {
 function appendSingleMessage(msg, animate = true) {
     const isMe = msg.sender === (socket.auth?.nick || "");
     const wasAtBottom = isUserAtBottom();
-    
+
     const lastMsgIndex = fullChatHistory.length - 2;
     if (lastMsgIndex >= 0) {
         const prevMsg = fullChatHistory[lastMsgIndex];
         const prevDay = getDayKey(prevMsg.timestamp || Date.now());
         const currentDay = getDayKey(msg.timestamp || Date.now());
-        
+
         if (prevDay !== currentDay) {
             els.chatMsgs.appendChild(createDateSeparator(msg.timestamp || Date.now()));
         }
@@ -1384,8 +1390,9 @@ function createMessageElement(msg, animate = true) {
 }
 
 function selectFriend(nick, status) {
-    if (currentChatFriend === nick) return;
 
+    if (currentChatFriend === nick) return;
+    els.chatMsgs.innerHTML = `<div class="h-full flex items-center justify-center"><span class="loader"></span></div>`;
     fullChatHistory = [];
     els.chatMsgs.innerHTML = "";
     isInternalScroll = false;
@@ -1409,7 +1416,6 @@ function selectFriend(nick, status) {
         els.headerAvatar.src = `https://mc-heads.net/avatar/${nick}`;
     }
 
-    els.chatMsgs.innerHTML = `<div class="h-full flex items-center justify-center"><span class="animate-spin h-5 w-5 border-2 border-yellow-500 rounded-full border-t-transparent"></span></div>`;
 
     typingIndicator.classList.remove("visible");
     btnScrollBottom.classList.remove('visible');
@@ -1668,7 +1674,7 @@ window.openNewTicketModal = () => {
 
 window.setTicketFilter = (filter) => {
     currentTicketFilter = filter;
-    if(socket && socket.connected) socket.emit('ticket:list');
+    if (socket && socket.connected) socket.emit('ticket:list');
 };
 
 window.confirmCreateTicket = () => {
@@ -1686,11 +1692,11 @@ window.confirmCreateTicket = () => {
 
 function selectTicket(ticket) {
     if (currentTicketId === ticket.id) return;
+    els.chatMsgs.innerHTML = `<div class="h-full flex items-center justify-center"><span class="loader"></span></div>`;
 
     currentChatFriend = null;
     currentTicketId = ticket.id;
     fullChatHistory = [];
-    els.chatMsgs.innerHTML = "";
 
     document.querySelectorAll('.ticket-item').forEach(el => el.classList.remove('bg-white/10', 'border-yellow-500/50'));
     document.getElementById(`ticket-item-${ticket.id}`)?.classList.add('bg-white/10', 'border-yellow-500/50');
@@ -1703,15 +1709,6 @@ function selectTicket(ticket) {
 
     if (els.headerStatusDot) {
         els.headerStatusDot.className = `w-2 h-2 rounded-full ${ticket.status === 'open' ? 'bg-green-500' : 'bg-red-500'}`;
-    }
-
-    const menuDropdown = document.getElementById("menu-chat-dropdown");
-    if (menuDropdown) {
-        menuDropdown.innerHTML = `
-            <button onclick="actionCloseTicket('${ticket.id}')" class="w-full text-left px-3 py-2.5 text-xs font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-xl flex items-center gap-3 transition-colors group">
-                <i data-lucide="x-circle" class="w-4 h-4 text-rose-500/50 group-hover:text-rose-400"></i> Fechar Ticket
-            </button>
-        `;
     }
 
     socket.emit('ticket:join', ticket.id);
@@ -1729,12 +1726,12 @@ function updateMessagesToRead() {
     const readIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>`;
 
     const pendingMsgs = document.querySelectorAll('.msg-status-sent');
-    
+
     pendingMsgs.forEach(el => {
         el.innerHTML = readIconSVG;
         el.classList.remove('msg-status-sent');
         el.classList.add('msg-status-read');
-        if(el.parentElement) el.parentElement.setAttribute('title-app', 'Lida');
+        if (el.parentElement) el.parentElement.setAttribute('title-app', 'Lida');
     });
 }
 
@@ -1742,7 +1739,7 @@ let currentTicketFilter = 'all';
 
 window.setTicketFilter = (filter) => {
     currentTicketFilter = filter;
-    if(socket && socket.connected) socket.emit('ticket:list');
+    if (socket && socket.connected) socket.emit('ticket:list');
 };
 
 function renderTicketList(tickets) {
@@ -1755,7 +1752,7 @@ function renderTicketList(tickets) {
     });
 
     list.innerHTML = "";
-    
+
     const filterHeader = document.createElement("div");
     filterHeader.className = "flex gap-1 mb-2 px-1";
     filterHeader.innerHTML = `
@@ -1783,7 +1780,7 @@ function renderTicketList(tickets) {
         const div = document.createElement("div");
         div.id = `ticket-item-${ticket.id}`;
         div.className = `group relative p-3 rounded-2xl cursor-pointer transition-all duration-100 border border-transparent hover:bg-white/5 hover:border-white/5 flex items-center gap-4 mb-1 ticket-item ${currentTicketId === ticket.id ? 'bg-white/10 border-yellow-500/50' : ''}`;
-        
+
         div.onclick = () => selectTicket(ticket);
 
         const statusColor = ticket.status === 'open' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-red-500';
@@ -1825,11 +1822,16 @@ els.chatForm.onsubmit = (e) => {
     if (text.toLowerCase().startsWith('chatstaff:')) {
         const message = text.substring(10).trim();
         if (message) {
-            socket.emit('chat:staff_send', { text: message });
-            showToast("Enviado para Staff Chat", "success");
-            const localMsg = { sender: myNick, text: `[STAFF] ${message}`, timestamp: Date.now(), read: true, isStaffChat: true };
-            appendSingleMessage(localMsg, true);
-            scrollToBottom(true);
+            socket.emit('chat:staff_send', { text: message }, (resposta) => {
+                if (resposta && resposta.error) {
+                    showToast("Erro ao enviar: " + resposta.error, "error");
+                } else {
+                    showToast("Enviado para Staff Chat", "success");
+                    const localMsg = { sender: myNick, text: `[STAFF] ${message}`, timestamp: Date.now(), read: true, isStaffChat: true };
+                    appendSingleMessage(localMsg, true);
+                    scrollToBottom(true);
+                }
+            });
         }
         els.chatInput.value = "";
         return;
@@ -1837,16 +1839,21 @@ els.chatForm.onsubmit = (e) => {
 
     if (currentSocialTab === 'tickets') {
         if (currentTicketId) {
-            const localMsg = { 
-                sender: myNick, text: text, timestamp: Date.now(), 
-                read: false, ticketId: currentTicketId 
+            const localMsg = {
+                sender: myNick, text: text, timestamp: Date.now(),
+                read: false, ticketId: currentTicketId
             };
-            
-            fullChatHistory.push(localMsg);
-            appendSingleMessage(localMsg, true);
-            scrollToBottom(true);
 
-            socket.emit('ticket:send', { ticketId: currentTicketId, text });
+            socket.emit('ticket:send', { ticketId: currentTicketId, text }, (resposta) => {
+                if (resposta && resposta.error) {
+                    showToast("Erro ao enviar: " + resposta.error, "error");
+
+                } else {
+                    fullChatHistory.push(localMsg);
+                    appendSingleMessage(localMsg, true);
+                    scrollToBottom(true);
+                }
+            });
         } else {
             showToast("Selecione um ticket primeiro.", "error");
         }
@@ -1857,8 +1864,8 @@ els.chatForm.onsubmit = (e) => {
 
     if (!currentChatFriend) return;
 
-    const localFriendMsg = { 
-        sender: myNick, text: text, timestamp: Date.now(), read: false 
+    const localFriendMsg = {
+        sender: myNick, text: text, timestamp: Date.now(), read: false
     };
     fullChatHistory.push(localFriendMsg);
     appendSingleMessage(localFriendMsg, true);
@@ -1868,7 +1875,7 @@ els.chatForm.onsubmit = (e) => {
     clearTimeout(typingTimeout);
     socket.emit('chat:typing', { target: currentChatFriend, state: false });
     socket.emit("chat:send", { targetNick: currentChatFriend, text });
-    
+
     els.chatInput.value = "";
     els.chatInput.focus();
 };
@@ -1887,3 +1894,102 @@ function addUnreadBadgeToTicket(ticketId) {
         if (socket && socket.connected) socket.emit('ticket:list');
     }
 }
+
+function updateChatOptionsContent() {
+    const menuDropdown = document.getElementById("menu-chat-dropdown");
+    if (!menuDropdown) return;
+
+    menuDropdown.innerHTML = "";
+
+    if (currentSocialTab === 'friends' && currentChatFriend) {
+        menuDropdown.innerHTML = `
+            <button onclick="actionClearChat()" class="w-full text-left px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-white/5 hover:text-white rounded-xl flex items-center gap-3 transition-colors group">
+                <i data-lucide="trash-2" class="w-4 h-4 text-zinc-600 group-hover:text-zinc-400"></i> Limpar Histórico
+            </button>
+            <button onclick="actionRemoveFriend()" class="w-full text-left px-3 py-2.5 text-xs font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-xl flex items-center gap-3 transition-colors group mt-1">
+                <i data-lucide="user-x" class="w-4 h-4 text-rose-500/50 group-hover:text-rose-400"></i> Desfazer Amizade
+            </button>
+        `;
+    }
+    else if (currentSocialTab === 'tickets' && currentTicketId) {
+        menuDropdown.innerHTML = `
+            <button onclick="actionCloseTicket('${currentTicketId}')" class="w-full text-left px-3 py-2.5 text-xs font-medium text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 rounded-xl flex items-center gap-3 transition-colors group">
+                <i data-lucide="x-circle" class="w-4 h-4 text-rose-500/50 group-hover:text-rose-400"></i> Fechar Ticket
+            </button>
+        `;
+    }
+    else {
+        menuDropdown.innerHTML = `<div class="px-3 py-2 text-[10px] text-zinc-600 text-center italic">Nenhuma ação disponível</div>`;
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+}
+
+window.closeModal = (id) => {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+};
+
+window.actionClearChat = () => {
+    if (!currentChatFriend) return;
+
+    document.getElementById("menu-chat-dropdown")?.classList.add("hidden");
+
+    const btnConfirm = document.getElementById("btn-confirm-clear-history");
+    btnConfirm.onclick = () => {
+        fullChatHistory = [];
+        els.chatMsgs.innerHTML = "";
+        socket.emit("chat:clear_history", currentChatFriend);
+        showToast("Histórico limpo.", "success");
+        closeModal("modal-clear-history");
+    };
+
+    openModal("modal-clear-history");
+};
+
+window.actionRemoveFriend = () => {
+    if (!currentChatFriend) return;
+
+    document.getElementById("menu-chat-dropdown")?.classList.add("hidden");
+    const nameSpan = document.getElementById("modal-friend-name");
+    if (nameSpan) nameSpan.innerText = currentChatFriend;
+
+    const btnConfirm = document.getElementById("btn-confirm-remove-friend");
+    btnConfirm.onclick = () => {
+        socket.emit("friend:remove", currentChatFriend);
+
+        const friendItem = document.getElementById(`friend-item-${currentChatFriend}`);
+        if (friendItem) friendItem.remove();
+
+        currentChatFriend = null;
+        els.placeholder?.classList.remove("hidden-force");
+
+        showToast("Amigo removido.", "success");
+        closeModal("modal-remove-friend");
+    };
+
+    openModal("modal-remove-friend");
+};
+
+window.actionCloseTicket = (id) => {
+    document.getElementById("menu-chat-dropdown")?.classList.add("hidden");
+
+    const btnConfirm = document.getElementById("btn-confirm-close-ticket");
+    btnConfirm.onclick = () => {
+        socket.emit('ticket:close', id);
+        closeModal("modal-close-ticket");
+    };
+
+    openModal("modal-close-ticket");
+};
