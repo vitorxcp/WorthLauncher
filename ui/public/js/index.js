@@ -983,4 +983,4 @@ function showLoading() {
 
 setTimeout(() => {
     hideLoading();
-}, 1000);
+}, 2000);
