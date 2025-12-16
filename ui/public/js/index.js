@@ -6,7 +6,7 @@ let savedAccounts = JSON.parse(localStorage.getItem('worth_accounts')) || [];
 let donwoadversionapp = "";
 
 try {
-    const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 854, height: 480, discordRichPresence: true };
+    const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 900, height: 550, discordRichPresence: true };
     const logConsole = document.getElementById('log-console');
     const btnPlay = document.getElementById('btn-play');
     const progressBar = document.getElementById('progress-bar');
