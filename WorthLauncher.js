@@ -92,7 +92,7 @@ function getLauncherRoot() {
 }
 
 function getForgePath() {
-    return path.join(getLauncherRoot(), `forge-${FORGE_VERSION}.jar`);
+    return path.join(getLauncherRoot(), "bin", `forge-${FORGE_VERSION}.jar`);
 }
 
 function getInternalModsPath() {
@@ -100,6 +100,13 @@ function getInternalModsPath() {
         return path.join(process.resourcesPath, 'mods');
     }
     return path.join(__dirname, 'mods');
+}
+
+function getInternalResourcePacksPath() {
+    if (app.isPackaged) {
+        return path.join(process.resourcesPath, 'resourcepacks');
+    }
+    return path.join(__dirname, 'resourcepacks');
 }
 
 function getTokenPath() {
@@ -359,6 +366,12 @@ app.whenReady().then(async () => {
         console.log(`[SISTEMA] Pasta de mods criada em: ${modsPath}`);
     }
 
+    const resourcepacksPath = getInternalResourcePacksPath();
+    if (!fs.existsSync(resourcepacksPath)) {
+        fs.ensureDirSync(resourcepacksPath);
+        console.log(`[SISTEMA] Pasta de resourcepacks criada em: ${resourcepacksPath}`);
+    }
+
     initializeApp();
 })
 
@@ -370,17 +383,26 @@ app.on('before-quit', () => {
 
 async function syncMods(sendLog) {
     const internalMods = getInternalModsPath();
+    const internalResourcePacks = getInternalResourcePacksPath();
     const gameMods = path.join(getLauncherRoot(), 'mods');
+    const gameResourcePacks = path.join(getLauncherRoot(), 'resourcepacks');
 
     try {
         fs.ensureDirSync(gameMods);
-        if (!fs.existsSync(internalMods)) return;
+        fs.ensureDirSync(gameResourcePacks);
 
-        const files = fs.readdirSync(internalMods);
-        if (files.length === 0) return;
+        if (fs.existsSync(internalMods)) {
+            const filesM = fs.readdirSync(internalMods);
+            sendLog(`[MODS] Sincronizando ${filesM.length} mods...`);
+            await fs.copy(internalMods, gameMods, { overwrite: true });
+        }
 
-        sendLog(`[MODS] Sincronizando ${files.length} mods...`);
-        await fs.copy(internalMods, gameMods, { overwrite: true });
+        if (fs.existsSync(internalResourcePacks)) {
+            const fileS = fs.readdirSync(internalResourcePacks);
+            sendLog(`[MODS] Sincronizando ${fileS.length} resourcepacks...`);
+            await fs.copy(internalResourcePacks, gameResourcePacks, { overwrite: true });
+        }
+
         sendLog("[MODS] Sincronização concluída.");
     } catch (err) {
         sendLog(`[MODS] Erro na cópia: ${err.message}`);
@@ -568,6 +590,30 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
         console.error("[CONFIG] Erro ao editar options.txt:", e);
     }
 
+    try {
+        const configDir = path.join(ROOT, 'config');
+        const splashPath = path.join(configDir, 'splash.properties');
+
+        fs.ensureDirSync(configDir);
+
+        let splashContent = "enabled=false";
+
+        if (fs.existsSync(splashPath)) {
+            let content = fs.readFileSync(splashPath, 'utf8');
+            if (content.includes("enabled=true")) {
+                content = content.replace("enabled=true", "enabled=false");
+                fs.writeFileSync(splashPath, content);
+                sendLog("[CONFIG] Splash do Forge foi desativado (Update).");
+            }
+        } else {
+            fs.writeFileSync(splashPath, splashContent);
+            sendLog("[CONFIG] Splash do Forge criado como desativado.");
+        }
+
+    } catch (e) {
+        console.error("[CONFIG] Erro ao desativar splash do Forge:", e);
+    }
+
     sendLog(`[CONFIG] Fullscreen: ${isFullscreen ? 'ATIVADO' : 'DESATIVADO'} | Res: ${config.width}x${config.height} | RAM: ${config.ram}`);
 
     const opts = {
@@ -584,6 +630,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             min: "2G"
         },
         javaPath: javaExecutable,
+        customArgs: ["-Dforge.splash=false"],
         window: {
             fullscreen: isFullscreen,
             width: parseInt(config.width) || 854,
@@ -643,6 +690,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 
         if (!hasStarted && e) {
             if (String(e).includes("LWJGL") || String(e).includes("OpenAL") || String(e).includes("Setting user") || String(e).includes("[Client thread/INFO]")) {
+                if (!String(e).includes("MinecraftForge v11.15.1.2318 Initialized")) return;
                 hasStarted = true;
 
                 checkPID();
