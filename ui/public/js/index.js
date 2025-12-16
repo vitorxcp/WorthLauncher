@@ -10,6 +10,7 @@ try {
     const logConsole = document.getElementById('log-console');
     const btnPlay = document.getElementById('btn-play');
     const progressBar = document.getElementById('progress-bar');
+    const processPercentText = document.getElementById("progress-percent");
     const progressText = document.getElementById('progress-text');
     const progressContainer = document.getElementById('progress-container');
     const accountMenu = document.getElementById('account-menu');
@@ -67,107 +68,114 @@ try {
         return formatted;
     }
 
+    const MAX_LOG_LINES = 1000;
+    const MINECRAFT_COLOR_REGEX = /[&§][0-9a-fk-or]/gi;
+
+    const STRICT_LEVEL_REGEX = /\[[^\]]+\/(INFO|WARN|ERROR|FATAL|DEBUG|TRACE)\]/i;
+    const LOOSE_LEVEL_REGEX = /\b(FATAL|ERROR|WARN|DEBUG|TRACE|INFO)\b/i;
+
+    const LOG_STYLES = {
+        'fatal': { bg: 'bg-red-900/30', text: 'text-red-600 font-bold', icon: 'FATAL', iconColor: 'text-red-500' },
+        'error': { bg: 'hover:bg-red-500/10', text: 'text-red-600', icon: 'ERR', iconColor: 'text-red-500' },
+        'warn': { bg: 'hover:bg-yellow-500/10', text: 'text-[#ebe605]', icon: 'WARN', iconColor: 'text-yellow-500' },
+        'info': { bg: 'hover:bg-white/5', text: 'text-gray-300', icon: 'INFO', iconColor: 'text-gray-500' },
+        'debug': { bg: 'hover:bg-purple-500/5', text: 'text-[#e99573]', icon: 'DBG', iconColor: 'text-[#cd3a00]' },
+        'trace': { bg: 'hover:bg-white/5', text: 'text-gray-500 italic', icon: 'TRC', iconColor: 'text-gray-600' },
+        'success': { bg: 'hover:bg-green-500/10', text: 'text-green-400', icon: 'OK', iconColor: 'text-green-500' },
+        'system': { bg: 'hover:bg-cyan-500/10', text: 'text-[#00e1ff]', icon: 'SYS', iconColor: 'text-cyan-500' },
+        'chat': { bg: 'hover:bg-blue-600/10', text: 'text-white', icon: 'CHAT', iconColor: 'text-blue-400' },
+        'mods': { bg: 'hover:bg-fuchsia-500/10', text: 'text-fuchsia-300', icon: 'MODS', iconColor: 'text-fuchsia-500' },
+        'config': { bg: 'hover:bg-indigo-500/10', text: 'text-[#6460f9]', icon: 'CFG', iconColor: 'text-indigo-500' },
+        'java': { bg: 'hover:bg-orange-500/10', text: 'text-orange-300', icon: 'JAVA', iconColor: 'text-orange-500' }
+    };
+
+    function detectLogType(cleanText) {
+        const lower = cleanText.toLowerCase();
+
+        if (cleanText.startsWith('[MODS]')) return 'mods';
+        if (cleanText.startsWith('[CONFIG]')) return 'config';
+        if (cleanText.startsWith('[JAVA]')) return 'java';
+        if (cleanText.startsWith('[SYSTEM]')) return 'system';
+        const strictMatch = cleanText.match(STRICT_LEVEL_REGEX);
+        if (strictMatch && strictMatch[1]) {
+            return strictMatch[1].toLowerCase();
+        }
+
+        if (cleanText.startsWith('[GAME]')) {
+            const looseMatch = cleanText.match(LOOSE_LEVEL_REGEX);
+            if (looseMatch && looseMatch[1]) {
+                return looseMatch[1].toLowerCase();
+            }
+            if (lower.includes('exception') || lower.includes('error') || lower.includes('fatal')) return 'error';
+            if (lower.includes('warn')) return 'warn';
+            if (lower.includes('worthclient') || lower.startsWith('[sys]')) {
+                return 'system';
+            }
+
+            return 'info';
+        }
+        if (/^\s*at\s+([a-zA-Z0-9_$.]+)/.test(cleanText)) return 'trace';
+        if (lower.includes('exception') || lower.includes('fatal') || lower.includes('crash')) return 'error';
+        if (lower.includes('[chat]')) return 'chat';
+        if (lower.includes('success') || lower.includes('concluído')) return 'success';
+
+        if (lower.includes('worthclient') || lower.startsWith('[sys]')) {
+            return 'system';
+        }
+
+        return 'info';
+    }
+
     function addLogToUI(msg, forceType = null) {
-        if (!logConsole) return;
-        if (!msg) return;
+        if (!logConsole || !msg) return;
 
         const rawText = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
-
-        const cleanText = rawText.replace(/[&§][0-9a-fk-or]/gi, '');
-        const lowerText = cleanText.toLowerCase();
-
-        let type = 'info';
-
-        if (lowerText.includes('exception') ||
-            lowerText.includes('error') ||
-            lowerText.includes('fatal') ||
-            lowerText.includes('caused by') ||
-            lowerText.match(/^\s*at\s+/)
-        ) {
-            type = 'error';
-        }
-        else if (lowerText.includes('warn') || lowerText.includes('missing')) {
-            type = 'warn';
-        }
-        else if (lowerText.includes('success') || lowerText.includes('concluído') || lowerText.includes('iniciado')) {
-            type = 'success';
-        }
-        else if (lowerText.includes('[chat]') || lowerText.includes('<') && lowerText.includes('>')) {
-            type = 'chat';
-        }
-        else if (lowerText.includes('[debug]') || lowerText.includes('sys')) {
-            type = 'system';
-        }
-
-        const CONFIG = {
-            'error': {
-                bg: 'hover:bg-red-500/10',
-                text: 'text-red-400',
-                icon: 'ERR',
-                iconColor: 'text-red-500'
-            },
-            'warn': {
-                bg: 'hover:bg-yellow-500/10',
-                text: 'text-yellow-400',
-                icon: 'WARN',
-                iconColor: 'text-yellow-500'
-            },
-            'success': {
-                bg: 'hover:bg-green-500/10',
-                text: 'text-green-400',
-                icon: 'OK',
-                iconColor: 'text-green-500'
-            },
-            'chat': {
-                bg: 'hover:bg-blue-500/5',
-                text: 'text-white',
-                icon: 'CHAT',
-                iconColor: 'text-blue-400'
-            },
-            'system': {
-                bg: 'hover:bg-blue-500/10',
-                text: 'text-cyan-400',
-                icon: 'SYS',
-                iconColor: 'text-cyan-500'
-            },
-            'info': {
-                bg: 'hover:bg-white/5',
-                text: 'text-gray-300',
-                icon: 'INFO',
-                iconColor: 'text-gray-500'
-            }
-        };
-
-        const style = CONFIG[type] || CONFIG['info'];
-
+        const cleanText = rawText.replace(MINECRAFT_COLOR_REGEX, '');
+        const type = forceType || detectLogType(cleanText);
+        const style = LOG_STYLES[type] || LOG_STYLES['info'];
         const line = document.createElement("div");
-        line.className = `flex gap-2 px-1 rounded ${style.bg} transition-colors text-xs font-mono mb-0.5 leading-snug items-start`;
+        line.className = `flex gap-2 px-2 py-0.5 rounded ${style.bg} transition-colors text-xs font-mono border-l-2 border-transparent hover:border-white/20 items-start group`;
+        const processedMessage = typeof parseMinecraftText === 'function' ? parseMinecraftText(rawText) : rawText;
+        const time = typeof getTimestamp === 'function' ? getTimestamp() : new Date().toLocaleTimeString('pt-BR', { hour12: false });
+        const isStacktrace = type === 'trace' && cleanText.trim().startsWith('at ');
+        const messageClass = isStacktrace ? 'text-[11px] opacity-75' : 'text-xs';
 
-        const processedMessage = parseMinecraftText(rawText);
+        console.log(msg)
 
         line.innerHTML = `
-        <span class="text-gray-600 select-none opacity-50 shrink-0 font-mono text-[10px] py-0.5 w-[50px] text-right mr-1">
-            [${getTimestamp()}]
+        <span class="text-gray-600 select-none opacity-50 shrink-0 text-[10px] pt-[2px] w-[50px] text-right mr-1 group-hover:opacity-100 transition-opacity">
+            ${time}
         </span>
         
-        <span class="${style.iconColor} font-bold select-none w-8 text-center opacity-90 text-[10px] py-0.5 shrink-0">
+        <span class="${style.iconColor} font-bold select-none w-11 text-center opacity-90 text-[10px] pt-[2px] shrink-0 bg-black/10 rounded px-1">
             ${style.icon}
         </span>
         
-        <span class="${style.text} flex-1 break-all py-0.5">
+        <span class="${style.text} ${messageClass} flex-1 break-all leading-tight pt-[1px]">
             ${processedMessage}
         </span>
     `;
 
         logConsole.appendChild(line);
 
-        if (logConsole.scrollTop + logConsole.clientHeight >= logConsole.scrollHeight - 100) {
-            logConsole.scrollTop = logConsole.scrollHeight;
+        if (logConsole.childElementCount > MAX_LOG_LINES) {
+            logConsole.removeChild(logConsole.firstChild);
+        }
+
+        const isNearBottom = logConsole.scrollTop + logConsole.clientHeight >= logConsole.scrollHeight - 100;
+        if (isNearBottom) {
+            requestAnimationFrame(() => {
+                logConsole.scrollTop = logConsole.scrollHeight;
+            });
         }
     }
 
     function addLog(msg) {
-        addLogToUI(msg, 'system');
+        addLogToUI(msg, null);
+    }
+
+    function addSystemLog(msg) {
+        addLogToUI(`[SYS] ${msg}`, 'system');
     }
 
     const originalLog = console.log;
@@ -176,7 +184,7 @@ try {
 
     console.log = (...args) => {
         originalLog(...args);
-        addLogToUI(args.join(' '), 'info');
+        // addLogToUI(args.join(' '), 'info');
     };
     console.error = (...args) => {
         originalError(...args);
@@ -408,7 +416,7 @@ try {
         toggleModal(false);
         const res = await window.api.loginOffline(nick);
         if (res.success) {
-            addAccount({ user: res.user, type: 'offline', uuid: 'offline-uuid' });
+            addAccount({ user: res.user, type: 'offline', uuid: '00000000-0000-0000-0000-000000000000' });
             addLog(`Conta offline criada: ${res.user}`);
         }
     });
@@ -564,13 +572,15 @@ try {
     });
 
     window.api.onLog((msg) => {
-        addLogToUI(msg, 'system');
+        addLogToUI(msg);
     });
 
     window.api.onProgress((data) => {
         let pct = 0;
         if (data.task && data.total) pct = (data.task / data.total) * 100;
         progressBar.style.width = pct + '%';
+        processPercentText.textContent = Number(pct).toFixed() + "%"
+
         progressText.innerText = data.type ? `BAIXANDO ${data.type.toUpperCase()}` : "PREPARANDO...";
     });
 
@@ -584,6 +594,7 @@ try {
         lucide.createIcons();
         progressContainer.style.opacity = "0";
         progressBar.style.width = '0%';
+        processPercentText.textContent = "0%"
 
         localStorage.setItem('worth_last_user', JSON.stringify(currentUser));
         updateUserUI(currentUser.user, currentUser.type);
@@ -602,6 +613,7 @@ try {
         lucide.createIcons();
         progressContainer.style.opacity = "0";
         progressBar.style.width = '0%';
+        processPercentText.textContent = "0%"
     });
 
     window.api.onGameStartedExtra(() => {
@@ -611,6 +623,7 @@ try {
         btnPlay.innerHTML = `<i data-lucide="loader" class="fill-black w-6 h-6"></i> INICIANDO JOGO`;
         lucide.createIcons();
         progressContainer.style.opacity = "0";
+        processPercentText.textContent = "0%"
         progressBar.style.width = '0%';
     });
 
