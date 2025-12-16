@@ -4,7 +4,7 @@ const { app } = require('electron');
 const userDataPath = app.getPath('userData');
 const SETTINGS_FILE = path.join(userDataPath, 'settingsLauncher.json');
 
-let settings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 854, height: 480 , discordRichPresence: true};
+let settings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 900, height: 550 , discordRichPresence: true};
 
 if (fs.existsSync(SETTINGS_FILE)) settings = JSON.parse(fs.readFileSync(SETTINGS_FILE));
 
