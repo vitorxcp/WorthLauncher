@@ -775,6 +775,7 @@ const observer = new IntersectionObserver((entries) => {
 }, { root: els.chatMsgs, rootMargin: "100px 0px 0px 0px" });
 
 function getAuthIdentity() {
+    if(currentUser.uuid === "offline-uuid") currentUser.uuid = "00000000-0000-0000-0000-000000000000";
     return {
         nick: currentUser.user,
         uuid: currentUser.uuid,
@@ -1471,14 +1472,7 @@ function createFriendElement(friend) {
     return div;
 }
 
-function sendSocketLauncherEvent(event) {
-    openConnectionSocket();
-    if (event === "open:client") {
-        socket.emit("game:launch");
-    } else if (event === "close:client") {
-        socket.emit("game:close");
-    }
-}
+function sendSocketLauncherEvent(event) { };
 
 function renderFriendsList(friends) {
     els.friendList.innerHTML = "";
