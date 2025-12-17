@@ -1,0 +1,127 @@
+<section id="view-resoucepacks" class="flex-1 hidden-force fade-enter flex flex-col overflow-hidden">
+    <div class="p-8 pb-4 border-b border-white/5 flex justify-between items-end shrink-0">
+        <div>
+            <h2 class="text-3xl font-bold text-white tracking-tight">Worth Packs</h2>
+            <p class="text-gray-400 text-sm mt-1">Texturas recomendadas pela comunidade.</p>
+        </div>
+        <div class="bg-white/5 px-3 py-1 rounded-full text-xs text-gray-400 border border-white/5">
+            1.8.9
+        </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <div id="packs-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        </div>
+    </div>
+
+    <script>
+        const texturePacks = [
+            {
+                name: "(EpicoPack) SkyBlock",
+                author: "EpicoPack",
+                res: "+16x",
+                image: "./assets/packs/epicopack_skyblock.png",
+                description: "Uma textura não oficial criada pela comunidade de skyblock.",
+                id: "epicopack-skyblock_D"
+            }
+        ];
+
+        function loadTexturePacks() {
+            const container = document.getElementById('packs-grid');
+            if (!container) return;
+
+            container.innerHTML = texturePacks.map(pack => `
+                <div class="group relative bg-black/20 hover:bg-black/40 border border-white/5 hover:border-yellow-500/50 rounded-xl transition-all duration-300 overflow-hidden flex flex-col">
+                    <div class="h-32 bg-gray-800 relative overflow-hidden">
+                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                        ${pack.image ? `<img src="${pack.image}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">` : ''}
+                        
+                        <span class="absolute top-2 right-2 z-20 bg-black/50 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10">
+                            ${pack.res}
+                        </span>
+                    </div>
+
+                    <div class="p-4 flex-1 flex flex-col">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-white font-semibold text-lg group-hover:text-yellow-400 transition-colors">${pack.name}</h3>
+                        </div>
+                        
+                        <p class="text-gray-500 text-sm mb-4 line-clamp-2 flex-1">${pack.description}</p>
+                        
+                        <div class="flex items-center gap-3 mt-auto">
+                            <button onclick="downloadTexture(this, '${pack.id}')" id="btn-${pack.id}" class="flex-1 bg-white/5 hover:bg-yellow-600 hover:text-white text-gray-300 text-sm font-medium py-2 rounded-lg border border-white/5 transition-all active:scale-95 flex justify-center items-center gap-2">
+                                <span>Instalar</span>
+                            </button>
+                            
+                            <div class="text-gray-600 text-xs font-mono" title="Criado por ${pack.author}">
+                                by ${pack.author}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            checkInstalledTextures();
+        }
+
+        async function checkInstalledTextures() {
+            try {
+                if (!window.api) return;
+                
+                const installedIDs = await window.api.checkInstalledTextures();
+
+                installedIDs.forEach(id => {
+                    const btn = document.getElementById(`btn-${id}`);
+                    if (btn) {
+                        setButtonState(btn, 'installed');
+                    }
+                });
+            } catch (error) {
+                console.error("Erro ao verificar texturas:", error);
+            }
+        }
+
+        async function downloadTexture(btn, packId) {
+            if (btn.dataset.status === 'downloading' || btn.dataset.status === 'installed') return;
+
+            setButtonState(btn, 'downloading', packId);
+
+            try {
+                const result = await window.api.installTexture(packId);
+
+                if (result.success) {
+                    setButtonState(btn, 'installed', packId);
+                } else {
+                    alert('Erro ao baixar: ' + result.error);
+                    setButtonState(btn, 'default', packId);
+                }
+            } catch (err) {
+                console.error(err);
+                setButtonState(btn, 'default', packId);
+                alert("Erro de comunicação com o Launcher.");
+            }
+        }
+
+        function setButtonState(btn, state, packId) {
+            btn.dataset.status = state;
+
+            if (state === 'downloading') {
+                btn.innerHTML = `<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span id="btn-${packId}-p">Baixando...</span>`;
+                btn.className = "flex-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 cursor-wait text-sm font-medium py-2 rounded-lg flex justify-center items-center gap-2";
+            }
+            else if (state === 'installed') {
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> <span>Instalado</span>`;
+                btn.className = "flex-1 bg-green-600/20 text-green-400 border border-green-500/30 cursor-default text-sm font-medium py-2 rounded-lg flex justify-center items-center gap-2";
+                btn.removeAttribute('onclick');
+            }
+            else {
+                btn.innerHTML = "<span>Instalar</span>";
+                btn.className = "flex-1 bg-white/5 hover:bg-yellow-600 hover:text-white text-gray-300 text-sm font-medium py-2 rounded-lg border border-white/5 transition-all active:scale-95 flex justify-center items-center gap-2";
+            }
+        }
+
+        loadTexturePacks();
+    </script>
+</section>
