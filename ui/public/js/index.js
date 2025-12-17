@@ -487,7 +487,7 @@ try {
     });
 
     window.switchTab = (tabName) => {
-        ['home', 'social', 'settings', 'store', "console"].forEach(v => {
+        ['home', 'social', 'settings', 'store', "console", "resoucepacks"].forEach(v => {
             const el = document.getElementById('view-' + v);
             const btn = document.getElementById('tab-' + v);
 
@@ -582,6 +582,10 @@ try {
         processPercentText.textContent = Number(pct).toFixed() + "%"
 
         progressText.innerText = data.type ? `BAIXANDO ${data.type.toUpperCase()}` : "PREPARANDO...";
+    });
+
+    window.api.onPercentDownloadTxT((data) => {
+        document.getElementById(`btn-${data.id}-p`).textContent = `Baixando ${data.percent}%...`;;
     });
 
     window.api.onGameClosed(() => {
