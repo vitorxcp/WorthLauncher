@@ -30,6 +30,10 @@ autoUpdater.setFeedURL({
     repo: 'WorthLauncher'
 });
 
+const path7za = app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', '7zip-bin', 'win', 'x64', '7za.exe')
+    : sevenBin.path7za;
+
 let isInstallerLaunch = false;
 let { settings, saveDataSettings } = require('./plugins/settingsRegister.js');
 let { updateDiscordActivity } = require('./plugins/RichPresencePlugin.js');
@@ -58,6 +62,49 @@ try {
 
 let rpc;
 let nickname = "Jogador";
+
+const texturePacks = [
+    {
+        name: "(EpicoPack) SkyBlock",
+        nameFile: "§5§l(EpicoPack) §9SkyBlock",
+        author: "EpicoPack",
+        res: "+16x",
+        image: "./assets/packs/epicopack_skyblock.png",
+        description: "Uma textura não oficial criada pela comunidade de skyblock.",
+        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
+        id: "epicopack-skyblock_D"
+    },
+    {
+        name: "Draccount HG",
+        nameFile: "§4§lDraccount §c§lHG",
+        author: "Draccount",
+        res: "+16x",
+        image: "./assets/packs/draccount_hg.png",
+        description: "Uma textura editada por Draccount para HG.",
+        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
+        id: "draccount-hg_D"
+    },
+    {
+        name: "Draccount v1",
+        nameFile: "§4@Draccount v1",
+        author: "Draccount",
+        res: "+16x",
+        image: "./assets/packs/epicopack_skyblock.png",
+        description: "Textura feita por Draccount.",
+        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
+        id: "epicopack-skyblock_D"
+    },
+    {
+        name: "Stimpy WAR Eum3 Revamp",
+        nameFile: "§3Stimpy WAR Eum3 Revamp",
+        author: "Draccount",
+        res: "+16x",
+        image: "./assets/packs/epicopack_skyblock.png",
+        description: "Uma textura não oficial criada pela comunidade de skyblock.",
+        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
+        id: "epicopack-skyblock_D"
+    },
+];
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -107,6 +154,10 @@ function getInternalResourcePacksPath() {
         return path.join(process.resourcesPath, 'resourcepacks');
     }
     return path.join(__dirname, 'resourcepacks');
+}
+
+function getGameResourcePacksPath() {
+    return path.join(getLauncherRoot(), 'resourcepacks');
 }
 
 function getTokenPath() {
@@ -466,6 +517,70 @@ ipcMain.handle('settings:update', (event, receivedSettings) => {
     }
 });
 
+ipcMain.handle('texture:check-all', async () => {
+    const installedIDs = [];
+    const packsDir = getGameResourcePacksPath();
+    
+    fs.ensureDirSync(packsDir);
+
+    texturePacks.forEach(pack => {
+        const folderName = pack.nameFile;
+        const folderPath = path.join(packsDir, folderName);
+        const zipPath = path.join(packsDir, `${pack.nameFile}.zip`);
+
+        if (fs.existsSync(folderPath) || fs.existsSync(zipPath)) {
+            installedIDs.push(pack.id);
+        }
+    });
+
+    return installedIDs;
+});
+
+ipcMain.handle('texture:install', async (event, packId) => {
+    const pack = texturePacks.find(p => p.id === packId);
+    
+    if (!pack) {
+        return { success: false, error: "Textura não encontrada no registro." };
+    }
+
+    const packsDir = getGameResourcePacksPath();
+    const tempDir = app.getPath('temp');
+    const tempZipName = `temp_${Date.now()}_${pack.id}.zip`;
+    const tempZipPath = path.join(tempDir, tempZipName);
+    
+    const name = pack.nameFile; 
+    const finalDestPath = path.join(packsDir, name);
+
+    const logToWindow = (msg) => {
+        console.log(msg);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("log", msg);
+        }
+    };
+
+    try {
+        logToWindow(`[TEXTURE] Iniciando download: ${pack.name}`);
+        await downloadFile(pack.urlDownload, tempZipPath, logToWindow);
+        
+        logToWindow(`[TEXTURE] Descompactando arquivos...`);
+        await extractZip(pack.id, tempZipPath, finalDestPath, logToWindow, event);
+        
+        try {
+            fs.unlinkSync(tempZipPath);
+        } catch(e) { console.error("Erro ao limpar temp:", e); }
+
+        logToWindow(`[TEXTURE] Instalação concluída: ${name}`);
+        return { success: true };
+
+    } catch (err) {
+        console.error(err);
+        if (fs.existsSync(tempZipPath)) {
+            try { fs.unlinkSync(tempZipPath); } catch(e) {}
+        }
+        return { success: false, error: err.message };
+    }
+});
+
 ipcMain.handle('auth:microsoft', async () => {
     try {
         if (mclcAuthorization) { }
@@ -629,7 +744,6 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             min: "2G"
         },
         javaPath: javaExecutable,
-        customArgs: ["-Dforge.splash=false"],
         window: {
             fullscreen: isFullscreen,
             width: parseInt(config.width) || 854,
@@ -837,3 +951,81 @@ ipcMain.on("window:close", () => {
 });
 
 ipcMain.on("window:minimize", () => mainWindow?.minimize());
+
+async function downloadFile(url, dest, sendLog) {
+    sendLog(`[NETWORK] Conectando: ${url}`);
+    
+    try {
+        const response = await axios({
+            method: 'GET',
+            url: url,
+            responseType: 'stream',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            }
+        });
+
+        const contentType = response.headers['content-type'];
+        if (contentType && (contentType.includes('text/html') || contentType.includes('application/json'))) {
+             throw new Error(`O link retornou um site/texto em vez de um arquivo ZIP. (Content-Type: ${contentType})`);
+        }
+
+        const totalLength = response.headers['content-length'];
+        
+        fs.ensureDirSync(path.dirname(dest));
+        const writer = fs.createWriteStream(dest);
+
+        return new Promise((resolve, reject) => {
+            let downloaded = 0;
+            
+            response.data.on('data', (chunk) => {
+                downloaded += chunk.length;
+            });
+
+            response.data.pipe(writer);
+
+            writer.on('finish', () => {
+                sendLog(`[NETWORK] Download concluído: ${path.basename(dest)}`);
+                resolve();
+            });
+
+            writer.on('error', (err) => {
+                fs.unlink(dest, () => {});
+                reject(err);
+            });
+        });
+
+    } catch (error) {
+        throw new Error(`Falha no download: ${error.message}`);
+    }
+}
+
+function extractZip(id, zipPath, destPath, sendLog, event) {
+    return new Promise((resolve, reject) => {
+        fs.ensureDirSync(destPath);
+
+        const stream = Seven.extractFull(zipPath, destPath, {
+            $bin: path7za,
+            $progress: true,
+            recursive: true,
+            overwrite: 'a'
+        });
+
+        stream.on('progress', (progress) => {
+            const percentage = Math.round(progress.percent);
+            
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send("outputPercentDownloadTxT", {
+                    id: id,
+                    percent: percentage
+                });
+            }
+        });
+
+        stream.on('end', () => resolve());
+        
+        stream.on('error', (err) => {
+            reject(err);
+        });
+    });
+}
