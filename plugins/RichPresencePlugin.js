@@ -53,6 +53,6 @@ module.exports.updateDiscordActivity = (detailsa, statea, rpca, nick) => {
 
         activityUpdater();
 
-        rpcInterval = setInterval(activityUpdater, 1000);
+        rpcInterval = setInterval(activityUpdater, 5000);
     }
 }
