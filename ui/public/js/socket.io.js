@@ -817,6 +817,13 @@ function openConnectionSocket() {
     }
 }
 
+setInterval(() => {
+    if(!socket.connected) {
+        socketinf = null;
+        openConnectionSocket();
+    }
+}, 5000)
+
 function closeConnectionSocket() {
     if (!socketinf || !socket) return;
     if (socket.connected) {
