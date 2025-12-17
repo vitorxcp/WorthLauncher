@@ -523,7 +523,6 @@ ipcMain.handle('texture:check-all', async () => {
     const packsDir = getGameResourcePacksPath();
 
     fs.ensureDirSync(packsDir);
-    const files = fs.readdirSync(packsDir);
 
     texturePacks.forEach(pack => {
         const folderPath = path.join(packsDir, pack.nameFile);
@@ -534,34 +533,40 @@ ipcMain.handle('texture:check-all', async () => {
         }
     });
 
-    for (const file of files) {
-        if (file === '.DS_Store' || file === 'thumbs.db') continue;
-        const fullPath = path.join(packsDir, file);
-        const isDirectory = fs.statSync(fullPath).isDirectory();
-        const isZip = file.endsWith('.zip');
-        if (!isDirectory && !isZip) continue;
-        const nameRaw = file.replace('.zip', '');
+    const allFoundPaths = getAllPotentialPacks(packsDir);
+
+    for (const fullPath of allFoundPaths) {
+        const filename = path.basename(fullPath);
+        const isZip = filename.endsWith('.zip');
+        const nameRaw = isZip ? filename.replace('.zip', '') : filename;
         const nameClean = stripColors(nameRaw);
         const isOfficial = texturePacks.some(p => stripColors(p.nameFile) === nameClean);
-
-        if (!isOfficial) {
-            const imageBase64 = getPackImage(fullPath, isZip);
-            const size = getFileSize(fullPath);
-            console.log(size)
-
-            localPacks.push({
-                name: nameClean,
-                author: "Desconhecido",
-                res: "?",
-                size: size,
-                categories: ["Local", "Não Verificado"],
-                image: imageBase64,
-                description: "Textura importada ou baixada externamente.",
-                id: `local-${nameClean.replace(/\s+/g, '-')}`,
-                isLocal: true,
-                fileName: file
-            });
+        const officialMatch = texturePacks.find(p => stripColors(p.nameFile) === nameClean);
+        
+        if (officialMatch) {
+            if (!installedIDs.includes(officialMatch.id)) {
+                installedIDs.push(officialMatch.id);
+            }
+            continue; 
         }
+
+        const imageBase64 = getPackImage(fullPath, isZip);
+        const size = getFileSize(fullPath);
+        const parentFolder = path.basename(path.dirname(fullPath));
+        const categoryTag = parentFolder === 'resourcepacks' ? 'Raiz' : parentFolder;
+
+        localPacks.push({
+            name: nameRaw,
+            author: categoryTag !== 'Raiz' ? categoryTag : "Desconhecido",
+            res: "?",
+            size: size,
+            categories: ["Local", categoryTag],
+            image: imageBase64,
+            description: `Localizado em: .../${categoryTag}/${filename}`,
+            id: `local-${nameClean.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`,
+            isLocal: true,
+            fileName: path.relative(packsDir, fullPath)
+        });
     }
 
     return {
@@ -667,9 +672,9 @@ ipcMain.handle('texture:uninstall', async (event, packId) => {
     }
 });
 
-ipcMain.handle('texture:uninstall-local', async (event, fileName) => {
+ipcMain.handle('texture:uninstall-local', async (event, relativePath) => {
     const packsDir = getGameResourcePacksPath();
-    const filePath = path.join(packsDir, fileName);
+    const filePath = path.join(packsDir, relativePath);
 
     try {
         if (fs.existsSync(filePath)) {
@@ -1199,4 +1204,32 @@ function getPackImage(filePath, isZip) {
 
 function stripColors(text) {
     return text.replace(/(?:§|&)[0-9a-fA-Fk-rK-R]/g, "");
+}
+
+function getAllPotentialPacks(dirPath, fileList = []) {
+    try {
+        const files = fs.readdirSync(dirPath);
+
+        for (const file of files) {
+            if (file === '.DS_Store' || file === 'thumbs.db' || file === '__MACOSX') continue;
+
+            const fullPath = path.join(dirPath, file);
+            const stats = fs.statSync(fullPath);
+
+            if (stats.isDirectory()) {
+                if (fs.existsSync(path.join(fullPath, 'pack.mcmeta'))) {
+                    fileList.push(fullPath); 
+                } else {
+                    getAllPotentialPacks(fullPath, fileList);
+                }
+            } else {
+                if (file.endsWith('.zip')) {
+                    fileList.push(fullPath);
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Erro ao escanear pasta:", dirPath, e);
+    }
+    return fileList;
 }
