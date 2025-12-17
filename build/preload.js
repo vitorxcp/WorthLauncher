@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('api', {
     // Texture Pack System
     checkInstalledTextures: () => ipcRenderer.invoke('texture:check-all'),
     installTexture: (packId) => ipcRenderer.invoke('texture:install', packId),
+    uninstallTexture: (packId) => ipcRenderer.invoke('texture:uninstall', packId),
+    uninstallLocalTexture: (fileName) => ipcRenderer.invoke('texture:uninstall-local', fileName),
 
     // Event Listeners
     onGameStarted: (cb) => {
