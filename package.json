@@ -108,6 +108,13 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "resourcepacks",
+        "to": "resourcepacks",
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
