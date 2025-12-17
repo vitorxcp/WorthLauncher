@@ -81,7 +81,7 @@ const texturePacks = [
         res: "+16x",
         image: "./assets/packs/draccount_hg.png",
         description: "Uma textura editada por Draccount para HG.",
-        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
+        urlDownload: "https://github.com/XPCreate/Draccount-HG/releases/download/hgv1/4.lDraccount.c.lHG.zip",
         id: "draccount-hg_D"
     },
     {
@@ -89,21 +89,21 @@ const texturePacks = [
         nameFile: "§4@Draccount v1",
         author: "Draccount",
         res: "+16x",
-        image: "./assets/packs/epicopack_skyblock.png",
+        image: "./assets/packs/draccount_v1.png",
         description: "Textura feita por Draccount.",
-        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
-        id: "epicopack-skyblock_D"
+        urlDownload: "https://github.com/XPCreate/Draccountv1/releases/download/Draccountv1/4@Draccount.v1.zip",
+        id: "draccount-v1_D"
     },
     {
         name: "Stimpy WAR Eum3 Revamp",
         nameFile: "§3Stimpy WAR Eum3 Revamp",
         author: "Draccount",
         res: "+16x",
-        image: "./assets/packs/epicopack_skyblock.png",
-        description: "Uma textura não oficial criada pela comunidade de skyblock.",
-        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
-        id: "epicopack-skyblock_D"
-    },
+        image: "./assets/packs/stimpy_war_dracc.png",
+        description: "Uma textura editada pelo Draccount.",
+        urlDownload: "https://github.com/XPCreate/Stimpy-WAR-Eum3-Revamp/releases/download/asd12/3Stimpy.WAR.Eum3.Revamp.zip",
+        id: "stimpy-war-dracc_D"
+    }
 ];
 
 app.disableHardwareAcceleration();
@@ -519,13 +519,14 @@ ipcMain.handle('settings:update', (event, receivedSettings) => {
 
 ipcMain.handle('texture:check-all', async () => {
     const installedIDs = [];
+    const localPacks = [];
     const packsDir = getGameResourcePacksPath();
-    
+
     fs.ensureDirSync(packsDir);
+    const files = fs.readdirSync(packsDir);
 
     texturePacks.forEach(pack => {
-        const folderName = pack.nameFile;
-        const folderPath = path.join(packsDir, folderName);
+        const folderPath = path.join(packsDir, pack.nameFile);
         const zipPath = path.join(packsDir, `${pack.nameFile}.zip`);
 
         if (fs.existsSync(folderPath) || fs.existsSync(zipPath)) {
@@ -533,12 +534,45 @@ ipcMain.handle('texture:check-all', async () => {
         }
     });
 
-    return installedIDs;
+    for (const file of files) {
+        if (file === '.DS_Store' || file === 'thumbs.db') continue;
+        const fullPath = path.join(packsDir, file);
+        const isDirectory = fs.statSync(fullPath).isDirectory();
+        const isZip = file.endsWith('.zip');
+        if (!isDirectory && !isZip) continue;
+        const nameRaw = file.replace('.zip', '');
+        const nameClean = stripColors(nameRaw);
+        const isOfficial = texturePacks.some(p => stripColors(p.nameFile) === nameClean);
+
+        if (!isOfficial) {
+            const imageBase64 = getPackImage(fullPath, isZip);
+            const size = getFileSize(fullPath);
+            console.log(size)
+
+            localPacks.push({
+                name: nameClean,
+                author: "Desconhecido",
+                res: "?",
+                size: size,
+                categories: ["Local", "Não Verificado"],
+                image: imageBase64,
+                description: "Textura importada ou baixada externamente.",
+                id: `local-${nameClean.replace(/\s+/g, '-')}`,
+                isLocal: true,
+                fileName: file
+            });
+        }
+    }
+
+    return {
+        installed: installedIDs,
+        locals: localPacks
+    };
 });
 
 ipcMain.handle('texture:install', async (event, packId) => {
     const pack = texturePacks.find(p => p.id === packId);
-    
+
     if (!pack) {
         return { success: false, error: "Textura não encontrada no registro." };
     }
@@ -547,8 +581,8 @@ ipcMain.handle('texture:install', async (event, packId) => {
     const tempDir = app.getPath('temp');
     const tempZipName = `temp_${Date.now()}_${pack.id}.zip`;
     const tempZipPath = path.join(tempDir, tempZipName);
-    
-    const name = pack.nameFile; 
+    const tempExtractPath = path.join(tempDir, `ext_${Date.now()}_${pack.id}`);
+    const name = pack.nameFile;
     const finalDestPath = path.join(packsDir, name);
 
     const logToWindow = (msg) => {
@@ -560,24 +594,91 @@ ipcMain.handle('texture:install', async (event, packId) => {
 
     try {
         logToWindow(`[TEXTURE] Iniciando download: ${pack.name}`);
-        await downloadFile(pack.urlDownload, tempZipPath, logToWindow);
-        
-        logToWindow(`[TEXTURE] Descompactando arquivos...`);
-        await extractZip(pack.id, tempZipPath, finalDestPath, logToWindow, event);
-        
+        await downloadFile2(pack.urlDownload, tempZipPath, logToWindow);
+
+        logToWindow(`[TEXTURE] Descompactando para análise...`);
+        await extractZip(pack.id, tempZipPath, tempExtractPath, logToWindow, event);
+
+        const files = fs.readdirSync(tempExtractPath);
+        let sourcePath = tempExtractPath;
+
+        if (files.length === 1) {
+            const innerPath = path.join(tempExtractPath, files[0]);
+            if (fs.statSync(innerPath).isDirectory()) {
+                logToWindow(`[TEXTURE] Pasta aninhada detectada (${files[0]}). Ajustando...`);
+                sourcePath = innerPath;
+            }
+        }
+
+        await fs.remove(finalDestPath);
+        await fs.move(sourcePath, finalDestPath);
+
         try {
-            fs.unlinkSync(tempZipPath);
-        } catch(e) { console.error("Erro ao limpar temp:", e); }
+            if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath);
+            if (fs.existsSync(tempExtractPath)) fs.removeSync(tempExtractPath);
+        } catch (e) { console.error("Erro ao limpar temp:", e); }
 
         logToWindow(`[TEXTURE] Instalação concluída: ${name}`);
         return { success: true };
 
     } catch (err) {
         console.error(err);
-        if (fs.existsSync(tempZipPath)) {
-            try { fs.unlinkSync(tempZipPath); } catch(e) {}
-        }
+        try {
+            if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath);
+            if (fs.existsSync(tempExtractPath)) fs.removeSync(tempExtractPath);
+        } catch (e) { }
+
         return { success: false, error: err.message };
+    }
+});
+
+ipcMain.handle('texture:uninstall', async (event, packId) => {
+    const pack = texturePacks.find(p => p.id === packId);
+
+    if (!pack) {
+        return { success: false, error: "Textura não encontrada no registro." };
+    }
+
+    const packsDir = getGameResourcePacksPath();
+    const possiblePaths = [
+        path.join(packsDir, pack.nameFile),
+        path.join(packsDir, `${pack.nameFile}.zip`)
+    ];
+
+    try {
+        let removed = false;
+        for (const p of possiblePaths) {
+            if (fs.existsSync(p)) {
+                await fs.remove(p);
+                removed = true;
+            }
+        }
+
+        if (removed) {
+            console.log(`[TEXTURE] Removido: ${pack.name}`);
+            return { success: true };
+        } else {
+            return { success: false, error: "Arquivos não encontrados para deletar." };
+        }
+
+    } catch (err) {
+        console.error(err);
+        return { success: false, error: err.message };
+    }
+});
+
+ipcMain.handle('texture:uninstall-local', async (event, fileName) => {
+    const packsDir = getGameResourcePacksPath();
+    const filePath = path.join(packsDir, fileName);
+
+    try {
+        if (fs.existsSync(filePath)) {
+            await fs.remove(filePath);
+            return { success: true };
+        }
+        return { success: false, error: "Arquivo não encontrado." };
+    } catch (e) {
+        return { success: false, error: e.message };
     }
 });
 
@@ -952,9 +1053,9 @@ ipcMain.on("window:close", () => {
 
 ipcMain.on("window:minimize", () => mainWindow?.minimize());
 
-async function downloadFile(url, dest, sendLog) {
+async function downloadFile2(url, dest, sendLog) {
     sendLog(`[NETWORK] Conectando: ${url}`);
-    
+
     try {
         const response = await axios({
             method: 'GET',
@@ -967,20 +1068,13 @@ async function downloadFile(url, dest, sendLog) {
 
         const contentType = response.headers['content-type'];
         if (contentType && (contentType.includes('text/html') || contentType.includes('application/json'))) {
-             throw new Error(`O link retornou um site/texto em vez de um arquivo ZIP. (Content-Type: ${contentType})`);
+            throw new Error(`O link retornou um site/texto em vez de um arquivo ZIP. (Content-Type: ${contentType})`);
         }
 
-        const totalLength = response.headers['content-length'];
-        
         fs.ensureDirSync(path.dirname(dest));
         const writer = fs.createWriteStream(dest);
 
         return new Promise((resolve, reject) => {
-            let downloaded = 0;
-            
-            response.data.on('data', (chunk) => {
-                downloaded += chunk.length;
-            });
 
             response.data.pipe(writer);
 
@@ -990,7 +1084,7 @@ async function downloadFile(url, dest, sendLog) {
             });
 
             writer.on('error', (err) => {
-                fs.unlink(dest, () => {});
+                fs.unlink(dest, () => { });
                 reject(err);
             });
         });
@@ -1011,21 +1105,98 @@ function extractZip(id, zipPath, destPath, sendLog, event) {
             overwrite: 'a'
         });
 
+        let lastPercent = 0;
+
         stream.on('progress', (progress) => {
             const percentage = Math.round(progress.percent);
-            
-            if (mainWindow && !mainWindow.isDestroyed()) {
-                mainWindow.webContents.send("outputPercentDownloadTxT", {
-                    id: id,
-                    percent: percentage
-                });
+
+            if (percentage > lastPercent) {
+                lastPercent = percentage;
+
+                if (mainWindow && !mainWindow.isDestroyed()) {
+                    mainWindow.webContents.send("outputPercentDownloadTxT", {
+                        id: id,
+                        percent: percentage
+                    });
+                }
             }
         });
 
-        stream.on('end', () => resolve());
-        
+        stream.on('end', () => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send("outputPercentDownloadTxT", {
+                    id: id,
+                    percent: 100
+                });
+            }
+            resolve();
+        });
+
         stream.on('error', (err) => {
             reject(err);
         });
     });
+}
+
+function getFolderSize(dirPath) {
+    let size = 0;
+    const files = fs.readdirSync(dirPath);
+
+    for (const file of files) {
+        const filePath = path.join(dirPath, file);
+        const stats = fs.statSync(filePath);
+
+        if (stats.isDirectory()) {
+            size += getFolderSize(filePath);
+        } else {
+            size += stats.size;
+        }
+    }
+    return size;
+}
+
+function getFileSize(filePath) {
+    try {
+        const stats = fs.statSync(filePath);
+        let sizeInBytes = stats.size;
+
+        if (stats.isDirectory()) {
+            sizeInBytes = getFolderSize(filePath);
+        }
+
+        return (sizeInBytes / (1024 * 1024)).toFixed(1) + ' MB';
+    } catch (e) {
+        return "Unknown";
+    }
+}
+
+function getPackImage(filePath, isZip) {
+    try {
+        let buffer = null;
+
+        if (isZip) {
+            const zip = new AdmZip(filePath);
+            const zipEntries = zip.getEntries();
+            const entry = zipEntries.find(e => e.entryName.toLowerCase() === "pack.png");
+            if (entry) {
+                buffer = entry.getData();
+            }
+        } else {
+            const imgPath = path.join(filePath, 'pack.png');
+            if (fs.existsSync(imgPath)) {
+                buffer = fs.readFileSync(imgPath);
+            }
+        }
+
+        if (buffer) {
+            return `data:image/png;base64,${buffer.toString('base64')}`;
+        }
+    } catch (e) {
+        console.error("Erro ao ler imagem do pack:", e);
+    }
+    return null;
+}
+
+function stripColors(text) {
+    return text.replace(/(?:§|&)[0-9a-fA-Fk-rK-R]/g, "");
 }
