@@ -140,8 +140,6 @@ try {
         const isStacktrace = type === 'trace' && cleanText.trim().startsWith('at ');
         const messageClass = isStacktrace ? 'text-[11px] opacity-75' : 'text-xs';
 
-        console.log(msg)
-
         line.innerHTML = `
         <span class="text-gray-600 select-none opacity-50 shrink-0 text-[10px] pt-[2px] w-[50px] text-right mr-1 group-hover:opacity-100 transition-opacity">
             ${time}
