@@ -18,6 +18,10 @@ const dateNow = Date.now();
 const Seven = require('node-7z');
 const axios = require('axios');
 const sevenBin = require('7zip-bin');
+const localPackCache = new Map();
+
+let isScanning = false;
+let watchdogInterval = null;
 
 autoUpdater.autoDownload = false;
 autoUpdater.allowPrerelease = true;
@@ -353,6 +357,7 @@ function createWindow() {
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
         startRPC();
+        startWatchdog(mainWindow);
     });
 
     mainWindow.on('close', (event) => {
@@ -518,62 +523,163 @@ ipcMain.handle('settings:update', (event, receivedSettings) => {
 });
 
 ipcMain.handle('texture:check-all', async () => {
-    const installedIDs = [];
-    const localPacks = [];
-    const packsDir = getGameResourcePacksPath();
+    if (isScanning) return { installed: [], locals: [], loading: true };
+    isScanning = true;
 
-    fs.ensureDirSync(packsDir);
+    try {
+        const installedIDs = [];
+        const localPacks = [];
+        const packsDir = getGameResourcePacksPath();
 
-    texturePacks.forEach(pack => {
-        const folderPath = path.join(packsDir, pack.nameFile);
-        const zipPath = path.join(packsDir, `${pack.nameFile}.zip`);
+        await fs.ensureDir(packsDir);
 
-        if (fs.existsSync(folderPath) || fs.existsSync(zipPath)) {
-            installedIDs.push(pack.id);
-        }
-    });
+        await Promise.all(texturePacks.map(async (pack) => {
+            const folderPath = path.join(packsDir, pack.nameFile);
+            const zipPath = path.join(packsDir, `${pack.nameFile}.zip`);
+            
+            const [folderExists, zipExists] = await Promise.all([
+                fs.pathExists(folderPath),
+                fs.pathExists(zipPath)
+            ]);
 
-    const allFoundPaths = getAllPotentialPacks(packsDir);
-
-    for (const fullPath of allFoundPaths) {
-        const filename = path.basename(fullPath);
-        const isZip = filename.endsWith('.zip');
-        const nameRaw = isZip ? filename.replace('.zip', '') : filename;
-        const nameClean = stripColors(nameRaw);
-        const isOfficial = texturePacks.some(p => stripColors(p.nameFile) === nameClean);
-        const officialMatch = texturePacks.find(p => stripColors(p.nameFile) === nameClean);
-        
-        if (officialMatch) {
-            if (!installedIDs.includes(officialMatch.id)) {
-                installedIDs.push(officialMatch.id);
+            if (folderExists || zipExists) {
+                installedIDs.push(pack.id);
             }
-            continue; 
+        }));
+
+        const allFoundFiles = await getAllPotentialPacksAsync(packsDir);
+
+        for (const fileData of allFoundFiles) {
+            const { fullPath, stats } = fileData;
+            const filename = path.basename(fullPath);
+            const mtimeMs = stats.mtimeMs;
+
+            if (localPackCache.has(fullPath)) {
+                const cached = localPackCache.get(fullPath);
+                if (cached.mtimeMs === mtimeMs) {
+                    if (cached.data.isOfficial) {
+                        if (!installedIDs.includes(cached.data.id)) installedIDs.push(cached.data.id);
+                    } else {
+                        localPacks.push(cached.data);
+                    }
+                    continue;
+                }
+            }
+
+            const isZip = filename.endsWith('.zip');
+            const nameRaw = isZip ? filename.replace('.zip', '') : filename;
+            const nameClean = stripColors(nameRaw);
+            
+            const officialMatch = texturePacks.find(p => stripColors(p.nameFile) === nameClean);
+
+            if (officialMatch) {
+                if (!installedIDs.includes(officialMatch.id)) installedIDs.push(officialMatch.id);
+                
+                localPackCache.set(fullPath, {
+                    mtimeMs,
+                    data: { isOfficial: true, id: officialMatch.id }
+                });
+                continue;
+            }
+
+            const imageBase64 = await getPackImageAsync(fullPath, isZip);
+            const size = (stats.size / (1024 * 1024)).toFixed(1) + ' MB';
+            const parentFolder = path.basename(path.dirname(fullPath));
+            const categoryTag = parentFolder === 'resourcepacks' ? 'Raiz' : parentFolder;
+
+            const packData = {
+                name: nameRaw,
+                author: categoryTag !== 'Raiz' ? categoryTag : "Desconhecido",
+                res: "?",
+                size: size,
+                categories: ["Local", categoryTag],
+                image: imageBase64,
+                description: `Localizado em: .../${categoryTag}/${filename}`,
+                id: `local-${nameClean.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`,
+                isLocal: true,
+                fileName: path.relative(packsDir, fullPath),
+                isOfficial: false
+            };
+
+            localPacks.push(packData);
+            
+            localPackCache.set(fullPath, {
+                mtimeMs,
+                data: packData
+            });
         }
 
-        const imageBase64 = getPackImage(fullPath, isZip);
-        const size = getFileSize(fullPath);
-        const parentFolder = path.basename(path.dirname(fullPath));
-        const categoryTag = parentFolder === 'resourcepacks' ? 'Raiz' : parentFolder;
+        for (const cachedPath of localPackCache.keys()) {
+            const stillExists = allFoundFiles.some(f => f.fullPath === cachedPath);
+            if (!stillExists) {
+                localPackCache.delete(cachedPath);
+            }
+        }
 
-        localPacks.push({
-            name: nameRaw,
-            author: categoryTag !== 'Raiz' ? categoryTag : "Desconhecido",
-            res: "?",
-            size: size,
-            categories: ["Local", categoryTag],
-            image: imageBase64,
-            description: `Localizado em: .../${categoryTag}/${filename}`,
-            id: `local-${nameClean.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}`,
-            isLocal: true,
-            fileName: path.relative(packsDir, fullPath)
-        });
+        return {
+            installed: installedIDs,
+            locals: localPacks
+        };
+
+    } catch (error) {
+        console.error("[TEXTURE CHECK] Erro:", error);
+        return { installed: [], locals: [] };
+    } finally {
+        isScanning = false;
     }
-
-    return {
-        installed: installedIDs,
-        locals: localPacks
-    };
 });
+
+async function getAllPotentialPacksAsync(dirPath, fileList = [], depth = 0) {
+    if (depth > 3) return fileList; 
+
+    try {
+        const files = await fs.readdir(dirPath);
+
+        for (const file of files) {
+            if (file === '.DS_Store' || file === 'thumbs.db' || file === '__MACOSX') continue;
+
+            const fullPath = path.join(dirPath, file);
+            let stats;
+            try { stats = await fs.stat(fullPath); } catch { continue; }
+
+            if (stats.isDirectory()) {
+                const mcmetaPath = path.join(fullPath, 'pack.mcmeta');
+                if (await fs.pathExists(mcmetaPath)) {
+                    fileList.push({ fullPath, stats });
+                } else {
+                    await new Promise(r => setImmediate(r));
+                    await getAllPotentialPacksAsync(fullPath, fileList, depth + 1);
+                }
+            } else if (file.endsWith('.zip')) {
+                fileList.push({ fullPath, stats });
+            }
+        }
+    } catch (e) {
+        console.error("Erro ao ler diretório:", dirPath, e);
+    }
+    return fileList;
+}
+
+async function getPackImageAsync(filePath, isZip) {
+    try {
+        if (isZip) {
+            const zip = new AdmZip(filePath);
+            const zipEntries = zip.getEntries();
+            const entry = zipEntries.find(e => e.entryName.toLowerCase() === "pack.png");
+            
+            if (entry) {
+                return `data:image/png;base64,${entry.getData().toString('base64')}`;
+            }
+        } else {
+            const imgPath = path.join(filePath, 'pack.png');
+            if (await fs.pathExists(imgPath)) {
+                const buffer = await fs.readFile(imgPath);
+                return `data:image/png;base64,${buffer.toString('base64')}`;
+            }
+        }
+    } catch (e) { }
+    return null;
+}
 
 ipcMain.handle('texture:install', async (event, packId) => {
     const pack = texturePacks.find(p => p.id === packId);
@@ -1233,3 +1339,36 @@ function getAllPotentialPacks(dirPath, fileList = []) {
     }
     return fileList;
 }
+
+let lastHeartbeat = Date.now();
+
+function startWatchdog(win) {
+    if (watchdogInterval) clearInterval(watchdogInterval);
+
+    watchdogInterval = setInterval(() => {
+        if (!win || win.isDestroyed()) return;
+
+        win.webContents.send('app:heartbeat');
+
+        if (Date.now() - lastHeartbeat > 15000 && !gamePID) {
+            console.warn("[WATCHDOG] Interface não responde. Recarregando...");
+            win.reload();
+            lastHeartbeat = Date.now();
+        }
+    }, 5000);
+}
+
+ipcMain.on('app:heartbeat-ack', () => {
+    lastHeartbeat = Date.now();
+});
+
+process.on('uncaughtException', (error) => {
+    console.error("[CRITICAL ERROR]", error);
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('app:error-notification', "Ocorreu um erro interno. O sistema tentou se recuperar.");
+    }
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error("[UNHANDLED PROMISE]", reason);
+});
