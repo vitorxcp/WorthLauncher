@@ -1029,9 +1029,11 @@ function showLoading() {
     });
 }
 
+const tempoAleatorio = Math.floor(Math.random() * (7000 - 2000 + 1)) + 3000;
+
 setTimeout(() => {
     hideLoading();
-}, 2000);
+}, tempoAleatorio);
 
 if (window.api && window.api.onHeartbeat) {
     window.api.onHeartbeat(() => {
