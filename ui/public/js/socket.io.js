@@ -506,10 +506,10 @@ if (!document.getElementById('chat-dynamic-styles')) {
     const styleParams = document.createElement('style');
     styleParams.id = 'chat-dynamic-styles';
     styleParams.innerHTML = `
-    #chat-messages {
-    flex: 1 1 0% !important; /* Adicionei o ; que faltava */
+#chat-messages {
+    flex: 1 1 0% !important;
     min-height: 0 !important;
-    max-height: 100% !important; /* Força a não expandir */
+    max-height: 100% !important;
     overflow-y: auto !important; 
     overflow-x: hidden !important;
     display: flex !important;
@@ -1103,6 +1103,7 @@ function createNewMessageSeparator() {
 function renderInitialHistory() {
     observer.unobserve(topSentinel);
     setTimeout(() => {
+        els.chatMsgs.innerHTML = "";
         els.chatMsgs.appendChild(topSentinel);
         const startIndex = Math.max(0, fullChatHistory.length - PERF_CONFIG.INITIAL_BATCH_SIZE);
         const initialBatch = fullChatHistory.slice(startIndex);
@@ -1131,10 +1132,8 @@ function renderInitialHistory() {
             }
             fragment.appendChild(createMessageElement(msg, false));
         }
-       els.chatMsgs.appendChild(fragment);
-
+        els.chatMsgs.appendChild(fragment);
         els.chatMsgs.style.scrollBehavior = 'auto';
-
         if (targetScrollElementId) {
             const el = document.getElementById(targetScrollElementId);
             if (el) {
@@ -1146,20 +1145,16 @@ function renderInitialHistory() {
         } else {
             els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
         }
-
         requestAnimationFrame(() => {
             setTimeout(() => {
                 els.chatMsgs.style.scrollBehavior = 'smooth';
-                
                 if (targetScrollElementId) setupUnreadRemover();
                 handleReadStatusMarking(hasInsertedUnreadSeparator);
                 observer.observe(topSentinel);
-                
                 els.chatMsgs.classList.remove('opacity-0-force', 'no-scroll');
                 els.chatMsgs.classList.add('visible-force');
             }, 50);
         });
-
     }, 500);
 }
 
