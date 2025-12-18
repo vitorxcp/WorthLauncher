@@ -25,6 +25,11 @@ contextBridge.exposeInMainWorld('api', {
     uninstallTexture: (packId) => ipcRenderer.invoke('texture:uninstall', packId),
     uninstallLocalTexture: (fileName) => ipcRenderer.invoke('texture:uninstall-local', fileName),
 
+    //heartbeat:
+    onHeartbeat: (callback) => ipcRenderer.on('app:heartbeat', callback),
+    sendHeartbeatAck: () => ipcRenderer.send('app:heartbeat-ack'),
+    onErrorNotification: (callback) => ipcRenderer.on('app:error-notification', (event, msg) => callback(msg)),
+
     // Event Listeners
     onGameStarted: (cb) => {
         const listener = () => cb();
