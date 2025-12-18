@@ -108,6 +108,13 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "ui/public/assets",
+        "to": "assets",
+        "filter": [
+          "**/*.mp4"
+        ]
       }
     ],
     "win": {
