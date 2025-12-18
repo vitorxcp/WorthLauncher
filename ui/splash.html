@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="titleAPP">Carregando...</title>
+    <title id="titleAPP">Carregando WorthLauncher...</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @font-face {
@@ -22,11 +22,10 @@
         }
 
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
             font-family: 'League Spartan', sans-serif;
             user-select: none;
+            -webkit-user-drag: none;
         }
 
         body {
@@ -39,131 +38,149 @@
             overflow: hidden;
         }
 
-        .splash-container {
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.973) 0%, rgba(48, 37, 3, 0.493) 100%);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        .splash-wrapper {
+            position: relative;
+            padding: 3px; /* Espaço para a borda gradiente */
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             -webkit-app-region: drag;
         }
 
-        @keyframes shimmer {
-            0% {
-                transform: translateX(-150%) skewX(-20deg);
-            }
-
-            100% {
-                transform: translateX(150%) skewX(-20deg);
-            }
+        .splash-container {
+            width: 380px;
+            height: 450px;
+            background: #0a0a0a;
+            border-radius: 22px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px 20px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .animate-shimmer {
-            animation: shimmer 2s infinite linear;
+        /* Fundo com textura sutil */
+        .splash-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(251, 191, 36, 0.15) 0%, transparent 60%),
+                        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            z-index: 0;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
+        .content { z-index: 10; display: flex; flex-direction: column; align-items: center; width: 100%; }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .logo-box {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.05);
+            animation: float 6s ease-in-out infinite;
         }
 
-        .animate-fade-in {
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
-
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #fbbf24;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
         .loader-track {
-            width: 200px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 99px;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
             overflow: hidden;
             position: relative;
-            margin-top: 10px;
+            margin-top: 15px;
         }
 
         .loader-fill {
             height: 100%;
-            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            background: #fbbf24;
             width: 0%;
             transition: width 0.3s ease-out;
-            border-radius: 99px;
-            box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+            border-radius: 4px;
+            box-shadow: 0 0 15px #fbbf24;
+            position: relative;
+        }
+        
+        .loader-fill::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background: white;
+            opacity: 0.5;
+            filter: blur(2px);
         }
 
-        .hidden {
-            display: none !important;
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(251, 191, 36, 0.1);
+            border-top-color: #fbbf24;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
         }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .hidden { display: none !important; }
     </style>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J75FLT254J"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-
-        gtag('config', 'G-J75FLT254J');
-    </script>
 </head>
 
 <body>
 
-    <div class="splash-container animate-fade-in">
+    <div class="splash-wrapper fade-in">
+        <div class="splash-container">
+            <div class="splash-bg"></div>
 
-        <div class="relative w-[7rem] h-[7rem] rounded-xl overflow-hidden bg-black/40 shadow-lg mb-6 p-[10px] group">
-            <img src="./public/assets/icon.png" class="w-full h-full object-cover" onerror="this.style.display='none'">
-            <div
-                class="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer">
-            </div>
-        </div>
+            <div class="content flex-1 justify-center">
+                <div class="logo-box">
+                    <img src="./public/assets/icon.png" class="w-full h-full object-contain drop-shadow-2xl" onerror="this.style.display='none'">
+                </div>
 
-        <div class="flex flex-col items-center gap-1 mb-6">
-            <h1 id="title" class="text-xl font-bold text-gray-100 tracking-wide">Iniciando...</h1>
-            <span id="subtitle" class="text-sm font-medium text-gray-500 h-5"></span>
-        </div>
-
-        <div id="loader-area" class="flex flex-col items-center">
-
-            <div id="loader-spinner" class="spinner"></div>
-
-            <div id="loader-bar-container" class="hidden flex-col items-center">
-                <div class="loader-track">
-                    <div id="loader-fill" class="loader-fill"></div>
+                <div class="flex flex-col items-center">
+                    <h1 id="title" class="text-xl font-bold text-white tracking-wider mb-1">WORTH LAUNCHER</h1>
+                    <span id="subtitle" class="text-[11px] font-medium text-gray-500 uppercase tracking-widest h-4">INICIANDO...</span>
                 </div>
             </div>
 
-            <div id="loader-success" class="hidden text-green-500 animate-bounce">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
+            <div class="content w-full px-4 mt-8">
+                <div class="w-full flex flex-col items-center justify-center h-10">
+                    
+                    <div id="loader-spinner" class="spinner"></div>
 
+                    <div id="loader-bar-container" class="hidden w-full">
+                        <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-1 px-1">
+                            <span id="progress-text">0%</span>
+                            <span id="size-text"></span>
+                        </div>
+                        <div class="loader-track">
+                            <div id="loader-fill" class="loader-fill"></div>
+                        </div>
+                    </div>
+
+                    <div id="loader-success" class="hidden text-green-400 animate-pulse">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+
+                </div>
+                
+                <div class="mt-4 text-[10px] text-gray-600 font-mono">v<span id="app-version">...</span></div>
+            </div>
         </div>
     </div>
 
@@ -176,25 +193,26 @@
         const elBarContainer = document.getElementById('loader-bar-container');
         const elBarFill = document.getElementById('loader-fill');
         const elSuccess = document.getElementById('loader-success');
+        const elProgressText = document.getElementById('progress-text');
+        const elSizeText = document.getElementById('size-text');
+        const elVersion = document.getElementById('app-version');
 
         const TEXTS = {
-            check: "Verificando atualizações...",
-            pending: "Atualização encontrada...",
-            downloading: "Baixando atualização",
-            extracting: "Extraindo arquivos",
-            success: "Reiniciando Launcher...",
-            starting: "Iniciando Launcher...",
-            noupdate: "Nenhuma atualização."
+            check: "VERIFICANDO...",
+            pending: "ATUALIZAÇÃO ENCONTRADA",
+            downloading: "BAIXANDO ARQUIVOS",
+            extracting: "EXTRAINDO PACOTE",
+            success: "PRONTO PARA JOGAR",
+            starting: "INICIANDO SISTEMA",
+            noupdate: "SISTEMA ATUALIZADO"
         };
 
         function formatBytes(bytes, decimals = 2) {
-            if (!+bytes) return ("0 bytes");
-
+            if (!+bytes) return ("0 B");
             const k = 1024;
             const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+            const sizes = ["B", "KB", "MB", "GB"];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-
             return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
         }
 
@@ -209,14 +227,12 @@
         }
 
         function updateText(main, sub) {
-            if (main) elTitle.innerText = main;
-            if (sub !== undefined) elSubtitle.innerText = sub;
+            if (main) elSubtitle.innerText = main; 
         }
 
         setTimeout(() => {
-            updateText(TEXTS.check, "");
+            updateText(TEXTS.check);
             setStatus('spin');
-
             ipcRenderer.send('updateVerify');
         }, 1000);
 
@@ -246,14 +262,12 @@
             }
 
             elBarFill.style.width = percent + '%';
+            elProgressText.innerText = Math.round(percent) + '%';
 
             if (total > 0) {
-                const transferredStr = formatBytes(transferred);
-                const totalStr = formatBytes(total);
-
-                updateText(null, `${Math.round(percent)}% - ${transferredStr} / ${totalStr}`)
+                elSizeText.innerText = `${formatBytes(transferred)} / ${formatBytes(total)}`;
             } else {
-                updateText(null, Math.round(percent) + '%');
+                elSizeText.innerText = "";
             }
         });
 
@@ -264,16 +278,15 @@
                 updateText(TEXTS.extracting);
                 setStatus('bar');
             }
-
             elBarFill.style.width = percent + '%';
-            updateText(null, Math.round(percent) + '%');
+            elProgressText.innerText = Math.round(percent) + '%';
+            elSizeText.innerText = "Descompactando...";
         });
 
         ipcRenderer.on('firstUpdate', (event, success) => {
             if (success) {
                 updateText(TEXTS.success);
                 setStatus('success');
-
                 setTimeout(() => {
                     updateText(TEXTS.starting);
                     setStatus('spin');
@@ -281,16 +294,14 @@
                 }, 2000);
             } else {
                 updateText(TEXTS.noupdate);
-                setStatus('spin');
-
+                setStatus('success');
                 setTimeout(() => {
                     updateText(TEXTS.starting);
-                    setTimeout(() => ipcRenderer.send('firstUpdate'), 500);
+                    setStatus('spin');
+                    setTimeout(() => ipcRenderer.send('firstUpdate'), 800);
                 }, 1000);
             }
         });
-
     </script>
 </body>
-
 </html>
