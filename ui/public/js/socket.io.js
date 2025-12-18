@@ -2,9 +2,10 @@ let currentSocialTab = 'friends';
 let currentTicketId = null;
 
 const PERF_CONFIG = {
-    MAX_DOM_NODES: 60,
-    MAX_HISTORY_MEMORY: 50,
-    SCROLL_THROTTLE: 150
+    MAX_DOM_NODES: 100,
+    MAX_HISTORY_MEMORY: 500,
+    INITIAL_BATCH_SIZE: 15,
+    SCROLL_THROTTLE: 100
 };
 
 let socket = null;
@@ -470,15 +471,13 @@ function initEmojiToggle() {
         btnToggle.onclick = (e) => {
             e.stopPropagation();
             const isHidden = picker.classList.contains("hidden");
-            
+
             if (isHidden) {
-                // OTIMIZAÇÃO 4: Só renderiza o HTML pesado na primeira vez que abrir
                 if (!isEmojiSystemInitialized) {
-                    initEmojiSystem(); 
+                    initEmojiSystem();
                     isEmojiSystemInitialized = true;
                 }
                 picker.classList.remove("hidden");
-                // Posicionamento...
                 const rect = btnToggle.getBoundingClientRect();
                 picker.style.left = `${Math.max(10, rect.right - 320)}px`;
                 picker.style.top = `${Math.max(10, rect.top - 384 - 12)}px`;
@@ -508,123 +507,65 @@ if (!document.getElementById('chat-dynamic-styles')) {
     styleParams.id = 'chat-dynamic-styles';
     styleParams.innerHTML = `
     #chat-messages {
-        contain: layout style paint;
-        will-change: transform;
-        content-visibility: auto;
-        height: 100%; 
-        overflow-y: auto;
-        scroll-behavior: smooth;
-        box-shadow: none !important;
-    }
+    flex: 1 1 0% !important; /* Adicionei o ; que faltava */
+    min-height: 0 !important;
+    max-height: 100% !important; /* Força a não expandir */
+    overflow-y: auto !important; 
+    overflow-x: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+    overflow-anchor: auto !important;
+}
     
     .msg-item {
-        contain: layout style;
-        content-visibility: auto; 
-        contain-intrinsic-size: 0 60px;
+        flex-shrink: 0 !important;
+        position: relative;
+        z-index: 1;
     }
+
     .show { opacity: 1 !important; transform: translateY(0) !important; }
 
     #btn-scroll-bottom {
-        position: absolute;
-        bottom: 80px; 
-        right: 20px;
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 0, 0, 0.8);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #eab308;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        opacity: 0;
-        transform: translateY(10px) scale(0.9);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        pointer-events: none;
-        z-index: 50;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        position: absolute; bottom: 80px; right: 20px; width: 40px; height: 40px;
+        background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #eab308; border-radius: 50%; display: flex; align-items: center;
+        justify-content: center; cursor: pointer; opacity: 0;
+        transform: translateY(10px) scale(0.9); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-    #btn-scroll-bottom.visible {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-        pointer-events: all;
-    }
-    #btn-scroll-bottom:hover {
-        background: #eab308;
-        color: black;
-        transform: scale(1.1);
-        border-color: #eab308;
-    }
+    #btn-scroll-bottom.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: all; }
+    #btn-scroll-bottom:hover { background: #eab308; color: black; transform: scale(1.1); border-color: #eab308; }
+    
     .unread-separator {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 24px 0;
-        position: relative;
-        width: 100%;
-        animation: fadeIn 0.3s ease;
+        display: flex; align-items: center; justify-content: center; margin: 24px 0;
+        position: relative; width: 100%; animation: fadeIn 0.3s ease;
     }
     .unread-separator::before, .unread-separator::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.5), transparent);
+        content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.5), transparent);
     }
     .unread-badge {
-        background: rgba(239, 68, 68, 0.15);
-        color: #f87171;
-        font-size: 10px;
-        font-weight: 800;
-        padding: 4px 12px;
-        border-radius: 99px;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        margin: 0 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
+        background: rgba(239, 68, 68, 0.15); color: #f87171; font-size: 10px; font-weight: 800;
+        padding: 4px 12px; border-radius: 99px; border: 1px solid rgba(239, 68, 68, 0.3);
+        margin: 0 12px; text-transform: uppercase; letter-spacing: 0.1em;
         box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
     }
-    @keyframes fadeOutSeparator {
-        to { opacity: 0; height: 0; margin: 0; transform: scaleY(0); }
-    }
+    @keyframes fadeOutSeparator { to { opacity: 0; height: 0; margin: 0; transform: scaleY(0); } }
+    
     #btn-scroll-bottom.new-message-alert::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 10px;
-        height: 10px;
-        background: #ef4444;
-        border-radius: 50%;
-        border: 2px solid #000;
-        animation: pulse 2s infinite;
+        content: ''; position: absolute; top: 0; right: 0; width: 10px; height: 10px;
+        background: #ef4444; border-radius: 50%; border: 2px solid #000; animation: pulse 2s infinite;
     }
 
     #typing-indicator {
-        position: absolute;
-        bottom: 90px; /* Acima do input */
-        left: 24px;
-        font-size: 0.75rem;
-        color: #d1d5db;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        opacity: 0;
-        transform: translateY(10px);
-        pointer-events: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 20;
-        background: rgba(24, 24, 27, 0.9); /* Zinc-900 */
-        padding: 6px 12px;
-        border-radius: 99px;
-        border: 1px solid rgba(255,255,255,0.08);
+        position: absolute; bottom: 90px; left: 24px; font-size: 0.75rem; color: #d1d5db;
+        font-weight: 600; display: flex; align-items: center; gap: 8px; opacity: 0;
+        transform: translateY(10px); pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 20; background: rgba(24, 24, 27, 0.9); padding: 6px 12px;
+        border-radius: 99px; border: 1px solid rgba(255,255,255,0.08);
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    #typing-indicator.visible { 
-        opacity: 1; 
-        transform: translateY(0);
-    }
+    #typing-indicator.visible { opacity: 1; transform: translateY(0); }
     .typing-dots { display: flex; gap: 4px; }
     .typing-dot {
         width: 4px; height: 4px; background: #eab308; border-radius: 50%;
@@ -642,14 +583,46 @@ if (!document.getElementById('chat-dynamic-styles')) {
     .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { bg: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
-.   custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #eab308; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #eab308; }
 
     @keyframes msgPop {
         0% { opacity: 0; transform: translateY(10px) scale(0.98); }
         100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     .msg-anim { animation: msgPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-`;
+    
+    @keyframes skeleton-pulse {
+        0% { opacity: 0.08; }
+        50% { opacity: 0.18; }
+        100% { opacity: 0.08; }
+    }
+
+    .chat-skeleton {
+        display: flex; flex-direction: column; gap: 16px; padding: 24px;
+        height: 100%; justify-content: flex-end; pointer-events: none;
+    }
+
+    .skeleton-msg {
+        display: flex; flex-direction: column; gap: 8px; width: 100%;
+        animation: skeleton-fade-in 0.3s ease;
+    }
+
+    .skeleton-msg.mine { align-items: flex-end; }
+    .skeleton-msg.theirs { align-items: flex-start; }
+
+    .skeleton-header {
+        width: 80px; height: 12px; background: white; border-radius: 4px;
+        margin-bottom: 4px; animation: skeleton-pulse 1.5s infinite ease-in-out;
+    }
+
+    .skeleton-bubble {
+        height: 40px; border-radius: 18px; background: white;
+        animation: skeleton-pulse 1.5s infinite ease-in-out;
+    }
+
+    .opacity-0-force { opacity: 0 !important; }
+    .no-scroll { overflow: hidden !important; }
+    `;
     document.head.appendChild(styleParams);
 }
 
@@ -751,10 +724,10 @@ topSentinel.style.height = "10px";
 topSentinel.style.width = "100%";
 
 const observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && (currentChatFriend || currentTicketId) && !isInternalScroll) {
-        loadOlderMessages();
+    if (entries[0].isIntersecting && currentChatFriend && !isInternalScroll) {
+        if (!isInternalScroll) loadOlderMessages();
     }
-}, { root: els.chatMsgs, rootMargin: "200px 0px 0px 0px" });
+}, { root: els.chatMsgs, rootMargin: "100px 0px 0px 0px" });
 
 function getAuthIdentity() {
     if (currentUser.uuid === "offline-uuid") currentUser.uuid = "00000000-0000-0000-0000-000000000000";
@@ -814,6 +787,32 @@ function closeConnectionSocket() {
     }
 }
 
+function renderChatLoading() {
+    observer.unobserve(topSentinel);
+
+    els.chatMsgs.innerHTML = `
+        <div class="chat-skeleton">
+            <div class="skeleton-msg theirs">
+                <div class="skeleton-header"></div>
+                <div class="skeleton-bubble" style="width: 45%; height: 40px; border-radius: 4px 18px 18px 18px;"></div>
+            </div>
+            <div class="skeleton-msg mine">
+                 <div class="skeleton-bubble" style="width: 30%; height: 40px; border-radius: 18px 4px 18px 18px;"></div>
+            </div>
+            <div class="skeleton-msg theirs">
+                <div class="skeleton-header"></div>
+                <div class="skeleton-bubble" style="width: 60%; height: 60px; border-radius: 4px 18px 18px 18px;"></div>
+            </div>
+            <div class="skeleton-msg mine">
+                <div class="skeleton-bubble" style="width: 25%; height: 40px; border-radius: 18px 4px 18px 18px;"></div>
+            </div>
+            <div class="skeleton-msg theirs">
+                <div class="skeleton-header"></div>
+                <div class="skeleton-bubble" style="width: 40%; height: 40px; border-radius: 4px 18px 18px 18px;"></div>
+            </div>
+        </div>
+    `;
+}
 
 function setupSocketEvents() {
     socket.removeAllListeners();
@@ -829,7 +828,7 @@ function setupSocketEvents() {
         requestAnimationFrame(() => {
             renderFriendsList(data.friends || []);
             if (data.requests) checkPendingRequests(data.requests);
-            setTimeout(checkGlobalNotification, 300);
+            checkGlobalNotification();
         });
     });
 
@@ -844,14 +843,18 @@ function setupSocketEvents() {
     socket.on("friend:status_update", ({ nick, status }) => updateFriendStatusUI(nick, status));
 
     socket.on("chat:history", ({ friend, messages }) => {
+        let sortedMessages = messages || [];
+
+        sortedMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
         if (currentSocialTab === 'friends') {
             if (currentChatFriend === friend) {
-                fullChatHistory = messages || [];
+                fullChatHistory = sortedMessages;
             }
         }
         else if (currentSocialTab === 'tickets') {
             if (currentTicketId) {
-                fullChatHistory = messages || [];
+                fullChatHistory = sortedMessages;
             }
         }
 
@@ -1091,81 +1094,88 @@ window.addEventListener("load", () => {
 function createNewMessageSeparator() {
     const div = document.createElement("div");
     div.id = "unread-separator-line";
-    div.className = "unread-separator select-none";
+    div.className = "unread-separator select-none w-full shrink-0";
+    div.style.height = "40px";
     div.innerHTML = `<span class="unread-badge">Novas Mensagens</span>`;
     return div;
 }
 
 function renderInitialHistory() {
     observer.unobserve(topSentinel);
-
-    els.chatMsgs.style.visibility = 'hidden';
-    els.chatMsgs.style.scrollBehavior = 'auto';
-    els.chatMsgs.innerHTML = "";
-    els.chatMsgs.appendChild(topSentinel);
-
-    const initialBatch = fullChatHistory.slice(-50);
-    const fragment = document.createDocumentFragment();
-
-    let lastRenderedDay = null;
-    let hasInsertedUnreadSeparator = false;
-    let targetScrollElementId = null;
-
-    const myNick = socket.auth?.nick || JSON.parse(localStorage.getItem("chat_identity") || "{}").nick;
-
-    for (let i = 0; i < initialBatch.length; i++) {
-        const msg = initialBatch[i];
-        const msgTimestamp = msg.timestamp || Date.now();
-        const currentDay = getDayKey(msgTimestamp);
-
-        if (currentDay !== lastRenderedDay) {
-            fragment.appendChild(createDateSeparator(msgTimestamp));
-            lastRenderedDay = currentDay;
+    setTimeout(() => {
+        els.chatMsgs.appendChild(topSentinel);
+        const startIndex = Math.max(0, fullChatHistory.length - PERF_CONFIG.INITIAL_BATCH_SIZE);
+        const initialBatch = fullChatHistory.slice(startIndex);
+        const fragment = document.createDocumentFragment();
+        let lastRenderedDay = null;
+        let hasInsertedUnreadSeparator = false;
+        let targetScrollElementId = null;
+        const myNick = socket.auth?.nick || JSON.parse(localStorage.getItem("chat_identity") || "{}").nick;
+        if (startIndex > 0) {
+            const prevMsg = fullChatHistory[startIndex - 1];
+            lastRenderedDay = getDayKey(prevMsg.timestamp || Date.now());
         }
-
-        if (!hasInsertedUnreadSeparator && !msg.read && msg.sender !== myNick) {
-            const sep = createNewMessageSeparator();
-            fragment.appendChild(sep);
-            hasInsertedUnreadSeparator = true;
-            targetScrollElementId = "unread-separator-line";
+        for (let i = 0; i < initialBatch.length; i++) {
+            const msg = initialBatch[i];
+            const msgTimestamp = msg.timestamp || Date.now();
+            const currentDay = getDayKey(msgTimestamp);
+            if (currentDay !== lastRenderedDay) {
+                fragment.appendChild(createDateSeparator(msgTimestamp));
+                lastRenderedDay = currentDay;
+            }
+            if (!hasInsertedUnreadSeparator && !msg.read && msg.sender !== myNick) {
+                const sep = createNewMessageSeparator();
+                fragment.appendChild(sep);
+                hasInsertedUnreadSeparator = true;
+                targetScrollElementId = "unread-separator-line";
+            }
+            fragment.appendChild(createMessageElement(msg, false));
         }
+       els.chatMsgs.appendChild(fragment);
 
-        const msgEl = createMessageElement(msg, false);
-        fragment.appendChild(msgEl);
-    }
+        els.chatMsgs.style.scrollBehavior = 'auto';
 
-    els.chatMsgs.appendChild(fragment);
-
-    requestAnimationFrame(() => {
         if (targetScrollElementId) {
             const el = document.getElementById(targetScrollElementId);
-            if (el) el.scrollIntoView({ block: "center", behavior: "auto" });
+            if (el) {
+                requestAnimationFrame(() => {
+                    const targetPos = el.offsetTop - (els.chatMsgs.offsetHeight / 2);
+                    els.chatMsgs.scrollTo({ top: targetPos, behavior: 'auto' });
+                });
+            }
         } else {
             els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
         }
 
-        els.chatMsgs.style.visibility = 'visible';
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                els.chatMsgs.style.scrollBehavior = 'smooth';
+                
+                if (targetScrollElementId) setupUnreadRemover();
+                handleReadStatusMarking(hasInsertedUnreadSeparator);
+                observer.observe(topSentinel);
+                
+                els.chatMsgs.classList.remove('opacity-0-force', 'no-scroll');
+                els.chatMsgs.classList.add('visible-force');
+            }, 50);
+        });
 
-        if (targetScrollElementId) setupUnreadRemover();
+    }, 500);
+}
 
-        if (!hasInsertedUnreadSeparator) {
-            if (currentSocialTab === 'friends' && currentChatFriend) {
-                socket.emit("chat:mark_read", currentChatFriend);
-            }
-            if (currentSocialTab === 'tickets' && currentTicketId) {
-                socket.emit("ticket:mark_read", currentTicketId);
-                const badge = document.querySelector(`#ticket-item-${currentTicketId} .ticket-badge`);
-                if (badge) badge.remove();
-            }
+function handleReadStatusMarking(hasSeparator) {
+    if (!hasSeparator) {
+        if (currentSocialTab === 'friends' && currentChatFriend) {
+            socket.emit("chat:mark_read", currentChatFriend);
+            document.getElementById(`badge-${currentChatFriend}`)?.classList.add("hidden-force");
         }
-
-        setTimeout(() => {
-            if (!targetScrollElementId) els.chatMsgs.scrollTop = els.chatMsgs.scrollHeight;
-
-            els.chatMsgs.style.scrollBehavior = 'smooth';
-            observer.observe(topSentinel);
-        }, 200);
-    });
+        if (currentSocialTab === 'tickets' && currentTicketId) {
+            socket.emit("ticket:mark_read", currentTicketId);
+            const badge = document.querySelector(`#ticket-item-${currentTicketId} .ticket-badge`);
+            if (badge) badge.remove();
+        }
+        checkGlobalNotification();
+    }
 }
 
 function createNewMessageSeparator() {
@@ -1193,12 +1203,14 @@ function setupUnreadRemover() {
             if (currentSocialTab === 'friends' && currentChatFriend) {
                 socket.emit("chat:mark_read", currentChatFriend);
                 document.getElementById(`badge-${currentChatFriend}`)?.classList.add("hidden-force");
+                checkGlobalNotification();
             }
 
             if (currentSocialTab === 'tickets' && currentTicketId) {
                 socket.emit("ticket:mark_read", currentTicketId);
                 const ticketBadge = document.querySelector(`#ticket-item-${currentTicketId} .ticket-badge`);
                 if (ticketBadge) ticketBadge.remove();
+                checkGlobalNotification();
             }
 
             setTimeout(() => sep.remove(), 500);
@@ -1217,25 +1229,29 @@ function setupUnreadRemover() {
 }
 
 function loadOlderMessages() {
-    if (isInternalScroll || fullChatHistory.length <= els.chatMsgs.querySelectorAll('.msg-item').length) return;
     const currentRenderedCount = els.chatMsgs.querySelectorAll('.msg-item').length;
-
     if (currentRenderedCount >= fullChatHistory.length) return;
 
     isInternalScroll = true;
     els.chatMsgs.style.scrollBehavior = 'auto';
+    const previousScrollHeight = els.chatMsgs.scrollHeight;
+    const previousScrollTop = els.chatMsgs.scrollTop;
+    const itemsRemaining = fullChatHistory.length - currentRenderedCount;
+    const batchSize = PERF_CONFIG.INITIAL_BATCH_SIZE;
+    const endIndex = itemsRemaining;
+    const startIndex = Math.max(0, endIndex - batchSize);
 
-    const nextIndex = fullChatHistory.length - currentRenderedCount;
-    const startIndex = Math.max(0, nextIndex - 30);
-    const olderBatch = fullChatHistory.slice(startIndex, nextIndex);
+    const olderBatch = fullChatHistory.slice(startIndex, endIndex);
 
     if (olderBatch.length === 0) {
         isInternalScroll = false;
+        els.chatMsgs.style.scrollBehavior = 'smooth';
         return;
     }
 
+    const fragment = document.createDocumentFragment();
     const lastMsgOfNewBatch = olderBatch[olderBatch.length - 1];
-    const firstMsgOfCurrentView = fullChatHistory[nextIndex];
+    const firstMsgOfCurrentView = fullChatHistory[endIndex];
 
     if (lastMsgOfNewBatch && firstMsgOfCurrentView) {
         const dateNew = getDayKey(lastMsgOfNewBatch.timestamp || Date.now());
@@ -1249,10 +1265,7 @@ function loadOlderMessages() {
         }
     }
 
-    const prevHeight = els.chatMsgs.scrollHeight;
-    const fragment = document.createDocumentFragment();
     let lastRenderedDay = null;
-
     if (startIndex > 0) {
         const msgBeforeBatch = fullChatHistory[startIndex - 1];
         lastRenderedDay = getDayKey(msgBeforeBatch.timestamp || Date.now());
@@ -1269,14 +1282,13 @@ function loadOlderMessages() {
 
         fragment.appendChild(createMessageElement(msg, false));
     });
-
     topSentinel.after(fragment);
-
+    const newScrollHeight = els.chatMsgs.scrollHeight;
+    const heightDifference = newScrollHeight - previousScrollHeight;
+    els.chatMsgs.scrollTop = previousScrollTop + heightDifference;
+    isInternalScroll = false;
     requestAnimationFrame(() => {
-        const newHeight = els.chatMsgs.scrollHeight;
-        els.chatMsgs.scrollTop = newHeight - prevHeight;
-        isInternalScroll = false;
-        setTimeout(() => els.chatMsgs.style.scrollBehavior = 'smooth', 50);
+        els.chatMsgs.style.scrollBehavior = 'smooth';
     });
 }
 
@@ -1392,8 +1404,8 @@ function createMessageElement(msg, animate = true) {
 function selectFriend(nick, status) {
 
     if (currentChatFriend === nick) return;
-    els.chatMsgs.replaceChildren();
-    els.chatMsgs.innerHTML = `<div class="h-full flex items-center justify-center"><span class="loader"></span></div>`;
+    renderChatLoading();
+
     fullChatHistory = [];
     isInternalScroll = false;
     observer.unobserve(topSentinel);
@@ -1421,6 +1433,7 @@ function selectFriend(nick, status) {
     btnScrollBottom.classList.remove('visible');
 
     socket.emit("chat:select", nick);
+    checkGlobalNotification();
 
     els.chatInput.focus();
 }
@@ -1685,7 +1698,7 @@ window.confirmCreateTicket = () => {
 
 function selectTicket(ticket) {
     if (currentTicketId === ticket.id) return;
-    els.chatMsgs.innerHTML = `<div class="h-full flex items-center justify-center"><span class="loader"></span></div>`;
+    renderChatLoading();
 
     currentChatFriend = null;
     currentTicketId = ticket.id;
