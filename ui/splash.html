@@ -4,22 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="titleAPP">Carregando WorthLauncher...</title>
+    <title id="titleAPP">WorthLauncher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @font-face {
-            font-family: 'League Spartan';
-            font-style: normal;
-            font-weight: 400;
-            src: url('./fonts/league-spartan/league-spartan_5.2.6_latin-400-normal.woff2') format('woff2');
-        }
-
-        @font-face {
-            font-family: 'League Spartan';
-            font-style: normal;
-            font-weight: 700;
-            src: url('./fonts/league-spartan/league-spartan_5.2.6_latin-700-normal.woff2') format('woff2');
-        }
+        @import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&display=swap');
 
         * {
             margin: 0; padding: 0; box-sizing: border-box;
@@ -30,8 +18,8 @@
 
         body {
             background-color: transparent;
-            color: white;
             height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -40,100 +28,140 @@
 
         .splash-wrapper {
             position: relative;
-            padding: 3px; /* Espaço para a borda gradiente */
-            border-radius: 24px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            -webkit-app-region: drag;
-        }
-
-        .splash-container {
-            width: 380px;
+            width: 350px;
             height: 450px;
-            background: #0a0a0a;
-            border-radius: 22px;
+            background: #080808;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            padding: 40px 20px;
-            position: relative;
-            overflow: hidden;
+            justify-content: center;
+            -webkit-app-region: drag;
+            border-radius: 12px;
         }
 
-        /* Fundo com textura sutil */
-        .splash-bg {
+        .splash-wrapper::before {
+            content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at top, rgba(251, 191, 36, 0.15) 0%, transparent 60%),
-                        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            z-index: 0;
+            border: 1px solid rgba(251, 191, 36, 0.1);
+            pointer-events: none;
+            z-index: 50;
+            border-radius: 12px;
         }
 
-        .content { z-index: 10; display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .bg-visuals {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            top: -10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 50%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
+            filter: blur(40px);
+        }
+
+        .grid-hud {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+            mask-image: radial-gradient(circle at center, black, transparent 80%);
+        }
 
         .logo-box {
-            width: 120px;
-            height: 120px;
-            border-radius: 24px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 15px;
-            margin-bottom: 25px;
-            box-shadow: 0 0 30px rgba(251, 191, 36, 0.05);
-            animation: float 6s ease-in-out infinite;
+            position: relative;
+            width: 110px; 
+            height: 110px;
+            z-index: 10;
+            margin-bottom: 20px;
+        }
+
+        .logo-glow {
+            position: absolute;
+            inset: 0;
+            background: #fbbf24;
+            filter: blur(35px);
+            opacity: 0.12;
+            border-radius: 50%;
+        }
+
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));
+            animation: float 4s ease-in-out infinite;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0); }
+            0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-8px); }
         }
 
-        .loader-track {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            overflow: hidden;
+        .orbital-loader {
             position: relative;
-            margin-top: 15px;
+            width: 28px;
+            height: 28px;
+        }
+
+        .orbital-loader div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid transparent;
+            border-top-color: #fbbf24;
+            border-radius: 50%;
+            animation: orbit 1s linear infinite;
+        }
+
+        @keyframes orbit {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .loader-track {
+            width: 180px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            overflow: hidden;
         }
 
         .loader-fill {
             height: 100%;
-            background: #fbbf24;
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
             width: 0%;
-            transition: width 0.3s ease-out;
-            border-radius: 4px;
-            box-shadow: 0 0 15px #fbbf24;
-            position: relative;
+            transition: width 0.4s ease;
         }
-        
-        .loader-fill::after {
-            content: '';
+
+        .status-text {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-top: 15px;
+            height: 14px;
+        }
+
+        .version-badge {
+            background: rgba(255,255,255,0.03);
+            padding: 3px 10px;
+            border-radius: 100px;
+            border: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.15);
+            font-size: 8px;
+            font-weight: 700;
             position: absolute;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            width: 10px;
-            background: white;
-            opacity: 0.5;
-            filter: blur(2px);
+            bottom: 25px;
         }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(251, 191, 36, 0.1);
-            border-top-color: #fbbf24;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
         .hidden { display: none !important; }
     </style>
@@ -141,53 +169,53 @@
 
 <body>
 
-    <div class="splash-wrapper fade-in">
-        <div class="splash-container">
-            <div class="splash-bg"></div>
+    <div class="splash-wrapper">
+        <div class="bg-visuals">
+            <div class="ambient-glow"></div>
+            <div class="grid-hud"></div>
+        </div>
 
-            <div class="content flex-1 justify-center">
-                <div class="logo-box">
-                    <img src="./public/assets/icon.png" class="w-full h-full object-contain drop-shadow-2xl" onerror="this.style.display='none'">
+        <div class="logo-box">
+            <div class="logo-glow"></div>
+            <img src="./public/assets/icon.png" class="logo-img">
+        </div>
+
+        <div class="text-center z-10">
+            <h1 class="text-white text-xl font-black tracking-[0.3em] mb-1">WORTHLAUNCHER</h1>
+            <div id="subtitle" class="status-text">CARREGANDO...</div>
+        </div>
+
+        <div class="mt-8 flex flex-col items-center min-h-[50px] z-10">
+            
+            <div id="loader-spinner" class="orbital-loader">
+                <div></div>
+            </div>
+
+            <div id="loader-bar-container" class="hidden flex flex-col items-center w-full">
+                <div class="loader-track">
+                    <div id="loader-fill" class="loader-fill"></div>
                 </div>
-
-                <div class="flex flex-col items-center">
-                    <h1 id="title" class="text-xl font-bold text-white tracking-wider mb-1">WORTH LAUNCHER</h1>
-                    <span id="subtitle" class="text-[11px] font-medium text-gray-500 uppercase tracking-widest h-4">INICIANDO...</span>
+                <div class="flex justify-between w-[180px] mt-2 px-1 text-[8px] font-bold font-mono text-zinc-600">
+                    <span id="progress-text" class="text-amber-500/80">0%</span>
+                    <span id="size-text"></span>
                 </div>
             </div>
 
-            <div class="content w-full px-4 mt-8">
-                <div class="w-full flex flex-col items-center justify-center h-10">
-                    
-                    <div id="loader-spinner" class="spinner"></div>
-
-                    <div id="loader-bar-container" class="hidden w-full">
-                        <div class="flex justify-between text-[10px] font-mono text-gray-400 mb-1 px-1">
-                            <span id="progress-text">0%</span>
-                            <span id="size-text"></span>
-                        </div>
-                        <div class="loader-track">
-                            <div id="loader-fill" class="loader-fill"></div>
-                        </div>
-                    </div>
-
-                    <div id="loader-success" class="hidden text-green-400 animate-pulse">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-
-                </div>
-                
-                <div class="mt-4 text-[10px] text-gray-600 font-mono">v<span id="app-version">...</span></div>
+            <div id="loader-success" class="hidden text-amber-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
             </div>
+        </div>
+
+        <div class="version-badge">
+            <span id="app-version">BUILD-LOADING</span>
         </div>
     </div>
 
     <script>
         const { ipcRenderer } = require('electron');
 
-        const elTitle = document.getElementById('title');
         const elSubtitle = document.getElementById('subtitle');
         const elSpinner = document.getElementById('loader-spinner');
         const elBarContainer = document.getElementById('loader-bar-container');
@@ -195,39 +223,40 @@
         const elSuccess = document.getElementById('loader-success');
         const elProgressText = document.getElementById('progress-text');
         const elSizeText = document.getElementById('size-text');
-        const elVersion = document.getElementById('app-version');
 
         const TEXTS = {
-            check: "VERIFICANDO...",
-            pending: "ATUALIZAÇÃO ENCONTRADA",
+            check: "VERIFICANDO ATUALIZAÇÕES",
+            pending: "NOVA VERSÃO ENCONTRADA",
             downloading: "BAIXANDO ARQUIVOS",
-            extracting: "EXTRAINDO PACOTE",
-            success: "PRONTO PARA JOGAR",
-            starting: "INICIANDO SISTEMA",
-            noupdate: "SISTEMA ATUALIZADO"
+            extracting: "INSTALANDO ATUALIZAÇÃO",
+            success: "TUDO PRONTO",
+            starting: "ABRINDO LAUNCHER",
+            noupdate: "AMBIENTE SEGURO"
         };
 
-        function formatBytes(bytes, decimals = 2) {
-            if (!+bytes) return ("0 B");
+        function formatBytes(bytes) {
+            if (!+bytes) return "0 B";
             const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
             const sizes = ["B", "KB", "MB", "GB"];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
         }
 
         function setStatus(mode) {
-            elSpinner.classList.add('hidden');
-            elBarContainer.classList.add('hidden');
-            elSuccess.classList.add('hidden');
-
-            if (mode === 'spin') elSpinner.classList.remove('hidden');
-            if (mode === 'bar') elBarContainer.classList.remove('hidden');
-            if (mode === 'success') elSuccess.classList.remove('hidden');
+            elSpinner.classList.toggle('hidden', mode !== 'spin');
+            elBarContainer.classList.toggle('hidden', mode !== 'bar');
+            elSuccess.classList.toggle('hidden', mode !== 'success');
         }
 
-        function updateText(main, sub) {
-            if (main) elSubtitle.innerText = main; 
+        function updateText(txt) {
+            elSubtitle.innerText = txt;
+        }
+
+        try {
+            const package = require("../package.json");
+            document.getElementById("app-version").innerText = `BUILD-${package.version}`.toUpperCase();
+        } catch(e) {
+            document.getElementById("app-version").innerText = "BUILD-PRODUCTION";
         }
 
         setTimeout(() => {
@@ -249,25 +278,12 @@
                 setStatus('bar');
             }
 
-            let percent = 0;
-            let transferred = 0;
-            let total = 0;
-
-            if (typeof data === "object") {
-                percent = data.percent;
-                transferred = data.transferred;
-                total = data.total;
-            } else {
-                percent = data;
-            }
-
+            let percent = (typeof data === "object") ? data.percent : data;
             elBarFill.style.width = percent + '%';
             elProgressText.innerText = Math.round(percent) + '%';
 
-            if (total > 0) {
-                elSizeText.innerText = `${formatBytes(transferred)} / ${formatBytes(total)}`;
-            } else {
-                elSizeText.innerText = "";
+            if (data.total > 0) {
+                elSizeText.innerText = `${formatBytes(data.transferred)} / ${formatBytes(data.total)}`;
             }
         });
 
@@ -280,7 +296,7 @@
             }
             elBarFill.style.width = percent + '%';
             elProgressText.innerText = Math.round(percent) + '%';
-            elSizeText.innerText = "Descompactando...";
+            elSizeText.innerText = "DESCOMPACTANDO...";
         });
 
         ipcRenderer.on('firstUpdate', (event, success) => {
