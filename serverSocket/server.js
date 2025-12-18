@@ -43,7 +43,7 @@ function loadData() {
         if (fs.existsSync(BLOG_FILE)) blogDB = JSON.parse(fs.readFileSync(BLOG_FILE));
         if (fs.existsSync(ADMINS_FILE)) adminsDB = JSON.parse(fs.readFileSync(ADMINS_FILE));
         if (fs.existsSync(TICKETS_FILE)) ticketsDB = JSON.parse(fs.readFileSync(TICKETS_FILE));
-        if (fs.existsSync(RESOURCEPSCKS_FILE)) ticketsDB = JSON.parse(fs.readFileSync(RESOURCEPSCKS_FILE));
+        if (fs.existsSync(RESOURCEPSCKS_FILE)) texturePacks = JSON.parse(fs.readFileSync(RESOURCEPSCKS_FILE));
     } catch (e) { console.error("Erro ao carregar DB:", e); }
 }
 
@@ -137,6 +137,27 @@ app.post("/admin/login", (req, res) => {
     }
 });
 
+app.get("/api/v1/resoucepack/community", (req, res) => {
+    try {
+        const { category } = req.query;
+        let filteredTextures = [...texturePacks];
+
+        if (category) {
+            filteredTextures = filteredTextures.filter(p => 
+                p.categories && p.categories.some(c => c.toLowerCase() === category.toLowerCase())
+            );
+        }
+
+        res.json({ 
+            success: true, 
+            count: filteredTextures.length, 
+            textures: filteredTextures 
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Erro ao buscar texturas." });
+    }
+});
+
 app.get("/admin/logout", (req, res) => {
     req.session.destroy();
     res.redirect("/admin/login");
@@ -146,14 +167,8 @@ app.get("/error/page/permission", (req, res) => {
     res.render("error/permission.html");
 });
 
-app.get("/api/v1/resoucepack/community", (req, res) => {
-    const sortedTxt = [...texturePacks];
-    res.json({ success: true, count: sortedTxt.length, textures: sortedTxt });
-});
-
 app.get("/admin/painel/textures", checkAdminAuth, (req, res) => {
-    const txts = [...texturePacks];
-    res.render("admin/texture/index.html", { textures: txts, user: req.session.user });
+    res.render("admin/textures/index.html", { textures: texturePacks, user: req.session.user });
 });
 
 app.get("/admin/painel/textures/new", checkAdminAuth, (req, res) => {
@@ -168,48 +183,59 @@ app.get("/admin/painel/textures/:id/edit", checkAdminAuth, (req, res) => {
 
 app.post("/admin/painel/textures/new/post", checkAdminAuth, (req, res) => {
     try {
-        const { name, nameFile, author, image, description, urlDownload, id } = req.body;
+        const { name, nameFile, author, image, description, urlDownload, res: resolution, categories } = req.body;
+        const id = makeid(12);
 
-        if (!name || !nameFile || !author || !image || !description || !urlDownload || !id) {
-            return res.json({ success: false, message: "Algo está faltando..." });
-        }
-
-        const newTxt = { name, nameFile, author, image, description, urlDownload, id };
+        const newTxt = { 
+            name, 
+            nameFile, 
+            author, 
+            res: resolution || "+16x", 
+            image, 
+            description, 
+            urlDownload, 
+            id,
+            categories: categories ? categories.split(',').map(c => c.trim()) : []
+        };
 
         texturePacks.push(newTxt);
         saveData('packs');
-
-        res.json({ success: true, message: "Textura postada com sucesso!", redirect: "/admin/painel/textures" });
+        res.json({ success: true, message: "Textura adicionada!", redirect: "/admin/painel/textures" });
     } catch (error) {
-        console.error(error);
         res.status(500).json({ success: false, message: "Erro interno." });
     }
 });
 
 app.post("/admin/painel/textures/:id/update", checkAdminAuth, (req, res) => {
-    const { title, summary, content, bannerUrl, tags } = req.body;
-    const postIndex = blogDB.findIndex(p => p.id === req.params.id);
+    const index = texturePacks.findIndex(p => p.id === req.params.id);
+    if (index === -1) return res.json({ success: false, message: "Textura não encontrada." });
 
-    if (postIndex === -1) return res.json({ success: false, message: "Post não encontrado." });
+    const { name, nameFile, author, image, description, urlDownload, res: resolution, categories } = req.body;
 
-    blogDB[postIndex].title = title || blogDB[postIndex].title;
-    blogDB[postIndex].summary = summary || blogDB[postIndex].summary;
-    blogDB[postIndex].content = content || blogDB[postIndex].content;
+    texturePacks[index] = {
+        ...texturePacks[index],
+        name: name || texturePacks[index].name,
+        nameFile: nameFile || texturePacks[index].nameFile,
+        author: author || texturePacks[index].author,
+        image: image || texturePacks[index].image,
+        description: description || texturePacks[index].description,
+        urlDownload: urlDownload || texturePacks[index].urlDownload,
+        res: resolution || texturePacks[index].res,
+        categories: categories ? categories.split(',').map(c => c.trim()) : texturePacks[index].categories || []
+    };
 
-    if (bannerUrl) blogDB[postIndex].image = bannerUrl;
-    if (tags) blogDB[postIndex].tags = tags.split(',').map(t => t.trim());
-
-    blogDB[postIndex].updatedAt = Date.now();
-    saveData('blog');
-    res.json({ success: true, message: "Post atualizado!", redirect: "/admin/painel/blog" });
+    saveData('packs');
+    res.json({ success: true, message: "Textura atualizada!", redirect: "/admin/painel/textures" });
 });
 
 app.post("/admin/painel/textures/:id/remove", checkAdminAuth, (req, res) => {
-    const initialLength = blogDB.length;
-    blogDB = blogDB.filter(p => p.id !== req.params.id);
-    if (blogDB.length === initialLength) return res.json({ success: false, message: "Post não encontrado." });
-    saveData('blog');
-    res.json({ success: true, message: "Post removido com sucesso." });
+    const initialLength = texturePacks.length;
+    texturePacks = texturePacks.filter(p => p.id !== req.params.id);
+    
+    if (texturePacks.length === initialLength) return res.json({ success: false, message: "Não encontrada." });
+    
+    saveData('packs');
+    res.json({ success: true, message: "Textura removida com sucesso." });
 });
 
 app.get("/api/v1/blog/feed", (req, res) => {
