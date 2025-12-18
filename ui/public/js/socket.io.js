@@ -3,8 +3,8 @@ let currentTicketId = null;
 
 const PERF_CONFIG = {
     MAX_DOM_NODES: 60,
-    MAX_HISTORY_MEMORY: 300,
-    SCROLL_THROTTLE: 100
+    MAX_HISTORY_MEMORY: 50,
+    SCROLL_THROTTLE: 150
 };
 
 let socket = null;
@@ -14,15 +14,30 @@ const btnOptions = document.getElementById("btn-chat-options");
 const menuDropdown = document.getElementById("menu-chat-dropdown");
 
 if (btnOptions && menuDropdown) {
-    btnOptions.onclick = (e) => {
+    const newBtn = btnOptions.cloneNode(true);
+    btnOptions.parentNode.replaceChild(newBtn, btnOptions);
+
+    newBtn.onclick = (e) => {
         e.stopPropagation();
-        menuDropdown.classList.toggle("hidden");
+        if (menuDropdown.classList.contains("hidden")) {
+            updateChatOptionsContent();
+            menuDropdown.classList.remove("hidden");
+        } else {
+            menuDropdown.classList.add("hidden");
+        }
     };
 
     document.addEventListener("click", (e) => {
         if (!menuDropdown.classList.contains("hidden")) {
-            if (!menuDropdown.contains(e.target) && e.target !== btnOptions) {
+            if (!menuDropdown.contains(e.target) && e.target !== newBtn) {
                 menuDropdown.classList.add("hidden");
+            }
+        }
+        const emojiPicker = document.getElementById("emoji-picker");
+        const btnEmoji = document.getElementById("btn-emoji-toggle");
+        if (emojiPicker && !emojiPicker.classList.contains("hidden")) {
+            if (!emojiPicker.contains(e.target) && e.target !== btnEmoji) {
+                emojiPicker.classList.add("hidden");
             }
         }
     });
@@ -312,7 +327,7 @@ function renderEmojiContent() {
 
         const title = document.createElement("div");
         title.id = `emoji-cat-${key}`;
-        title.className = "text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 mt-2 px-1 pt-1 sticky top-0 bg-[#202020]/95 backdrop-blur-sm z-10 flex justify-between items-center";
+        title.className = "text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 mt-2 px-1 pt-1 sticky top-0 bg-[#202020]/95 z-10 flex justify-between items-center";
         title.innerText = category.label;
 
         if (key === 'recents') {
@@ -445,60 +460,32 @@ function insertEmoji(emoji) {
     input.selectionStart = input.selectionEnd = start + emoji.length;
 }
 
+let isEmojiSystemInitialized = false;
+
 function initEmojiToggle() {
     const btnToggle = document.getElementById("btn-emoji-toggle");
     const picker = document.getElementById("emoji-picker");
 
     if (btnToggle && picker) {
-
         btnToggle.onclick = (e) => {
             e.stopPropagation();
-
             const isHidden = picker.classList.contains("hidden");
-
+            
             if (isHidden) {
+                // OTIMIZAÇÃO 4: Só renderiza o HTML pesado na primeira vez que abrir
+                if (!isEmojiSystemInitialized) {
+                    initEmojiSystem(); 
+                    isEmojiSystemInitialized = true;
+                }
                 picker.classList.remove("hidden");
-
-                if (!document.getElementById("emoji-header-tabs")) {
-                    initEmojiSystem();
-                }
-
+                // Posicionamento...
                 const rect = btnToggle.getBoundingClientRect();
-                const pickerWidth = 320;
-                const pickerHeight = 384;
-                const margin = 12;
-
-                let left = rect.right - pickerWidth;
-                let top = rect.top - pickerHeight - margin;
-
-                if (top < 10) {
-                    top = rect.bottom + margin;
-                }
-
-                if (left < 10) left = 10;
-
-                picker.style.left = `${left}px`;
-                picker.style.top = `${top}px`;
-
+                picker.style.left = `${Math.max(10, rect.right - 320)}px`;
+                picker.style.top = `${Math.max(10, rect.top - 384 - 12)}px`;
             } else {
                 picker.classList.add("hidden");
             }
         };
-
-        document.addEventListener("click", (e) => {
-            if (!picker.classList.contains("hidden")) {
-                if (!picker.contains(e.target) && !btnToggle.contains(e.target)) {
-                    picker.classList.add("hidden");
-                }
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            if (!picker.classList.contains("hidden")) picker.classList.add("hidden");
-        });
-
-    } else {
-        console.warn("[EMOJI] Botão ou Picker não encontrados no HTML.");
     }
 }
 
@@ -516,8 +503,10 @@ window.addEventListener('resize', () => {
     }
 });
 
-const styleParams = document.createElement('style');
-styleParams.innerHTML = `
+if (!document.getElementById('chat-dynamic-styles')) {
+    const styleParams = document.createElement('style');
+    styleParams.id = 'chat-dynamic-styles';
+    styleParams.innerHTML = `
     #chat-messages {
         contain: layout style paint;
         will-change: transform;
@@ -627,7 +616,6 @@ styleParams.innerHTML = `
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 20;
         background: rgba(24, 24, 27, 0.9); /* Zinc-900 */
-        backdrop-filter: blur(8px);
         padding: 6px 12px;
         border-radius: 99px;
         border: 1px solid rgba(255,255,255,0.08);
@@ -662,7 +650,8 @@ styleParams.innerHTML = `
     }
     .msg-anim { animation: msgPop 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 `;
-document.head.appendChild(styleParams);
+    document.head.appendChild(styleParams);
+}
 
 const els = {
     friendList: document.getElementById("friends-list"),
@@ -736,22 +725,15 @@ els.chatInput.addEventListener('input', () => {
 els.chatMsgs.addEventListener('scroll', () => {
     if (isScrollThrottled) return;
     isScrollThrottled = true;
-
-    setTimeout(() => {
+    requestAnimationFrame(() => {
         const distanceToBottom = els.chatMsgs.scrollHeight - els.chatMsgs.scrollTop - els.chatMsgs.clientHeight;
-
-        if (distanceToBottom > 500) {
-            btnScrollBottom.classList.add('visible');
-        } else {
-            btnScrollBottom.classList.remove('visible');
-            btnScrollBottom.classList.remove('new-message-alert');
+        if (distanceToBottom > 500) btnScrollBottom.classList.add('visible');
+        else {
+            btnScrollBottom.classList.remove('visible', 'new-message-alert');
         }
-
-        const menuDropdown = document.getElementById("menu-chat-dropdown");
-        if (menuDropdown && !menuDropdown.classList.contains("hidden")) menuDropdown.classList.add("hidden");
-
-        isScrollThrottled = false;
-    }, PERF_CONFIG.SCROLL_THROTTLE);
+        if (!menuDropdown.classList.contains("hidden")) menuDropdown.classList.add("hidden");
+        setTimeout(() => isScrollThrottled = false, PERF_CONFIG.SCROLL_THROTTLE);
+    });
 });
 
 let currentChatFriend = null;
@@ -769,13 +751,13 @@ topSentinel.style.height = "10px";
 topSentinel.style.width = "100%";
 
 const observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && currentChatFriend && !isInternalScroll) {
-        if (!isInternalScroll) loadOlderMessages();
+    if (entries[0].isIntersecting && (currentChatFriend || currentTicketId) && !isInternalScroll) {
+        loadOlderMessages();
     }
-}, { root: els.chatMsgs, rootMargin: "100px 0px 0px 0px" });
+}, { root: els.chatMsgs, rootMargin: "200px 0px 0px 0px" });
 
 function getAuthIdentity() {
-    if(currentUser.uuid === "offline-uuid") currentUser.uuid = "00000000-0000-0000-0000-000000000000";
+    if (currentUser.uuid === "offline-uuid") currentUser.uuid = "00000000-0000-0000-0000-000000000000";
     return {
         nick: currentUser.user,
         uuid: currentUser.uuid,
@@ -818,11 +800,11 @@ function openConnectionSocket() {
 }
 
 setInterval(() => {
-    if(!socket.connected) {
+    if (!socket.connected) {
         socketinf = null;
         openConnectionSocket();
     }
-}, 5000)
+}, 10000)
 
 function closeConnectionSocket() {
     if (!socketinf || !socket) return;
@@ -922,27 +904,27 @@ function setupSocketEvents() {
     });
 
     socket.on("auth_error", (data) => {
-    socketinf = false;
-    
-    const msgElement = document.getElementById("auth-error-msg");
-    if (msgElement) {
-        msgElement.innerText = data.message || "Sua conexão foi recusada pelo servidor.";
-    }
+        socketinf = false;
 
-    if (currentUser?.user) {
-        updateUserUI('Convidado', 'none');
-        localStorage.setItem('worth_last_user', null);
-        
-        if (typeof savedAccounts !== 'undefined') {
-            savedAccounts = savedAccounts.filter(account => account.user !== currentUser.user);
-            saveAccountsToStorage();
+        const msgElement = document.getElementById("auth-error-msg");
+        if (msgElement) {
+            msgElement.innerText = data.message || "Sua conexão foi recusada pelo servidor.";
         }
-    }
 
-    openModal("modal-auth-error");
-    
-    if (window.lucide) window.lucide.createIcons();
-});
+        if (currentUser?.user) {
+            updateUserUI('Convidado', 'none');
+            localStorage.setItem('worth_last_user', null);
+
+            if (typeof savedAccounts !== 'undefined') {
+                savedAccounts = savedAccounts.filter(account => account.user !== currentUser.user);
+                saveAccountsToStorage();
+            }
+        }
+
+        openModal("modal-auth-error");
+
+        if (window.lucide) window.lucide.createIcons();
+    });
 
     socket.on("error", (mensagem) => {
         console.warn("Erro do Servidor:", mensagem);
@@ -950,7 +932,6 @@ function setupSocketEvents() {
 
     socket.on("ticket:receive", (msg) => {
         const myNick = socket.auth?.nick || "";
-
         if (msg.sender === myNick) return;
 
         if (currentSocialTab === 'tickets' && currentTicketId === msg.ticketId) {
@@ -959,7 +940,7 @@ function setupSocketEvents() {
             scrollToBottom(true);
         } else {
             addUnreadBadgeToTicket(msg.ticketId);
-            if (document.hidden || currentSocialTab !== 'tickets' || currentTicketId !== msg.ticketId) {
+            if (document.hidden || currentTicketId !== msg.ticketId) {
                 sendDesktopNotification(`Ticket #${msg.ticketId}`, msg.text);
                 showToast(`Nova mensagem no Ticket #${msg.ticketId}`, 'info');
             }
@@ -1120,7 +1101,6 @@ function renderInitialHistory() {
 
     els.chatMsgs.style.visibility = 'hidden';
     els.chatMsgs.style.scrollBehavior = 'auto';
-
     els.chatMsgs.innerHTML = "";
     els.chatMsgs.appendChild(topSentinel);
 
@@ -1237,6 +1217,7 @@ function setupUnreadRemover() {
 }
 
 function loadOlderMessages() {
+    if (isInternalScroll || fullChatHistory.length <= els.chatMsgs.querySelectorAll('.msg-item').length) return;
     const currentRenderedCount = els.chatMsgs.querySelectorAll('.msg-item').length;
 
     if (currentRenderedCount >= fullChatHistory.length) return;
@@ -1411,9 +1392,9 @@ function createMessageElement(msg, animate = true) {
 function selectFriend(nick, status) {
 
     if (currentChatFriend === nick) return;
+    els.chatMsgs.replaceChildren();
     els.chatMsgs.innerHTML = `<div class="h-full flex items-center justify-center"><span class="loader"></span></div>`;
     fullChatHistory = [];
-    els.chatMsgs.innerHTML = "";
     isInternalScroll = false;
     observer.unobserve(topSentinel);
 
