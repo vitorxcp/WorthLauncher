@@ -1,4 +1,5 @@
-<section id="view-resoucepacks" class="flex-1 hidden-force fade-enter flex flex-col overflow-hidden rounded-[10px] relative">
+<section id="view-resoucepacks"
+    class="flex-1 hidden-force fade-enter flex flex-col overflow-hidden rounded-[10px] relative">
 
     <div class="p-4 pb-2 border-b border-white/5 flex flex-col gap-3 shrink-0 z-20 bg-[#000000c9]">
         <div class="flex justify-between items-end">
@@ -12,21 +13,27 @@
         </div>
 
         <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-[5px]">
-            <div class="flex gap-2 overflow-x-auto custom-scrollbar w-full md:w-auto pb-2 md:pb-0" id="category-filters">
-                </div>
+            <div class="flex gap-2 overflow-x-auto custom-scrollbar w-full md:w-auto pb-2 md:pb-0"
+                id="category-filters">
+            </div>
 
             <div class="flex items-center gap-3 w-full md:w-auto">
                 <label class="flex items-center gap-2 cursor-pointer group select-none">
                     <div class="relative">
-                        <input type="checkbox" id="hide-installed-check" class="sr-only peer" onchange="toggleHideInstalled()">
-                        <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-600"></div>
+                        <input type="checkbox" id="hide-installed-check" class="sr-only peer"
+                            onchange="toggleHideInstalled()">
+                        <div
+                            class="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-600">
+                        </div>
                     </div>
-                    <span class="text-xs text-gray-400 group-hover:text-gray-200 transition-colors">Ocultar Instalados</span>
+                    <span class="text-xs text-gray-400 group-hover:text-gray-200 transition-colors">Ocultar
+                        Instalados</span>
                 </label>
 
                 <div class="relative w-full md:w-64 group">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-yellow-400 transition-colors"></i>
-                    <input type="text" id="search-input" placeholder="Pesquisar textura..." 
+                    <i data-lucide="search"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-yellow-400 transition-colors"></i>
+                    <input type="text" id="search-input" placeholder="Pesquisar textura..."
                         class="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-yellow-500/50 focus:bg-black/40 transition-all">
                 </div>
             </div>
@@ -35,23 +42,23 @@
 
     <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#000000c9]">
         <div id="packs-grid" class="grid grid-cols-3 md:grid-cols-3 xl:grid-cols-6 gap-3">
-            </div>
-        
+        </div>
+
         <div id="no-results" class="hidden flex-col items-center justify-center py-20 text-gray-500">
             <i data-lucide="frown" class="w-12 h-12 mb-2 opacity-50"></i>
             <p>Nenhuma textura encontrada.</p>
         </div>
     </div>
 
-    <div id="modal-uninstall-pack" 
-         class="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center hidden opacity-0 transition-all duration-300 select-none">
-        
-        <div class="relative bg-[#0f0f10] border border-white/10 p-8 rounded-[2rem] w-96 shadow-2xl transform scale-95 transition-all duration-300 group overflow-hidden" id="modal-content-box">
-            
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-red-500/20 rounded-full pointer-events-none animate-pulse"></div>
+    <div id="modal-uninstall-pack"
+        class="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center hidden opacity-0 transition-all duration-300 select-none">
+
+        <div class="relative bg-[#0f0f10] border border-white/10 p-8 rounded-[2rem] w-96 shadow-2xl transform scale-95 transition-all duration-300 group overflow-hidden"
+            id="modal-content-box">
 
             <div class="relative z-10 flex flex-col items-center text-center">
-                <div class="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)] relative">
+                <div
+                    class="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)] relative">
                     <i data-lucide="trash-2" class="w-8 h-8 text-red-500 relative z-10"></i>
                     <div class="absolute -bottom-1 w-8 h-1 bg-red-500/50 rounded-full"></div>
                 </div>
@@ -62,11 +69,11 @@
                 </p>
 
                 <div class="flex gap-3 w-full">
-                    <button onclick="closeUninstallModal()" 
+                    <button onclick="closeUninstallModal()"
                         class="flex-1 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all border border-transparent hover:border-white/5">
                         Cancelar
                     </button>
-                    
+
                     <button id="btn-confirm-uninstall" onclick="confirmUninstallAction()"
                         class="flex-1 py-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] active:scale-95 flex items-center justify-center gap-2">
                         <i data-lucide="check-circle" class="w-4 h-4"></i> Confirmar
@@ -77,32 +84,12 @@
     </div>
 
     <script>
-        const officialPacks = [
-            {
-                name: "(EpicoPack) SkyBlock", author: "EpicoPack", res: "16x", size: "20.8 MB", 
-                categories: ["Skyblock", "FPS"], image: "./assets/packs/epicopack_skyblock.png",
-                description: "Uma textura não oficial criada pela comunidade de skyblock.", id: "epicopack-skyblock_D"
-            },
-            {
-                name: "Draccount HG", author: "Draccount", res: "32x", size: "14.6 MB",
-                categories: ["PvP", "HG"], image: "./assets/packs/draccount_hg.png",
-                description: "Uma textura editada por Draccount para HG.", id: "draccount-hg_D"
-            },
-            {
-                name: "Draccount v1", author: "Draccount", res: "16x", size: "19.0 MB",
-                categories: ["PvP", "FPS"], image: "./assets/packs/draccount_v1.png",
-                description: "Textura feita por Draccount focada em PvP.", id: "draccount-v1_D"
-            },
-            {
-                name: "Stimpy WAR Revamp", author: "Draccount", res: "16x", size: "28.7 MB",
-                categories: ["PvP"], image: "./assets/packs/stimpy_war_dracc.png",
-                description: "Uma textura editada pelo Draccount.", id: "stimpy-war-dracc_D"
-            }
-        ];
+        const API_BASE = "http://elgae-sp1-b001.elgaehost.com.br:10379";
+        const API_URLTXT = `${API_BASE}/api/v1/resoucepack/community`;
 
-        let texturePacks = [...officialPacks];
-        const categories = ["Todos", "Baixados", "Local", "PvP", "Skyblock", "FPS", "HG"];
-        
+        let officialPacks = [];
+        let texturePacks = [];
+        let categories = ["Todos", "Baixados", "Local"];
         let currentCategory = "Todos";
         let searchQuery = "";
         let installedIds = new Set();
@@ -111,10 +98,40 @@
         let refreshInterval = null;
         let searchTimeout = null;
 
-        function initPacksPage() {
+        async function fetchOfficialPacks() {
+            try {
+                const response = await fetch(API_URLTXT);
+                const data = await response.json();
+
+                if (data.success && data.textures) {
+                    officialPacks = data.textures.map(pack => ({
+                        ...pack,
+                        image: pack.image.startsWith('http') ? pack.image : `${API_BASE}${pack.image}`,
+                        size: pack.size || "--- MB"
+                    }));
+
+                    const apiCategories = new Set();
+                    officialPacks.forEach(p => {
+                        if (p.categories) p.categories.forEach(cat => apiCategories.add(cat));
+                    });
+
+                    categories = ["Todos", "Baixados", "Local", ...Array.from(apiCategories)];
+
+                    renderCategories();
+                    return true;
+                }
+            } catch (error) {
+                console.error("Erro ao carregar packs da API:", error);
+            }
+            return false;
+        }
+
+        async function initPacksPage() {
+            await fetchOfficialPacks();
+
             renderCategories();
             updatePacksData(true);
-            
+
             document.getElementById('search-input').addEventListener('input', (e) => {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
@@ -127,14 +144,22 @@
             setupVisibilityObserver();
         }
 
+        async function startAutoRefresh() {
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(async () => {
+                await fetchOfficialPacks();
+                updatePacksData();
+            }, 60000);
+        }
+
         function renderCategories() {
             const container = document.getElementById('category-filters');
             container.innerHTML = categories.map(cat => `
                 <button onclick="setCategory('${cat}')" id="cat-btn-${cat}"
                     class="px-[10px] py-[5px] rounded-lg text-xs font-medium border transition-all whitespace-nowrap 
-                    ${currentCategory === cat 
-                        ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/50' 
-                        : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-gray-200'}">
+                    ${currentCategory === cat
+                    ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/50'
+                    : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-gray-200'}">
                     ${cat}
                 </button>
             `).join('');
@@ -145,9 +170,9 @@
             if (oldBtn) {
                 oldBtn.className = 'px-[10px] py-[5px] rounded-lg text-xs font-medium border transition-all whitespace-nowrap bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-gray-200';
             }
-            
+
             currentCategory = cat;
-            
+
             const newBtn = document.getElementById(`cat-btn-${currentCategory}`);
             if (newBtn) {
                 newBtn.className = 'px-[10px] py-[5px] rounded-lg text-xs font-medium border transition-all whitespace-nowrap bg-yellow-500/10 text-yellow-400 border-yellow-500/50';
@@ -174,17 +199,63 @@
             };
         }
 
+        function renderPackCard(pack, index, isInstalled) {
+            const btnConfig = getButtonHTMLAndClass(pack.id, isInstalled);
+            return `
+        <div class="group relative bg-black/20 hover:bg-black/40 border border-white/5 hover:border-yellow-500/50 rounded-xl transition-all duration-300 overflow-hidden flex flex-col news-card-base animate-card shrink-0 contain-content" 
+             id="card-${pack.id}" 
+             style="animation-delay: ${index * 30}ms;">
+            <div class="h-28 bg-gray-800 relative overflow-hidden">
+                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                ${pack.image
+                    ? `<img src="${pack.image}" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">`
+                    : `<div class="w-full h-full flex items-center justify-center text-gray-600"><i data-lucide="image-off"></i></div>`}
+                
+                <span class="absolute top-2 right-2 z-20 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10">
+                    ${pack.res}
+                </span>
+
+                <div class="absolute bottom-2 left-2 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    ${pack.categories.slice(0, 2).map(c => `
+                        <span class="text-[9px] ${c === 'Local' ? 'bg-purple-500/80 text-white' : 'bg-yellow-500/80 text-black'} font-bold px-1.5 py-0.5 rounded">${c}</span>
+                    `).join('')}
+                </div>
+            </div>
+
+            <div class="p-4 flex-1 flex flex-col">
+                <h3 class="text-white font-semibold text-lg group-hover:text-yellow-400 transition-colors leading-tight truncate w-full mb-1" title="${pack.name}">${pack.name}</h3>
+                <p class="text-gray-500 text-xs mb-4 line-clamp-2 flex-1">${pack.description}</p>
+                
+                <div class="flex items-center gap-3 mt-auto">
+                    <button onclick="handlePackAction(this, '${pack.id}')" id="btn-${pack.id}" 
+                        data-status="${btnConfig.status}"
+                        class="${btnConfig.cls}">
+                        ${btnConfig.html}
+                    </button>
+                    
+                    <div class="flex flex-col items-end text-xs font-mono text-gray-600">
+                        <span title="Autor">by ${pack.author}</span>
+                        <span class="text-gray-500 flex items-center gap-1 mt-0.5">
+                            <i data-lucide="hard-drive" class="w-3 h-3"></i> ${pack.size}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+        }
+
         function renderPacks() {
             const container = document.getElementById('packs-grid');
             const noResults = document.getElementById('no-results');
-            
+
             const filtered = texturePacks.filter(pack => {
                 const isInstalled = installedIds.has(pack.id) || pack.isLocal;
                 if (hideInstalled && isInstalled) return false;
 
-                const matchesSearch = pack.name.toLowerCase().includes(searchQuery) || 
-                                      pack.author.toLowerCase().includes(searchQuery);
-                
+                const matchesSearch = pack.name.toLowerCase().includes(searchQuery) ||
+                    pack.author.toLowerCase().includes(searchQuery);
+
                 if (currentCategory === "Todos") return matchesSearch;
                 if (currentCategory === "Baixados") return matchesSearch && isInstalled;
                 return matchesSearch && pack.categories.includes(currentCategory);
@@ -192,62 +263,38 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = '';
-                noResults.classList.remove('hidden');
-                noResults.classList.add('flex');
-            } else {
-                noResults.classList.add('hidden');
-                noResults.classList.remove('flex');
-
-                container.innerHTML = filtered.map((pack, index) => {
-                    const isInstalled = installedIds.has(pack.id) || pack.isLocal;
-                    const btnConfig = getButtonHTMLAndClass(pack.id, isInstalled);
-
-                    return `
-                        <div class="group relative bg-black/20 hover:bg-black/40 border border-white/5 hover:border-yellow-500/50 rounded-xl transition-all duration-300 overflow-hidden flex flex-col news-card-base animate-card shrink-0 contain-content" style="animation-delay: ${index * 30}ms;">
-                            <div class="h-28 bg-gray-800 relative overflow-hidden">
-                                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
-                                ${pack.image 
-                                    ? `<img src="${pack.image}" loading="lazy" decoding="async" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">` 
-                                    : `<div class="w-full h-full flex items-center justify-center text-gray-600"><i data-lucide="image-off"></i></div>`}
-                                
-                                <span class="absolute top-2 right-2 z-20 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded border border-white/10">
-                                    ${pack.res}
-                                </span>
-
-                                <div class="absolute bottom-2 left-2 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    ${pack.categories.slice(0, 2).map(c => `
-                                        <span class="text-[9px] ${c === 'Local' ? 'bg-purple-500/80 text-white' : 'bg-yellow-500/80 text-black'} font-bold px-1.5 py-0.5 rounded">${c}</span>
-                                    `).join('')}
-                                </div>
-                            </div>
-
-                            <div class="p-4 flex-1 flex flex-col">
-                                <h3 class="text-white font-semibold text-lg group-hover:text-yellow-400 transition-colors leading-tight truncate w-full mb-1" title="${pack.name}">${pack.name}</h3>
-                                <p class="text-gray-500 text-xs mb-4 line-clamp-2 flex-1">${pack.description}</p>
-                                
-                                <div class="flex items-center gap-3 mt-auto">
-                                    <button onclick="handlePackAction(this, '${pack.id}')" id="btn-${pack.id}" 
-                                        data-status="${btnConfig.status}"
-                                        class="${btnConfig.cls}">
-                                        ${btnConfig.html}
-                                    </button>
-                                    
-                                    <div class="flex flex-col items-end text-xs font-mono text-gray-600">
-                                        <span title="Autor">by ${pack.author}</span>
-                                        <span class="text-gray-500 flex items-center gap-1 mt-0.5">
-                                            <i data-lucide="hard-drive" class="w-3 h-3"></i> ${pack.size}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
-                if (typeof lucide !== 'undefined') {
-                    lucide.createIcons({ root: container });
-                }
+                noResults.classList.replace('hidden', 'flex');
+                return;
             }
+
+            noResults.classList.replace('flex', 'hidden');
+
+            const filteredIds = new Set(filtered.map(p => p.id));
+            Array.from(container.children).forEach(child => {
+                const id = child.id.replace('card-', '');
+                if (!filteredIds.has(id)) child.remove();
+            });
+
+            filtered.forEach((pack, index) => {
+                const existingCard = document.getElementById(`card-${pack.id}`);
+                const isInstalled = installedIds.has(pack.id) || pack.isLocal;
+
+                if (!existingCard) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = renderPackCard(pack, index, isInstalled);
+                    const newCard = temp.firstElementChild;
+                    container.appendChild(newCard);
+                    if (typeof lucide !== 'undefined') lucide.createIcons({ root: newCard });
+                } else {
+                    const btn = document.getElementById(`btn-${pack.id}`);
+                    const currentStatus = btn.dataset.status;
+                    const newStatus = isInstalled ? 'installed' : 'default';
+
+                    if (currentStatus !== newStatus && currentStatus !== 'downloading' && currentStatus !== 'uninstalling') {
+                        setButtonState(btn, newStatus, pack.id);
+                    }
+                }
+            });
         }
 
         function setupVisibilityObserver() {
@@ -257,7 +304,7 @@
                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                         const isHidden = section.classList.contains('hidden-force');
                         if (!isHidden) {
-                            updatePacksData(); 
+                            updatePacksData();
                             startAutoRefresh();
                         } else {
                             stopAutoRefresh();
@@ -284,7 +331,7 @@
             try {
                 if (!window.api) return;
                 const result = await window.api.checkInstalledTextures();
-                
+
                 const newInstalledSet = new Set(result.installed);
                 const newLocals = result.locals || [];
                 const currentLocals = texturePacks.filter(p => p.isLocal);
@@ -330,7 +377,7 @@
 
         function setButtonState(btn, state, packId) {
             btn.dataset.status = state;
-            
+
             if (state === 'downloading') {
                 btn.innerHTML = `<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span id="btn-${packId}-p">0%</span>`;
                 btn.className = "flex-1 bg-blue-600/20 text-blue-400 border border-blue-500/30 cursor-wait text-sm font-medium py-2 rounded-lg flex justify-center items-center gap-2 pointer-events-none";
@@ -349,17 +396,13 @@
 
         async function downloadTexture(btn, packId) {
             setButtonState(btn, 'downloading', packId);
-            try {
-                const result = await window.api.installTexture(packId);
-                if (result.success) {
-                    installedIds.add(packId);
-                    await updatePacksData(true);
-                } else {
-                    alert('Erro ao baixar: ' + result.error);
-                    setButtonState(btn, 'default', packId);
-                }
-            } catch (err) {
-                console.error(err);
+            const result = await window.api.installTexture(packId);
+            if (result.success) {
+                installedIds.add(packId);
+                setButtonState(btn, 'installed', packId);
+                setTimeout(updatePacksData, 500);
+            } else {
+                alert('Erro: ' + result.error);
                 setButtonState(btn, 'default', packId);
             }
         }
@@ -367,19 +410,13 @@
         async function uninstallTexture(btn, packId) {
             setButtonState(btn, 'uninstalling', packId);
             const pack = texturePacks.find(p => p.id === packId);
-            try {
-                let result;
-                if (pack && pack.isLocal) result = await window.api.uninstallLocalTexture(pack.fileName);
-                else result = await window.api.uninstallTexture(packId);
-
-                if (result.success) {
-                    installedIds.delete(packId);
-                    await updatePacksData(true);
-                } else {
-                    alert('Erro: ' + result.error);
-                    setButtonState(btn, 'installed', packId);
-                }
-            } catch (err) {
+            const result = (pack && pack.isLocal) ? await window.api.uninstallLocalTexture(pack.fileName) : await window.api.uninstallTexture(packId);
+            if (result.success) {
+                installedIds.delete(packId);
+                setButtonState(btn, 'default', packId);
+                setTimeout(updatePacksData, 500);
+            } else {
+                alert('Erro: ' + result.error);
                 setButtonState(btn, 'installed', packId);
             }
         }
