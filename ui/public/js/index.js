@@ -45,7 +45,7 @@ try {
         if (!text) return "";
 
         let clean = text.replace(/[&<>"']/g, (m) => ({
-            '&': '&amp;', '�': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            '&': '&amp;', '': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         })[m]);
 
         clean = clean.replace(/&amp;([0-9a-fk-or])/gi, '&$1');
@@ -126,45 +126,88 @@ try {
         return 'info';
     }
 
+    let logBuffer = [];
+    let isProcessingLogs = false;
+    let lastScrollTime = 0;
+
     function addLogToUI(msg, forceType = null) {
         if (!logConsole || !msg) return;
-
-        const rawText = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
-        const cleanText = rawText.replace(MINECRAFT_COLOR_REGEX, '');
-        const type = forceType || detectLogType(cleanText);
-        const style = LOG_STYLES[type] || LOG_STYLES['info'];
-        const line = document.createElement("div");
-        line.className = `flex gap-2 px-2 py-0.5 rounded ${style.bg} transition-colors text-xs font-mono border-l-2 border-transparent hover:border-white/20 items-start group`;
-        const processedMessage = typeof parseMinecraftText === 'function' ? parseMinecraftText(rawText) : rawText;
-        const time = typeof getTimestamp === 'function' ? getTimestamp() : new Date().toLocaleTimeString('pt-BR', { hour12: false });
-        const isStacktrace = type === 'trace' && cleanText.trim().startsWith('at ');
-        const messageClass = isStacktrace ? 'text-[11px] opacity-75' : 'text-xs';
-
-        line.innerHTML = `
-        <span class="text-gray-600 select-none opacity-50 shrink-0 text-[10px] pt-[2px] w-[50px] text-right mr-1 group-hover:opacity-100 transition-opacity">
-            ${time}
-        </span>
         
-        <span class="${style.iconColor} font-bold select-none w-11 text-center opacity-90 text-[10px] pt-[2px] shrink-0 bg-black/10 rounded px-1">
-            ${style.icon}
-        </span>
-        
-        <span class="${style.text} ${messageClass} flex-1 break-all leading-tight pt-[1px]">
-            ${processedMessage}
-        </span>
-    `;
+        logBuffer.push({ msg, forceType });
 
-        logConsole.appendChild(line);
+        if (!isProcessingLogs) {
+            requestAnimationFrame(processLogBuffer);
+            isProcessingLogs = true;
+        }
+    }
 
-        if (logConsole.childElementCount > MAX_LOG_LINES) {
-            logConsole.removeChild(logConsole.firstChild);
+    function processLogBuffer() {
+        if (logBuffer.length === 0) {
+            isProcessingLogs = false;
+            return;
         }
 
-        const isNearBottom = logConsole.scrollTop + logConsole.clientHeight >= logConsole.scrollHeight - 100;
-        if (isNearBottom) {
-            requestAnimationFrame(() => {
+        const logsToRender = [...logBuffer];
+        logBuffer = [];
+
+        const fragment = document.createDocumentFragment();
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('pt-BR', { hour12: false });
+
+        logsToRender.forEach(({ msg, forceType }) => {
+            const rawText = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
+            
+            const hasColors = rawText.includes('&') || rawText.includes('§');
+            const cleanText = hasColors ? rawText.replace(MINECRAFT_COLOR_REGEX, '') : rawText;
+            
+            const type = forceType || detectLogType(cleanText);
+            const style = LOG_STYLES[type] || LOG_STYLES['info'];
+            
+            const line = document.createElement("div");
+            line.className = `flex gap-2 px-2 py-0.5 rounded ${style.bg} transition-colors text-xs font-mono border-l-2 border-transparent hover:border-white/20 items-start group contain-content`;
+            
+            const processedMessage = hasColors && typeof parseMinecraftText === 'function' ? parseMinecraftText(rawText) : rawText;
+            const isStacktrace = type === 'trace' && cleanText.trim().startsWith('at ');
+            const messageClass = isStacktrace ? 'text-[11px] opacity-75' : 'text-xs';
+
+            line.innerHTML = `
+            <span class="text-gray-600 select-none opacity-50 shrink-0 text-[10px] pt-[2px] w-[50px] text-right mr-1 group-hover:opacity-100 transition-opacity">
+                ${timeString}
+            </span>
+            
+            <span class="${style.iconColor} font-bold select-none w-11 text-center opacity-90 text-[10px] pt-[2px] shrink-0 bg-black/10 rounded px-1">
+                ${style.icon}
+            </span>
+            
+            <span class="${style.text} ${messageClass} flex-1 break-all leading-tight pt-[1px]">
+                ${processedMessage}
+            </span>
+            `;
+
+            fragment.appendChild(line);
+        });
+
+        logConsole.appendChild(fragment);
+
+        if (logConsole.childElementCount > MAX_LOG_LINES) {
+            while (logConsole.childElementCount > MAX_LOG_LINES) {
+                logConsole.removeChild(logConsole.firstChild);
+            }
+        }
+
+        const currentTime = Date.now();
+        if (currentTime - lastScrollTime > 100) {
+            const isNearBottom = logConsole.scrollTop + logConsole.clientHeight >= logConsole.scrollHeight - 200;
+            if (isNearBottom) {
                 logConsole.scrollTop = logConsole.scrollHeight;
-            });
+            }
+            lastScrollTime = currentTime;
+        }
+
+        if (logBuffer.length > 0) {
+            requestAnimationFrame(processLogBuffer);
+        } else {
+            isProcessingLogs = false;
         }
     }
 
@@ -516,34 +559,6 @@ try {
         btnPlay.disabled = true;
         btnPlay.innerHTML = `<span class="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full"></span>`;
         progressContainer.style.opacity = "1";
-
-        // Desativado para solução de erros:
-        // if (btnPlay.as3cd) {
-        //     addLog("Solicitando fechamento do jogo...", 'warn');
-        //     btnPlay.disabled = true;
-        //     btnPlay.as3cd = false;
-        //     btnPlay.innerHTML = `<i data-lucide="shield-alert" class="fill-black w-6 h-6"></i> FECHANDO JOGO`;
-        //     lucide.createIcons();
-        //     progressContainer.style.opacity = "0";
-        //     const res = await window.api.abortGame();
-        //     if (res.success) {
-        //         addLog("Jogo fechado forçadamente.", 'success');
-        //         btnPlay.disabled = false;
-        //         btnPlay.as3cd = false;
-        //         btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
-        //         lucide.createIcons();
-        //         progressContainer.style.opacity = "0";
-        //     } else {
-        //         addLog("Falha ao fechar jogo, restaurando estado.", 'error');
-        //         btnPlay.disabled = false;
-        //         btnPlay.as3cd = true;
-        //         btnPlay.innerHTML = `<i data-lucide="pause" class="fill-black w-6 h-6"></i> SAIR DO JOGO`;
-        //         lucide.createIcons();
-        //         progressContainer.style.opacity = "0";
-        //         progressBar.style.width = '0%';
-        //     }
-        //     return;
-        // }
 
         const res = await window.api.launchGame(
             { type: currentUser.type, user: currentUser.user, uuid: currentUser.uuid },
@@ -901,10 +916,15 @@ try {
     const CONFIG = {
         url: 'http://elgae-sp1-b001.elgaehost.com.br:10379/admin/painel/blog',
         checkInterval: 5000,
-        timeout: 3000
+        timeout: 5000
     };
 
+    let isCheckingStatus = false;
+
     async function checkWebStatus() {
+        if (isCheckingStatus) return;
+        isCheckingStatus = true;
+
         const errorPage = document.getElementById('error-popup');
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), CONFIG.timeout);
@@ -916,22 +936,33 @@ try {
             });
 
             clearTimeout(timeoutId);
+
             if (response.ok) {
                 if (!errorPage.className.includes("hidden-force")) {
                     loadBlogFeed();
                 }
                 errorPage.classList.add('hidden-force');
             } else {
-                errorPage.classList.remove('hidden-force');
+                throw new Error(`Server returned ${response.status}`);
             }
         } catch (error) {
-            console.log(error)
+            if (error.name !== 'AbortError' && error.name !== 'DOMException') {
+                console.warn("Status Check Failed:", error.message);
+            }
             errorPage.classList.remove('hidden-force');
+        } finally {
+            isCheckingStatus = false;
         }
     }
 
-    setInterval(checkWebStatus, CONFIG.checkInterval);
-    checkWebStatus();
+    function scheduleNextCheck() {
+        setTimeout(async () => {
+            await checkWebStatus();
+            scheduleNextCheck();
+        }, CONFIG.checkInterval);
+    }
+
+    checkWebStatus().then(scheduleNextCheck);
 
     document.getElementById('btn-goto-step2').addEventListener('click', () => {
         const step1 = document.getElementById('modal-step-1');
@@ -941,11 +972,13 @@ try {
         }, 300);
     });
 
+    let lastUpdatedUser = null;
     setInterval(() => {
-        if (currentUser ? currentUser.user : null) {
+        if (currentUser && currentUser.user && currentUser.user !== lastUpdatedUser) {
             window.api.updateNickName(currentUser.user);
+            lastUpdatedUser = currentUser.user;
         }
-    }, 1000)
+    }, 2000);
 
     addLog("WorthLauncher carregado e pronto.");
 } catch (e) {
@@ -999,3 +1032,21 @@ function showLoading() {
 setTimeout(() => {
     hideLoading();
 }, 2000);
+
+if (window.api && window.api.onHeartbeat) {
+    window.api.onHeartbeat(() => {
+        if (window.api.sendHeartbeatAck) {
+            window.api.sendHeartbeatAck();
+        }
+    });
+}
+
+if (window.api && window.api.onErrorNotification) {
+    window.api.onErrorNotification((msg) => {
+        if (typeof showGenericToast === 'function') {
+            showGenericToast("⚠️ " + msg);
+        } else {
+            console.warn(msg);
+        }
+    });
+}
