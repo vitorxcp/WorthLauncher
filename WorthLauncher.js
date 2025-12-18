@@ -19,6 +19,8 @@ const Seven = require('node-7z');
 const axios = require('axios');
 const sevenBin = require('7zip-bin');
 const localPackCache = new Map();
+const API_URL = "http://elgae-sp1-b001.elgaehost.com.br:10379";
+const API_TEXTURES = `${API_URL}/api/v1/resoucepack/community`;
 
 let isScanning = false;
 let watchdogInterval = null;
@@ -66,49 +68,7 @@ try {
 
 let rpc;
 let nickname = "Jogador";
-
-const texturePacks = [
-    {
-        name: "(EpicoPack) SkyBlock",
-        nameFile: "§5§l(EpicoPack) §9SkyBlock",
-        author: "EpicoPack",
-        res: "+16x",
-        image: "./assets/packs/epicopack_skyblock.png",
-        description: "Uma textura não oficial criada pela comunidade de skyblock.",
-        urlDownload: "https://github.com/EpicoPack/TextureSkyBlock/releases/download/v8.1/5.l.EpicoPack.9SkyBlock.zip",
-        id: "epicopack-skyblock_D"
-    },
-    {
-        name: "Draccount HG",
-        nameFile: "§4§lDraccount §c§lHG",
-        author: "Draccount",
-        res: "+16x",
-        image: "./assets/packs/draccount_hg.png",
-        description: "Uma textura editada por Draccount para HG.",
-        urlDownload: "https://github.com/XPCreate/Draccount-HG/releases/download/hgv1/4.lDraccount.c.lHG.zip",
-        id: "draccount-hg_D"
-    },
-    {
-        name: "Draccount v1",
-        nameFile: "§4@Draccount v1",
-        author: "Draccount",
-        res: "+16x",
-        image: "./assets/packs/draccount_v1.png",
-        description: "Textura feita por Draccount.",
-        urlDownload: "https://github.com/XPCreate/Draccountv1/releases/download/Draccountv1/4@Draccount.v1.zip",
-        id: "draccount-v1_D"
-    },
-    {
-        name: "Stimpy WAR Eum3 Revamp",
-        nameFile: "§3Stimpy WAR Eum3 Revamp",
-        author: "Draccount",
-        res: "+16x",
-        image: "./assets/packs/stimpy_war_dracc.png",
-        description: "Uma textura editada pelo Draccount.",
-        urlDownload: "https://github.com/XPCreate/Stimpy-WAR-Eum3-Revamp/releases/download/asd12/3Stimpy.WAR.Eum3.Revamp.zip",
-        id: "stimpy-war-dracc_D"
-    }
-];
+let texturePacks = [];
 
 app.disableHardwareAcceleration();
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
@@ -413,6 +373,8 @@ const initializeApp = () => {
 app.whenReady().then(async () => {
     fs.ensureDirSync(getLauncherRoot());
 
+    await syncApiTextures();
+    setInterval(syncApiTextures, 60000);
     await loadSessionFromCache();
 
     const modsPath = getInternalModsPath();
@@ -1372,3 +1334,26 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (reason) => {
     console.error("[UNHANDLED PROMISE]", reason);
 });
+
+async function syncApiTextures() {
+    try {
+        console.log("[API] Sincronizando texturas da comunidade...");
+        const response = await axios.get(API_TEXTURES, { timeout: 10000 });
+
+        if (response.data && response.data.success) {
+            const remotePacks = response.data.textures.map(pack => ({
+                ...pack,
+                image: pack.image.startsWith('http') ? pack.image : `${API_URL}${pack.image}`
+            }));
+
+            texturePacks = remotePacks;
+            console.log(`[API] ${texturePacks.length} texturas sincronizadas com sucesso.`);
+            
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                mainWindow.webContents.send("texture:registry-updated", texturePacks);
+            }
+        }
+    } catch (error) {
+        console.error("[API] Erro ao sincronizar texturas:", error.message);
+    }
+}
