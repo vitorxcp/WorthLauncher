@@ -1337,7 +1337,6 @@ process.on('unhandledRejection', (reason) => {
 
 async function syncApiTextures() {
     try {
-        console.log("[API] Sincronizando texturas da comunidade...");
         const response = await axios.get(API_TEXTURES, { timeout: 10000 });
 
         if (response.data && response.data.success) {
@@ -1347,7 +1346,6 @@ async function syncApiTextures() {
             }));
 
             texturePacks = remotePacks;
-            console.log(`[API] ${texturePacks.length} texturas sincronizadas com sucesso.`);
             
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.webContents.send("texture:registry-updated", texturePacks);
