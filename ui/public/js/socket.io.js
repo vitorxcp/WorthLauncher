@@ -1706,7 +1706,7 @@ function selectTicket(ticket) {
     els.headerNick.innerText = `Ticket #${ticket.id}`;
     els.headerStatus.innerText = ticket.subject;
     els.headerAvatar.src = "https://cdn-icons-png.flaticon.com/512/4961/4961759.png";
-    els.headerAvatar.className = "relative w-11 h-11 rounded-xl object-cover border border-white/10 shadow-lg p-1.5 bg-yellow-500";
+    els.headerAvatar.className = "relative w-11 h-11 rounded-xl object-cover border border-white/10 shadow-lg p-1.5 bg-[#231a00]";
 
     if (els.headerStatusDot) {
         els.headerStatusDot.className = `w-2 h-2 rounded-full ${ticket.status === 'open' ? 'bg-green-500' : 'bg-red-500'}`;
