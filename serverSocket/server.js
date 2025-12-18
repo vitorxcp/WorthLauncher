@@ -15,12 +15,14 @@ const CHATS_FILE = path.join(__dirname, 'chats.json');
 const BLOG_FILE = path.join(__dirname, 'blog.json');
 const ADMINS_FILE = path.join(__dirname, 'admins.json');
 const TICKETS_FILE = path.join(__dirname, 'tickets.json');
+const RESOURCEPSCKS_FILE = path.join(__dirname, 'resourcepacks.json');
 
 let blogDB = [];
 let usersDB = {};
 let chatsDB = {};
 let adminsDB = []
 let ticketsDB = [];
+let texturePacks = [];
 
 function makeid(length) {
     let result = '';
@@ -41,6 +43,7 @@ function loadData() {
         if (fs.existsSync(BLOG_FILE)) blogDB = JSON.parse(fs.readFileSync(BLOG_FILE));
         if (fs.existsSync(ADMINS_FILE)) adminsDB = JSON.parse(fs.readFileSync(ADMINS_FILE));
         if (fs.existsSync(TICKETS_FILE)) ticketsDB = JSON.parse(fs.readFileSync(TICKETS_FILE));
+        if (fs.existsSync(RESOURCEPSCKS_FILE)) ticketsDB = JSON.parse(fs.readFileSync(RESOURCEPSCKS_FILE));
     } catch (e) { console.error("Erro ao carregar DB:", e); }
 }
 
@@ -50,6 +53,7 @@ function saveData(type) {
         if (type === 'chats') fs.writeFileSync(CHATS_FILE, JSON.stringify(chatsDB, null, 2));
         if (type === 'blog') fs.writeFileSync(BLOG_FILE, JSON.stringify(blogDB, null, 2));
         if (type === 'tickets') fs.writeFileSync(TICKETS_FILE, JSON.stringify(ticketsDB, null, 2));
+        if (type === 'packs') fs.writeFileSync(RESOURCEPSCKS_FILE, JSON.stringify(texturePacks, null, 2));
     } catch (e) { console.error("Erro ao salvar DB:", e); }
 }
 
@@ -140,6 +144,72 @@ app.get("/admin/logout", (req, res) => {
 
 app.get("/error/page/permission", (req, res) => {
     res.render("error/permission.html");
+});
+
+app.get("/api/v1/resoucepack/community", (req, res) => {
+    const sortedTxt = [...texturePacks];
+    res.json({ success: true, count: sortedTxt.length, textures: sortedTxt });
+});
+
+app.get("/admin/painel/textures", checkAdminAuth, (req, res) => {
+    const txts = [...texturePacks];
+    res.render("admin/texture/index.html", { textures: txts, user: req.session.user });
+});
+
+app.get("/admin/painel/textures/new", checkAdminAuth, (req, res) => {
+    res.render("admin/textures/new.html", { user: req.session.user });
+});
+
+app.get("/admin/painel/textures/:id/edit", checkAdminAuth, (req, res) => {
+    const txt = texturePacks.find(p => p.id === req.params.id);
+    if (!txt) return res.redirect("/admin/painel/textures");
+    res.render("admin/textures/edit.html", { texture: txt, user: req.session.user });
+});
+
+app.post("/admin/painel/textures/new/post", checkAdminAuth, (req, res) => {
+    try {
+        const { name, nameFile, author, image, description, urlDownload, id } = req.body;
+
+        if (!name || !nameFile || !author || !image || !description || !urlDownload || !id) {
+            return res.json({ success: false, message: "Algo está faltando..." });
+        }
+
+        const newTxt = { name, nameFile, author, image, description, urlDownload, id };
+
+        texturePacks.push(newTxt);
+        saveData('packs');
+
+        res.json({ success: true, message: "Textura postada com sucesso!", redirect: "/admin/painel/textures" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Erro interno." });
+    }
+});
+
+app.post("/admin/painel/textures/:id/update", checkAdminAuth, (req, res) => {
+    const { title, summary, content, bannerUrl, tags } = req.body;
+    const postIndex = blogDB.findIndex(p => p.id === req.params.id);
+
+    if (postIndex === -1) return res.json({ success: false, message: "Post não encontrado." });
+
+    blogDB[postIndex].title = title || blogDB[postIndex].title;
+    blogDB[postIndex].summary = summary || blogDB[postIndex].summary;
+    blogDB[postIndex].content = content || blogDB[postIndex].content;
+
+    if (bannerUrl) blogDB[postIndex].image = bannerUrl;
+    if (tags) blogDB[postIndex].tags = tags.split(',').map(t => t.trim());
+
+    blogDB[postIndex].updatedAt = Date.now();
+    saveData('blog');
+    res.json({ success: true, message: "Post atualizado!", redirect: "/admin/painel/blog" });
+});
+
+app.post("/admin/painel/textures/:id/remove", checkAdminAuth, (req, res) => {
+    const initialLength = blogDB.length;
+    blogDB = blogDB.filter(p => p.id !== req.params.id);
+    if (blogDB.length === initialLength) return res.json({ success: false, message: "Post não encontrado." });
+    saveData('blog');
+    res.json({ success: true, message: "Post removido com sucesso." });
 });
 
 app.get("/api/v1/blog/feed", (req, res) => {
@@ -305,6 +375,8 @@ io.on("connection", (socket) => {
         socket.emit("error", "Nick e UUID são obrigatórios.");
         return socket.disconnect();
     }
+
+    if (!status) status = usersDB[nick].status;
 
     nick = nick.trim();
 
