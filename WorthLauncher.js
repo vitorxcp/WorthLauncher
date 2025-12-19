@@ -1317,7 +1317,7 @@ function startWatchdog(win) {
             win.reload();
             lastHeartbeat = Date.now();
         }
-    }, 5000);
+    }, 10000);
 }
 
 ipcMain.on('app:heartbeat-ack', () => {
