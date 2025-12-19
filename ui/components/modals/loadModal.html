@@ -1,12 +1,64 @@
 <div id="modal-loadPage"
-    class="modal-visible absolute inset-0 z-[100] bg-[#000] flex flex-col items-center justify-center transition-all duration-500 ease-in-out no-drag text-white font-mono select-none z-[999]">
+     class="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center transition-opacity duration-500 ease-in-out select-none no-drag text-white font-mono">
 
-    <video width="200" height="450" autoplay loop muted playsinline>
+    <video id="intro-video" 
+           width="200" 
+           height="450" 
+           muted 
+           playsinline 
+           preload="auto"
+           class="opacity-0 transition-opacity duration-700 rounded-lg ml-[20px]">
         <source src="assets/quebrandotudo.mp4" type="video/mp4">
     </video>
 
-    <div class="flex flex-col items-center gap-2">
-        <h2 class="text-xl font-bold tracking-widest uppercase text-shadow-sm">Carregando</h2>
-        <span class="text-xs text-gray-400 animate-pulse">Aguarde...</span>
+    <div class="flex flex-col items-center gap-3">
+        <h2 class="text-2xl font-black tracking-[0.2em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-md">
+            Carregando
+        </h2>
+        
+        <div class="w-32 h-1 bg-gray-800 rounded-full overflow-hidden mt-1">
+            <div class="w-full h-full bg-yellow-600 animate-[loading_1.5s_infinite]"></div>
+        </div>
+
+        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">
+            Iniciando WorthLauncher...
+        </span>
     </div>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const video = document.getElementById('intro-video');
+
+        if (video) {
+            video.addEventListener('loadedmetadata', () => {
+                video.currentTime = 3; 
+            });
+
+            const playPromise = video.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    video.classList.remove('opacity-0');
+                })
+                .catch(error => {
+                    console.error("Erro no autoplay:", error);
+                    video.classList.remove('opacity-0');
+                });
+            }
+
+            video.addEventListener('ended', () => {
+                video.currentTime = 3;
+                video.play();
+            });
+        }
+    });
+</script>
+
+<style>
+    @keyframes loading {
+        0% { transform: translateX(-100%); }
+        50% { transform: translateX(0%); }
+        100% { transform: translateX(100%); }
+    }
+</style>
