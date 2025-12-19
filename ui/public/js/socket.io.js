@@ -906,6 +906,21 @@ function setupSocketEvents() {
         }
     });
 
+    socket.on("launcher:cosmetics:player", (data1, data2) => {
+        if (Array.isArray(data2)) {
+            data2.forEach(cosmetic => {
+                if (cosmetic.name) reloadCosmetics(cosmetic.name);
+            });
+        }
+        else if (data2 && data2.name) {
+            reloadCosmetics(data2.name);
+        }
+
+        else {
+            console.error("[Erro] Formato desconhecido recebido:", data2);
+        }
+    });
+
     socket.on("auth_error", (data) => {
         socketinf = false;
 
