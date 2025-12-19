@@ -16,6 +16,7 @@ const BLOG_FILE = path.join(__dirname, 'blog.json');
 const ADMINS_FILE = path.join(__dirname, 'admins.json');
 const TICKETS_FILE = path.join(__dirname, 'tickets.json');
 const RESOURCEPSCKS_FILE = path.join(__dirname, 'resourcepacks.json');
+const COSMETICS_DB_FILE = path.join(__dirname, 'cosmetics.json');
 
 let blogDB = [];
 let usersDB = {};
@@ -23,6 +24,7 @@ let chatsDB = {};
 let adminsDB = []
 let ticketsDB = [];
 let texturePacks = [];
+let cosmeticsListDB = [];
 
 function makeid(length) {
     let result = '';
@@ -44,6 +46,7 @@ function loadData() {
         if (fs.existsSync(ADMINS_FILE)) adminsDB = JSON.parse(fs.readFileSync(ADMINS_FILE));
         if (fs.existsSync(TICKETS_FILE)) ticketsDB = JSON.parse(fs.readFileSync(TICKETS_FILE));
         if (fs.existsSync(RESOURCEPSCKS_FILE)) texturePacks = JSON.parse(fs.readFileSync(RESOURCEPSCKS_FILE));
+        if (fs.existsSync(COSMETICS_DB_FILE)) cosmeticsListDB = JSON.parse(fs.readFileSync(COSMETICS_DB_FILE));
     } catch (e) { console.error("Erro ao carregar DB:", e); }
 }
 
@@ -143,15 +146,15 @@ app.get("/api/v1/resoucepack/community", (req, res) => {
         let filteredTextures = [...texturePacks];
 
         if (category) {
-            filteredTextures = filteredTextures.filter(p => 
+            filteredTextures = filteredTextures.filter(p =>
                 p.categories && p.categories.some(c => c.toLowerCase() === category.toLowerCase())
             );
         }
 
-        res.json({ 
-            success: true, 
-            count: filteredTextures.length, 
-            textures: filteredTextures 
+        res.json({
+            success: true,
+            count: filteredTextures.length,
+            textures: filteredTextures
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Erro ao buscar texturas." });
@@ -186,14 +189,14 @@ app.post("/admin/painel/textures/new/post", checkAdminAuth, (req, res) => {
         const { name, nameFile, author, image, description, urlDownload, res: resolution, categories } = req.body;
         const id = makeid(12);
 
-        const newTxt = { 
-            name, 
-            nameFile, 
-            author, 
-            res: resolution || "+16x", 
-            image, 
-            description, 
-            urlDownload, 
+        const newTxt = {
+            name,
+            nameFile,
+            author,
+            res: resolution || "+16x",
+            image,
+            description,
+            urlDownload,
             id,
             categories: categories ? categories.split(',').map(c => c.trim()) : []
         };
@@ -231,9 +234,9 @@ app.post("/admin/painel/textures/:id/update", checkAdminAuth, (req, res) => {
 app.post("/admin/painel/textures/:id/remove", checkAdminAuth, (req, res) => {
     const initialLength = texturePacks.length;
     texturePacks = texturePacks.filter(p => p.id !== req.params.id);
-    
+
     if (texturePacks.length === initialLength) return res.json({ success: false, message: "Não encontrada." });
-    
+
     saveData('packs');
     res.json({ success: true, message: "Textura removida com sucesso." });
 });
@@ -376,13 +379,28 @@ let playingUsers = [];
 let usersSessionGames = {};
 
 function updateOnlineCount() {
+    const usersCount = Object.keys(onlineUsers).length - Object.keys(usersSessionGames).length;
+    const launchCount = Object.keys(usersSessionGames).length;
+    const totalCount = Object.keys(onlineUsers).length;
+
     io.emit("server:online_count", {
-        users: Object.keys(onlineUsers).length - Object.keys(usersSessionGames).length,
-        usersLaunch: Object.keys(usersSessionGames).length,
-        total: Object.keys(onlineUsers).length
+        users: usersCount,
+        usersLaunch: launchCount,
+        total: totalCount
     });
 
-    io.emit("client:users_playing", Object.keys(usersSessionGames));
+    const playingData = Object.keys(usersSessionGames).map(playerNick => {
+        const userCosmetics = usersDB[playerNick]?.cosmetics || {};
+
+        const activeCosmetics = Object.keys(userCosmetics).filter(id => userCosmetics[id] === true);
+
+        return {
+            nick: playerNick,
+            cosmetics: activeCosmetics
+        };
+    });
+
+    io.emit("client:users_playing", playingData);
 }
 
 console.log(`[SOCKET] Servidor Social rodando na porta ${PORT}`);
@@ -413,7 +431,12 @@ io.on("connection", (socket) => {
         }
         usersDB[nick].status = status;
     } else {
-        usersDB[nick] = { uuid, friends: [], requests: [], status };
+        usersDB[nick] = { uuid, friends: [], requests: [], status, cosmetics: [] };
+        saveData('users');
+    }
+
+    if (!usersDB[nick].cosmetics) {
+        usersDB[nick].cosmetics = {};
         saveData('users');
     }
 
@@ -431,6 +454,76 @@ io.on("connection", (socket) => {
             hasUnread: hasUnread
         };
     });
+
+    socket.on("launcher:cosmetic:player:add", (cosmeticId) => {
+        const itemInfo = cosmeticsListDB.find(c => c.id === cosmeticId);
+
+        if (!itemInfo) {
+            return socket.emit("error", "Cosmético não encontrado no sistema.");
+        }
+
+        if (itemInfo.isPaid) {
+            const userPurchased = usersDB[nick].purchasedCosmetics || [];
+            if (!userPurchased.includes(cosmeticId)) {
+                return socket.emit("error", `Você precisa comprar a ${itemInfo.name} antes de equipar.`);
+            }
+        }
+
+        const userActiveCosmetics = usersDB[nick].cosmetics || {};
+        const equippedIds = Object.keys(userActiveCosmetics).filter(k => userActiveCosmetics[k] === true);
+
+        for (const equippedId of equippedIds) {
+            const equippedItemInfo = cosmeticsListDB.find(c => c.id === equippedId);
+            if (equippedItemInfo && equippedItemInfo.category === itemInfo.category) {
+                if (equippedId === cosmeticId) return;
+
+                return socket.emit("error", `Remova ${equippedItemInfo.name} antes de equipar este item de mesma categoria.`);
+            }
+        }
+
+        usersDB[nick].cosmetics[cosmeticId] = true;
+        saveData('users');
+        socket.emit("success", `${itemInfo.name} equipado com sucesso!`);
+        socket.emit("launcher:cosmetics:player", true, { name: cosmeticId });
+
+        if (usersSessionGames[nick]) updateOnlineCount();
+    });
+
+    socket.on("launcher:cosmetic:player:remove", (cosmeticId) => {
+        if (!usersDB[nick].cosmetics) return;
+
+        if (usersDB[nick].cosmetics[cosmeticId]) {
+            usersDB[nick].cosmetics[cosmeticId] = false;
+            saveData('users');
+
+            const itemInfo = cosmeticsListDB.find(c => c.id === cosmeticId);
+            socket.emit("success", `${itemInfo ? itemInfo.name : cosmeticId} removido.`);
+            socket.emit("launcher:cosmetic:player:removed_success", cosmeticId);
+
+            if (usersSessionGames[nick]) updateOnlineCount();
+        }
+    });
+
+    socket.on("player:set:cosmetic", ({ id, state }) => {
+        if (!usersDB[nick].cosmetics) usersDB[nick].cosmetics = {};
+
+        usersDB[nick].cosmetics[id] = state;
+        saveData('users');
+
+        socket.emit("success", `Cosmético ${state ? 'ativado' : 'desativado'}!`);
+
+        if (usersSessionGames[nick]) {
+            updateOnlineCount();
+        }
+    });
+
+    const userCosmetics = usersDB[nick].cosmetics || {};
+
+    const activeCosmeticsList = Object.keys(userCosmetics)
+        .filter(key => userCosmetics[key] === true)
+        .map(key => ({ name: key }));
+
+    socket.emit("launcher:cosmetics:player", true, ...activeCosmeticsList);
 
     socket.emit("init:data", { friends: friendsListWithData, requests: usersDB[nick].requests });
 
@@ -636,8 +729,16 @@ io.on("connection", (socket) => {
 
     socket.on("game:launch", () => {
         usersSessionGames[nick] = socket.id;
+        const userCosmetics = usersDB[nick].cosmetics || {};
+
+        const activeCosmeticsList = Object.keys(userCosmetics)
+            .filter(key => userCosmetics[key] === true)
+            .map(key => ({ name: key }));
+
+        socket.emit("client:cosmetics:player", true, ...activeCosmeticsList);
+
         updateOnlineCount();
-    })
+    });
 
     socket.on("game:close", () => {
         delete usersSessionGames[nick];
