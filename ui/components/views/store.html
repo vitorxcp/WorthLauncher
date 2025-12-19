@@ -1,6 +1,428 @@
-<section id="view-store" class="flex-1 hidden-force fade-enter">
-    <div class="flex items-center justify-center h-full flex-col gap-4">
-        <i data-lucide="hammer" class="w-16 h-16 text-white/10"></i>
-        <p class="text-gray-500 font-mono text-sm">Cosméticos em Desenvolvimento...</p>
+<section id="view-store" class="flex-1 hidden-force fade-enter flex flex-col overflow-hidden rounded-[10px] relative">
+
+    <div class="p-4 pb-2 border-b border-white/5 flex flex-col gap-3 shrink-0 z-20 bg-[#000000c9]">
+        <div class="flex justify-between items-end">
+            <div>
+                <h2 class="text-3xl font-bold text-white tracking-tight">Worth Cosmetics</h2>
+                <p class="text-gray-400 text-sm mt-1">Personalize seu visual no jogo.</p>
+            </div>
+            <div class="bg-white/5 px-3 py-1 rounded-full text-xs text-gray-400 border border-white/5">
+                Loja
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-[5px]">
+            <div class="flex gap-2 overflow-x-auto custom-scrollbar w-full md:w-auto pb-2 md:pb-0" id="cosmetic-filters">
+            </div>
+
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <label class="flex items-center gap-2 cursor-pointer group select-none">
+                    <div class="relative">
+                        <input type="checkbox" id="hide-owned-check" class="sr-only peer" onchange="toggleHideOwned()">
+                        <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-purple-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                    </div>
+                    <span class="text-xs text-gray-400 group-hover:text-gray-200 transition-colors">Ocultar Adquiridos</span>
+                </label>
+
+                <div class="relative w-full md:w-64 group">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-purple-400 transition-colors"></i>
+                    <input type="text" id="search-cosmetic-input" placeholder="Pesquisar cosmético..." class="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50 focus:bg-black/40 transition-all">
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-[#000000c9]">
+        <div id="cosmetics-grid" class="grid grid-cols-3 md:grid-cols-3 xl:grid-cols-6 gap-3"></div>
+        <div id="no-cosmetics-results" class="hidden flex-col items-center justify-center py-20 text-gray-500">
+            <i data-lucide="shirt" class="w-12 h-12 mb-2 opacity-50"></i>
+            <p>Nenhum cosmético encontrado.</p>
+        </div>
+    </div>
+
+    <div id="modal-remove-cosmetic" class="absolute inset-0 z-[100] bg-black/80 flex items-center justify-center hidden opacity-0 transition-all duration-300 select-none">
+        <div class="relative bg-[#0f0f10] border border-white/10 p-8 rounded-[2rem] w-96 shadow-2xl transform scale-95 transition-all duration-300 group overflow-hidden" id="modal-cosmetic-box">
+            <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)] relative">
+                    <i data-lucide="x-circle" class="w-8 h-8 text-red-500 relative z-10"></i>
+                    <div class="absolute -bottom-1 w-8 h-1 bg-red-500/50 rounded-full"></div>
+                </div>
+                <h3 class="text-2xl font-black text-white mb-2 tracking-tight">Remover Cosmético?</h3>
+                <p class="text-sm text-zinc-400 mb-6 leading-relaxed">Você está prestes a desequipar este item.<br>Deseja confirmar?</p>
+                <div class="flex gap-3 w-full">
+                    <button onclick="closeRemoveCosmeticModal()" class="flex-1 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all border border-transparent hover:border-white/5">Cancelar</button>
+                    <button id="btn-confirm-remove-cosmetic" onclick="confirmRemoveCosmeticAction()" class="flex-1 py-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider transition-all shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] active:scale-95 flex items-center justify-center gap-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Remover
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_COSMETIC = "http://elgae-sp1-b001.elgaehost.com.br:10379";
+        const API_URL_COSMETICS = `${API_BASE_COSMETIC}/api/v1/cosmetics/all`;
+
+        let officialCosmetics = [];
+        let cosmeticsList = [];
+        let cosmeticCategories = ["Todos", "Capas", "Asas", "Bandanas", "Chapéus"];
+        let currentCosmeticCategory = "Todos";
+        let searchCosmeticQuery = "";
+        let ownedCosmeticIds = new Set();
+        let hideOwned = false;
+        let pendingRemoveCosmeticId = null;
+        let searchCosmeticTimeout = null;
+
+        async function fetchCosmetics() {
+            try {
+                const data = {
+                    success: true,
+                    items: [
+                        { id: "cape_free_redeworth", name: "Capa Worth", description: "Capa oficial do Client.", image: "./assets/cosmeticos/cape_free_redeworth.png", type: "Capas", rarity: "COMUM", author: "vitorxp" },
+                    ]
+                };
+
+                if (data.success && data.items) {
+                    officialCosmetics = data.items.map(item => ({
+                        ...item,
+                        image: item.image.startsWith('http') ? item.image : (item.image ? `${item.image}` : null)
+                    }));
+
+                    const apiCats = new Set();
+                    officialCosmetics.forEach(i => { if (i.type) apiCats.add(i.type); });
+                    cosmeticCategories = ["Todos", "Adquiridos", ...Array.from(apiCats)];
+                    cosmeticsList = [...officialCosmetics];
+
+                    renderCosmeticCategories();
+                    renderCosmetics();
+                    return true;
+                }
+            } catch (error) { console.error("Erro cosmetics:", error); }
+            return false;
+        }
+
+        async function initCosmeticsPage() {
+            await fetchCosmetics();
+            
+            // Inicializa os listeners do socket aqui para garantir que carreguem
+            setupSocketListeners();
+
+            const searchInput = document.getElementById('search-cosmetic-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchCosmeticTimeout);
+                    searchCosmeticTimeout = setTimeout(() => {
+                        searchCosmeticQuery = e.target.value.toLowerCase();
+                        renderCosmetics();
+                    }, 300);
+                });
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            setupCosmeticObserver();
+        }
+
+        // --- SISTEMA DE SOCKET OTIMIZADO ---
+
+        function setupSocketListeners() {
+            // Verifica se o socket existe globalmente
+            if (typeof socket === 'undefined' || !socket) {
+                // Tenta novamente em 500ms se o socket ainda nao conectou
+                setTimeout(setupSocketListeners, 500);
+                return;
+            }
+
+            // Remove listeners antigos para evitar duplicidade
+            socket.off("launcher:cosmetic:player:removed_success");
+            socket.off("error");
+            socket.off("auth_error");
+
+            // LISTENER: SUCESSO AO REMOVER
+            socket.on("launcher:cosmetic:player:removed_success", (id) => {
+                ownedCosmeticIds.delete(id); // Remove da memória local
+                resetCosmeticButton(id);     // Atualiza o botão visualmente
+            });
+
+            // LISTENER: ERRO GERAL (Reseta botões travados)
+            socket.on("error", (msg) => {
+                resetAllLoadingButtons();
+            });
+
+            socket.on("auth_error", (msg) => {
+                resetAllLoadingButtons();
+            });
+        }
+
+        // ------------------------------------
+
+        function renderCosmeticCategories() {
+            const container = document.getElementById('cosmetic-filters');
+            if (!container) return;
+            container.innerHTML = cosmeticCategories.map(cat => `
+                <button onclick="setCosmeticCategory('${cat}')" id="cat-cosmetic-btn-${cat}"
+                    class="px-[10px] py-[5px] rounded-lg text-xs font-medium border transition-all whitespace-nowrap 
+                    ${currentCosmeticCategory === cat ? 'bg-purple-500/10 text-purple-400 border-purple-500/50' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-gray-200'}">
+                    ${cat}
+                </button>
+            `).join('');
+        }
+
+        function setCosmeticCategory(cat) {
+            const oldBtn = document.getElementById(`cat-cosmetic-btn-${currentCosmeticCategory}`);
+            if (oldBtn) oldBtn.className = 'px-[10px] py-[5px] rounded-lg text-xs font-medium border transition-all whitespace-nowrap bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-gray-200';
+            currentCosmeticCategory = cat;
+            const newBtn = document.getElementById(`cat-cosmetic-btn-${currentCosmeticCategory}`);
+            if (newBtn) newBtn.className = 'px-[10px] py-[5px] rounded-lg text-xs font-medium border transition-all whitespace-nowrap bg-purple-500/10 text-purple-400 border-purple-500/50';
+            renderCosmetics();
+        }
+
+        function getCosmeticButtonConfig(itemId, isOwned) {
+            if (isOwned) {
+                return {
+                    html: `<span class="group-hover/btn:hidden flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Equipado</span>
+                           <span class="hidden group-hover/btn:flex items-center gap-2"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg> Remover</span>`,
+                    cls: "flex-1 bg-green-600/20 text-green-400 border border-green-500/30 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 cursor-pointer text-sm font-medium py-2 rounded-lg flex justify-center items-center gap-2 transition-all group/btn",
+                    status: 'owned'
+                };
+            }
+            return {
+                html: "<span>Equipar</span>",
+                cls: "flex-1 bg-white/5 hover:bg-purple-600 hover:text-white text-gray-300 text-sm font-medium py-2 rounded-lg border border-white/5 transition-all active:scale-95 flex justify-center items-center gap-2 group/btn",
+                status: 'default'
+            };
+        }
+
+        function renderCosmeticCard(item, index, isOwned) {
+            const btnConfig = getCosmeticButtonConfig(item.id, isOwned);
+            let rarityColor = "bg-gray-500";
+            if (item.rarity === "Legendary") rarityColor = "bg-yellow-500";
+            if (item.rarity === "Epic") rarityColor = "bg-purple-500";
+            if (item.rarity === "Rare") rarityColor = "bg-blue-500";
+
+            return `
+            <div class="group relative bg-black/20 hover:bg-black/40 border border-white/5 hover:border-purple-500/50 rounded-xl transition-all duration-300 overflow-hidden flex flex-col news-card-base animate-card shrink-0 contain-content" 
+                 id="cosmetic-card-${item.id}" style="animation-delay: ${index * 30}ms;">
+                <div class="h-32 bg-gray-900 relative overflow-hidden group/img">
+                     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/5 to-black/80 z-10"></div>
+                    ${item.image ? `<img src="${item.image}" loading="lazy" class="w-full h-full object-contain p-4 group-hover/img:scale-110 transition-transform duration-500 z-0 relative">` : `<div class="w-full h-full flex items-center justify-center text-gray-700 z-0 relative"><i data-lucide="shirt" class="w-12 h-12"></i></div>`}
+                    <span class="absolute top-2 right-2 z-20 ${rarityColor} text-black text-[9px] font-extrabold px-2 py-0.5 rounded shadow-lg uppercase tracking-wide">${item.rarity || 'COMUM'}</span>
+                    <div class="absolute bottom-2 left-2 z-20 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                         <span class="text-[9px] bg-white/10 text-white backdrop-blur-md border border-white/10 font-bold px-1.5 py-0.5 rounded">${item.type}</span>
+                    </div>
+                </div>
+                <div class="p-4 flex-1 flex flex-col">
+                    <h3 class="text-white font-semibold text-lg group-hover:text-purple-400 transition-colors leading-tight truncate w-full mb-1" title="${item.name}">${item.name}</h3>
+                    <p class="text-gray-500 text-xs mb-4 line-clamp-2 flex-1">${item.description}</p>
+                    <div class="flex items-center gap-3 mt-auto">
+                        <button onclick="handleCosmeticAction(this, '${item.id}')" id="btn-cosmetic-${item.id}" data-status="${btnConfig.status}" class="${btnConfig.cls}">${btnConfig.html}</button>
+                        <div class="flex flex-col items-end text-xs font-mono text-gray-600"><span title="Criador">by ${item.author}</span></div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderCosmetics() {
+            const container = document.getElementById('cosmetics-grid');
+            const noResults = document.getElementById('no-cosmetics-results');
+            if (!container || !noResults) return;
+
+            if (cosmeticsList.length === 0 && officialCosmetics.length > 0) cosmeticsList = [...officialCosmetics];
+
+            const filtered = cosmeticsList.filter(item => {
+                const isOwned = ownedCosmeticIds.has(item.id);
+                if (hideOwned && isOwned) return false;
+                const matchesSearch = item.name.toLowerCase().includes(searchCosmeticQuery) || item.type.toLowerCase().includes(searchCosmeticQuery);
+                if (currentCosmeticCategory === "Todos") return matchesSearch;
+                if (currentCosmeticCategory === "Adquiridos") return matchesSearch && isOwned;
+                return matchesSearch && item.type === currentCosmeticCategory;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                noResults.classList.replace('hidden', 'flex');
+                return;
+            }
+            noResults.classList.replace('flex', 'hidden');
+
+            const filteredIds = new Set(filtered.map(p => p.id));
+            Array.from(container.children).forEach(child => {
+                const id = child.id.replace('cosmetic-card-', '');
+                if (!filteredIds.has(id)) child.remove();
+            });
+
+            filtered.forEach((item, index) => {
+                const existingCard = document.getElementById(`cosmetic-card-${item.id}`);
+                const isOwned = ownedCosmeticIds.has(item.id);
+
+                if (!existingCard) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = renderCosmeticCard(item, index, isOwned);
+                    const newCard = temp.firstElementChild;
+                    container.appendChild(newCard);
+                    if (typeof lucide !== 'undefined') lucide.createIcons({ root: newCard });
+                } else {
+                    const btn = document.getElementById(`btn-cosmetic-${item.id}`);
+                    if (btn) {
+                        const currentStatus = btn.dataset.status;
+                        const newStatus = isOwned ? 'owned' : 'default';
+                        if (currentStatus !== newStatus && currentStatus !== 'downloading' && currentStatus !== 'removing') {
+                            setCosmeticButtonState(btn, newStatus, item.id);
+                        }
+                    }
+                }
+            });
+        }
+
+        function setupCosmeticObserver() {
+            const section = document.getElementById('view-store');
+            if (!section) { setTimeout(setupCosmeticObserver, 100); return; }
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        if (!section.classList.contains('hidden-force')) {
+                            renderCosmetics();
+                        }
+                    }
+                });
+            });
+            observer.observe(section, { attributes: true });
+        }
+
+        function toggleHideOwned() {
+            hideOwned = document.getElementById('hide-owned-check').checked;
+            renderCosmetics();
+        }
+
+        function handleCosmeticAction(btn, itemId) {
+            const status = btn.dataset.status || 'default';
+            if (status === 'downloading' || status === 'removing') return;
+            if (status === 'owned') openRemoveCosmeticModal(itemId);
+            else downloadCosmetic(btn, itemId);
+        }
+
+        function setCosmeticButtonState(btn, state, itemId) {
+            btn.dataset.status = state;
+            if (state === 'downloading') {
+                btn.innerHTML = `<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>Carregando...</span>`;
+                btn.className = "flex-1 bg-purple-600/20 text-purple-400 border border-purple-500/30 cursor-wait text-sm font-medium py-2 rounded-lg flex justify-center items-center gap-2 pointer-events-none";
+            } else if (state === 'removing') {
+                btn.innerHTML = `<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> ...`;
+                btn.className = "flex-1 bg-red-600/20 text-red-400 border border-red-500/30 cursor-wait text-sm font-medium py-2 rounded-lg flex justify-center items-center gap-2 pointer-events-none";
+            } else if (state === 'owned' || state === 'default') {
+                const isOwned = state === 'owned';
+                const config = getCosmeticButtonConfig(itemId, isOwned);
+                btn.innerHTML = config.html;
+                btn.className = config.cls;
+            }
+        }
+
+        // ======================== MODAL LOGIC ========================
+
+        function openRemoveCosmeticModal(itemId) {
+            pendingRemoveCosmeticId = itemId;
+            const modal = document.getElementById('modal-remove-cosmetic');
+            const box = document.getElementById('modal-cosmetic-box');
+            if (modal && box) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
+            }
+        }
+
+        function closeRemoveCosmeticModal() {
+            pendingRemoveCosmeticId = null;
+            const modal = document.getElementById('modal-remove-cosmetic');
+            const box = document.getElementById('modal-cosmetic-box');
+            if (modal && box) {
+                modal.classList.add('opacity-0');
+                box.classList.remove('scale-100');
+                box.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function confirmRemoveCosmeticAction() {
+            if (!pendingRemoveCosmeticId) return;
+            const btn = document.getElementById(`btn-cosmetic-${pendingRemoveCosmeticId}`);
+            if (btn) removeCosmetic(btn, pendingRemoveCosmeticId);
+            closeRemoveCosmeticModal();
+        }
+
+        // ======================== SOCKET LOGIC ========================
+
+        // FUNÇÃO DE SEGURANÇA: Reseta botão específico se der erro ou sucesso
+        function resetCosmeticButton(itemId) {
+            const btn = document.getElementById(`btn-cosmetic-${itemId}`);
+            if (btn) {
+                const isOwned = ownedCosmeticIds.has(itemId);
+                const config = getCosmeticButtonConfig(itemId, isOwned);
+                btn.innerHTML = config.html;
+                btn.className = config.cls;
+                btn.dataset.status = isOwned ? 'owned' : 'default';
+            }
+        }
+
+        // FUNÇÃO DE SEGURANÇA GERAL: Reseta TODOS os botões carregando
+        function resetAllLoadingButtons() {
+            document.querySelectorAll('[data-status="downloading"], [data-status="removing"]').forEach(btn => {
+                const id = btn.id.replace('btn-cosmetic-', '');
+                resetCosmeticButton(id);
+            });
+        }
+
+        function reloadCosmetics(type) {
+            var id = "btn-cosmetic-" + type;
+            var element = document.getElementById(id);
+            ownedCosmeticIds.add(type); 
+            if (!element) return;
+            
+            const btnConfig = getCosmeticButtonConfig(type, true);
+            element.setAttribute("data-status", btnConfig.status);
+            element.setAttribute("class", btnConfig.cls);
+            element.innerHTML = `${btnConfig.html}`;
+        }
+
+        async function downloadCosmetic(btn, itemId) {
+            addCosmetic(itemId);
+        }
+
+        function addCosmetic(type) {
+            if (!socket || !socket.connected) {
+                showToast("Erro de conexão.", "error");
+                resetCosmeticButton(type);
+                return;
+            }
+            const btn = document.getElementById("btn-cosmetic-" + type);
+            if (btn) setCosmeticButtonState(btn, 'downloading', type);
+            
+            // Timeout de segurança (5s)
+            setTimeout(() => {
+                const currentBtn = document.getElementById("btn-cosmetic-" + type);
+                if(currentBtn && currentBtn.dataset.status === 'downloading') {
+                    resetCosmeticButton(type);
+                }
+            }, 5000);
+
+            socket.emit("launcher:cosmetic:player:add", type);
+        }
+
+        function removeCosmetic(btn, itemId) {
+            if (!socket || !socket.connected) {
+                showToast("Erro de conexão.", "error");
+                resetCosmeticButton(itemId);
+                return;
+            }
+            setCosmeticButtonState(btn, 'removing', itemId);
+            
+            // Timeout de segurança (5s)
+            setTimeout(() => {
+                const currentBtn = document.getElementById("btn-cosmetic-" + itemId);
+                if(currentBtn && currentBtn.dataset.status === 'removing') {
+                    resetCosmeticButton(itemId);
+                }
+            }, 5000);
+
+            socket.emit("launcher:cosmetic:player:remove", itemId);
+        }
+
+        initCosmeticsPage();
+    </script>
 </section>
