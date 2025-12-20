@@ -1026,8 +1026,8 @@ function setupSocketEvents() {
     `);
     });
 
-    socket.on("error", (msg) => showToast(msg, "error"));
-    socket.on("success", (msg) => showToast(msg, "success"));
+    socket.on("error", (msg) => { showToast(msg, "error"); resetAllLoadingButtons(); });
+    socket.on("success", (msg) => { showToast(msg, "success"); resetAllLoadingButtons(); });
 }
 
 function requestNotificationPermission() {
