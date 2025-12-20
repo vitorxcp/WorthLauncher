@@ -78,7 +78,7 @@
                 const data = {
                     success: true,
                     items: [
-                        { id: "cape_free_redeworth", name: "Capa Worth", description: "Capa oficial do Client.", image: "./assets/cosmeticos/cape_free_redeworth.png", type: "Capas", rarity: "COMUM", author: "vitorxp" },
+                        { id: "cape_free_redeworth", name: "Capa Worth", description: "Capa gratuita da RedeWorth.", image: "./assets/cosmeticos/cape_free_redeworth.png", type: "Capas", rarity: "COMUM", author: "vitorxp" },
                     ]
                 };
 
@@ -104,7 +104,6 @@
         async function initCosmeticsPage() {
             await fetchCosmetics();
             
-            // Inicializa os listeners do socket aqui para garantir que carreguem
             setupSocketListeners();
 
             const searchInput = document.getElementById('search-cosmetic-input');
@@ -121,38 +120,19 @@
             setupCosmeticObserver();
         }
 
-        // --- SISTEMA DE SOCKET OTIMIZADO ---
-
         function setupSocketListeners() {
-            // Verifica se o socket existe globalmente
             if (typeof socket === 'undefined' || !socket) {
-                // Tenta novamente em 500ms se o socket ainda nao conectou
                 setTimeout(setupSocketListeners, 500);
                 return;
             }
-
-            // Remove listeners antigos para evitar duplicidade
             socket.off("launcher:cosmetic:player:removed_success");
             socket.off("error");
             socket.off("auth_error");
-
-            // LISTENER: SUCESSO AO REMOVER
             socket.on("launcher:cosmetic:player:removed_success", (id) => {
-                ownedCosmeticIds.delete(id); // Remove da memória local
-                resetCosmeticButton(id);     // Atualiza o botão visualmente
-            });
-
-            // LISTENER: ERRO GERAL (Reseta botões travados)
-            socket.on("error", (msg) => {
-                resetAllLoadingButtons();
-            });
-
-            socket.on("auth_error", (msg) => {
-                resetAllLoadingButtons();
+                ownedCosmeticIds.delete(id);
+                resetCosmeticButton(id);
             });
         }
-
-        // ------------------------------------
 
         function renderCosmeticCategories() {
             const container = document.getElementById('cosmetic-filters');
@@ -315,8 +295,6 @@
             }
         }
 
-        // ======================== MODAL LOGIC ========================
-
         function openRemoveCosmeticModal(itemId) {
             pendingRemoveCosmeticId = itemId;
             const modal = document.getElementById('modal-remove-cosmetic');
@@ -346,9 +324,6 @@
             closeRemoveCosmeticModal();
         }
 
-        // ======================== SOCKET LOGIC ========================
-
-        // FUNÇÃO DE SEGURANÇA: Reseta botão específico se der erro ou sucesso
         function resetCosmeticButton(itemId) {
             const btn = document.getElementById(`btn-cosmetic-${itemId}`);
             if (btn) {
@@ -360,7 +335,6 @@
             }
         }
 
-        // FUNÇÃO DE SEGURANÇA GERAL: Reseta TODOS os botões carregando
         function resetAllLoadingButtons() {
             document.querySelectorAll('[data-status="downloading"], [data-status="removing"]').forEach(btn => {
                 const id = btn.id.replace('btn-cosmetic-', '');
@@ -393,7 +367,6 @@
             const btn = document.getElementById("btn-cosmetic-" + type);
             if (btn) setCosmeticButtonState(btn, 'downloading', type);
             
-            // Timeout de segurança (5s)
             setTimeout(() => {
                 const currentBtn = document.getElementById("btn-cosmetic-" + type);
                 if(currentBtn && currentBtn.dataset.status === 'downloading') {
@@ -412,7 +385,6 @@
             }
             setCosmeticButtonState(btn, 'removing', itemId);
             
-            // Timeout de segurança (5s)
             setTimeout(() => {
                 const currentBtn = document.getElementById("btn-cosmetic-" + itemId);
                 if(currentBtn && currentBtn.dataset.status === 'removing') {
