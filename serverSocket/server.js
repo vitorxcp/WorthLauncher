@@ -392,6 +392,8 @@ function updateOnlineCount() {
     const playingData = Object.keys(usersSessionGames).map(playerNick => {
         const userCosmetics = usersDB[playerNick]?.cosmetics || {};
 
+        console.log(userCosmetics);
+
         const activeCosmetics = Object.keys(userCosmetics).filter(id => userCosmetics[id] === true);
 
         return {
@@ -484,9 +486,10 @@ io.on("connection", (socket) => {
         usersDB[nick].cosmetics[cosmeticId] = true;
         saveData('users');
         socket.emit("success", `${itemInfo.name} equipado com sucesso!`);
+        console.log("[Cosmetics] Atualizando jogadores online...");
+        updateOnlineCount();
         socket.emit("launcher:cosmetics:player", true, { name: cosmeticId });
 
-        if (usersSessionGames[nick]) updateOnlineCount();
     });
 
     socket.on("launcher:cosmetic:player:remove", (cosmeticId) => {
@@ -499,22 +502,30 @@ io.on("connection", (socket) => {
             const itemInfo = cosmeticsListDB.find(c => c.id === cosmeticId);
             socket.emit("success", `${itemInfo ? itemInfo.name : cosmeticId} removido.`);
             socket.emit("launcher:cosmetic:player:removed_success", cosmeticId);
-
-            if (usersSessionGames[nick]) updateOnlineCount();
+            updateOnlineCount();
         }
     });
 
     socket.on("player:set:cosmetic", ({ id, state }) => {
+        console.log(`[Cosmetics] Alterando ${id} para ${state} no usuário ${nick}`);
+
+        if (!usersDB[nick]) usersDB[nick] = {};
         if (!usersDB[nick].cosmetics) usersDB[nick].cosmetics = {};
+
+        if (state === true && id.includes("cape")) {
+            Object.keys(usersDB[nick].cosmetics).forEach(key => {
+                if (key.includes("cape") && key !== id) {
+                    usersDB[nick].cosmetics[key] = false;
+                }
+            });
+        }
 
         usersDB[nick].cosmetics[id] = state;
         saveData('users');
-
+        console.log("[Cosmetics] Salvo com sucesso!");
         socket.emit("success", `Cosmético ${state ? 'ativado' : 'desativado'}!`);
-
-        if (usersSessionGames[nick]) {
-            updateOnlineCount();
-        }
+        console.log("[Cosmetics] Atualizando jogadores online...");
+        updateOnlineCount();
     });
 
     const userCosmetics = usersDB[nick].cosmetics || {};
