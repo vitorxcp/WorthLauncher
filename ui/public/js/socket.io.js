@@ -944,10 +944,6 @@ function setupSocketEvents() {
         if (window.lucide) window.lucide.createIcons();
     });
 
-    socket.on("error", (mensagem) => {
-        console.warn("Erro do Servidor:", mensagem);
-    });
-
     socket.on("ticket:receive", (msg) => {
         const myNick = socket.auth?.nick || "";
         if (msg.sender === myNick) return;
@@ -1026,8 +1022,8 @@ function setupSocketEvents() {
     `);
     });
 
-    socket.on("error", (msg) => { showToast(msg, "error"); resetAllLoadingButtons(); });
-    socket.on("success", (msg) => { showToast(msg, "success"); resetAllLoadingButtons(); });
+    socket.on("error", (msg) => { resetAllLoadingButtons(); showToast(msg, "error"); });
+    socket.on("success", (msg) => { resetAllLoadingButtons(); showToast(msg, "success"); });
 }
 
 function requestNotificationPermission() {
