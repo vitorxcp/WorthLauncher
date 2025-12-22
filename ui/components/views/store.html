@@ -79,20 +79,19 @@
                     success: true,
                     items: [
                         { id: "cape_free_redeworth", name: "Capa Worth", description: "Capa gratuita da RedeWorth.", image: "./assets/cosmeticos/cape_free_redeworth.png", type: "Capas", rarity: "COMUM", author: "vitorxp" },
+                        { id: "cape_staff_gerente_1", name: "Capa Worth", description: "Capa gratuita da RedeWorth.", image: "./assets/cosmeticos/cape_free_redeworth.png", type: "Capas", rarity: "COMUM", author: "vitorxp" },
+                        { id: "cape_staff_gerente_2", name: "Capa Worth", description: "Capa gratuita da RedeWorth.", image: "./assets/cosmeticos/cape_free_redeworth.png", type: "Capas", rarity: "COMUM", author: "vitorxp" },
                     ]
                 };
-
                 if (data.success && data.items) {
                     officialCosmetics = data.items.map(item => ({
                         ...item,
                         image: item.image.startsWith('http') ? item.image : (item.image ? `${item.image}` : null)
                     }));
-
                     const apiCats = new Set();
                     officialCosmetics.forEach(i => { if (i.type) apiCats.add(i.type); });
                     cosmeticCategories = ["Todos", "Adquiridos", ...Array.from(apiCats)];
                     cosmeticsList = [...officialCosmetics];
-
                     renderCosmeticCategories();
                     renderCosmetics();
                     return true;
@@ -100,12 +99,9 @@
             } catch (error) { console.error("Erro cosmetics:", error); }
             return false;
         }
-
         async function initCosmeticsPage() {
             await fetchCosmetics();
-            
             setupSocketListeners();
-
             const searchInput = document.getElementById('search-cosmetic-input');
             if (searchInput) {
                 searchInput.addEventListener('input', (e) => {
@@ -119,7 +115,6 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
             setupCosmeticObserver();
         }
-
         function setupSocketListeners() {
             if (typeof socket === 'undefined' || !socket) {
                 setTimeout(setupSocketListeners, 500);
@@ -133,7 +128,6 @@
                 resetCosmeticButton(id);
             });
         }
-
         function renderCosmeticCategories() {
             const container = document.getElementById('cosmetic-filters');
             if (!container) return;
@@ -177,7 +171,6 @@
             if (item.rarity === "Legendary") rarityColor = "bg-yellow-500";
             if (item.rarity === "Epic") rarityColor = "bg-purple-500";
             if (item.rarity === "Rare") rarityColor = "bg-blue-500";
-
             return `
             <div class="group relative bg-black/20 hover:bg-black/40 border border-white/5 hover:border-purple-500/50 rounded-xl transition-all duration-300 overflow-hidden flex flex-col news-card-base animate-card shrink-0 contain-content" 
                  id="cosmetic-card-${item.id}" style="animation-delay: ${index * 30}ms;">
@@ -199,12 +192,10 @@
                 </div>
             </div>`;
         }
-
         function renderCosmetics() {
             const container = document.getElementById('cosmetics-grid');
             const noResults = document.getElementById('no-cosmetics-results');
             if (!container || !noResults) return;
-
             if (cosmeticsList.length === 0 && officialCosmetics.length > 0) cosmeticsList = [...officialCosmetics];
 
             const filtered = cosmeticsList.filter(item => {
@@ -336,6 +327,7 @@
         }
 
         function resetAllLoadingButtons() {
+            console.log("a")
             document.querySelectorAll('[data-status="downloading"], [data-status="removing"]').forEach(btn => {
                 const id = btn.id.replace('btn-cosmetic-', '');
                 resetCosmeticButton(id);
