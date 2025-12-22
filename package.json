@@ -1,7 +1,7 @@
 {
   "name": "worthlauncher",
-  "version": "1.7.3442-alpha",
-  "description": "Launcher Otimizado 1.8.9 com Chat e Auto-Update",
+  "version": "1.7.3443-alpha",
+  "description": "Launcher Otimizado para 1.8.9.",
   "main": "WorthLauncher.js",
   "email": "vitor.xp.1958@gmail.com",
   "scripts": {
