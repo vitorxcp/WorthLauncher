@@ -922,3 +922,49 @@ io.on("connection", (socket) => {
         }
     });
 });
+
+const app2 = express();
+const port2 = 9075;
+
+app2.use(cors());
+app2.disable('x-powered-by');
+app2.disable('etag');
+
+app2.get('/api/intel', async (req, res) => {
+    try {
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 2000);
+        const r = await fetch('http://ip-api.com/json/?fields=status,countryCode,regionName,city,isp,query,as,org', { signal: controller.signal });
+        const d = await r.json();
+        res.json(d);
+    } catch { 
+        res.json({status:'fail', isp:'Rede Local / Host', query:'127.0.0.1', city:'Local', regionName:'Servidor Interno', as:'AS-LOCAL'}); 
+    }
+});
+
+app2.get('/ping', (req, res) => { 
+    res.set('Cache-Control', 'no-store');
+    res.send('pong'); 
+});
+
+app2.post('/upload', (req, res) => {
+    req.on('data', () => {});
+    req.on('end', () => res.send('ok'));
+});
+
+const randomBuffer = Buffer.allocUnsafe(2 * 1024 * 1024);
+app2.get('/download', (req, res) => {
+    const size = (parseInt(req.query.size) || 20) * 1024 * 1024;
+    res.writeHead(200, { 'Content-Type': 'app2lication/octet-stream', 'Content-Length': size, 'Cache-Control': 'no-store' });
+    let sent = 0;
+    const send = () => {
+        while(sent < size) {
+            if(!res.write(randomBuffer)) { res.once('drain', send); return; }
+            sent += randomBuffer.length;
+        }
+        res.end();
+    };
+    send();
+});
+
+app2.listen(port2, () => console.log(`🚀 SpeedTestVX Server ON: http://localhost:${port2}`));
