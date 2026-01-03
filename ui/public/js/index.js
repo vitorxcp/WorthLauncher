@@ -4,6 +4,7 @@ let currentUser = null;
 let userSelect = null;
 let savedAccounts = JSON.parse(localStorage.getItem('worth_accounts')) || [];
 let donwoadversionapp = "";
+let updateModalAc = false;
 
 try {
     const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 900, height: 550, discordRichPresence: true };
@@ -129,10 +130,64 @@ try {
     let logBuffer = [];
     let isProcessingLogs = false;
     let lastScrollTime = 0;
+    let currentLogFilter = 'all';
+
+    function setupLogFilters() {
+        // Mapeamento de botões (IDs que você deve por no HTML)
+        const filters = {
+            'all': document.getElementById('btn-filter-all'),
+            'info': document.getElementById('btn-filter-info'),
+            'warn': document.getElementById('btn-filter-warn'),
+            'error': document.getElementById('btn-filter-error')
+        };
+
+        window.applyLogFilter = (filterType) => {
+            currentLogFilter = filterType;
+            const container = document.getElementById('log-console');
+            if (!container) return;
+
+            Object.keys(filters).forEach(key => {
+                const btn = filters[key];
+                if (!btn) return;
+
+                if (key === filterType) {
+                    btn.classList.add('bg-white/10', 'text-white');
+                    btn.classList.remove('text-zinc-400', 'text-blue-400/70', 'text-yellow-400/70', 'text-red-400/70');
+                } else {
+                    btn.classList.remove('bg-white/10', 'text-white');
+                    if (key === 'info') btn.classList.add('text-blue-400/70');
+                    else if (key === 'warn') btn.classList.add('text-yellow-400/70');
+                    else if (key === 'error') btn.classList.add('text-red-400/70');
+                    else btn.classList.add('text-zinc-400');
+                }
+            });
+
+            const lines = container.children;
+            for (let line of lines) {
+                const type = line.dataset.type;
+
+                let show = false;
+                if (filterType === 'all') show = true;
+                else if (filterType === filterType) show = (type === filterType);
+
+                if (filterType === 'error' && (type === 'fatal' || type === 'error')) show = true;
+
+                if (show) line.classList.remove('hidden');
+                else line.classList.add('hidden');
+            }
+
+            container.scrollTop = container.scrollHeight;
+        };
+
+        if (filters.all) filters.all.onclick = () => window.applyLogFilter('all');
+        if (filters.info) filters.info.onclick = () => window.applyLogFilter('info');
+        if (filters.warn) filters.warn.onclick = () => window.applyLogFilter('warn');
+        if (filters.error) filters.error.onclick = () => window.applyLogFilter('error');
+    }
 
     function addLogToUI(msg, forceType = null) {
         if (!logConsole || !msg) return;
-        
+
         logBuffer.push({ msg, forceType });
 
         if (!isProcessingLogs) {
@@ -153,19 +208,32 @@ try {
         const fragment = document.createDocumentFragment();
         const now = new Date();
         const timeString = now.toLocaleTimeString('pt-BR', { hour12: false });
+        const activeFilter = (typeof currentLogFilter !== 'undefined') ? currentLogFilter : 'all';
 
         logsToRender.forEach(({ msg, forceType }) => {
             const rawText = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
-            
             const hasColors = rawText.includes('&') || rawText.includes('§');
             const cleanText = hasColors ? rawText.replace(MINECRAFT_COLOR_REGEX, '') : rawText;
-            
             const type = forceType || detectLogType(cleanText);
             const style = LOG_STYLES[type] || LOG_STYLES['info'];
-            
             const line = document.createElement("div");
+
+            line.dataset.type = type;
+
+            if (activeFilter !== 'all') {
+                let shouldShow = (type === activeFilter);
+
+                if (activeFilter === 'error' && (type === 'fatal' || type === 'error')) {
+                    shouldShow = true;
+                }
+
+                if (!shouldShow) {
+                    line.classList.add('hidden');
+                }
+            }
+
             line.className = `flex gap-2 px-2 py-0.5 rounded ${style.bg} transition-colors text-xs font-mono border-l-2 border-transparent hover:border-white/20 items-start group contain-content`;
-            
+
             const processedMessage = hasColors && typeof parseMinecraftText === 'function' ? parseMinecraftText(rawText) : rawText;
             const isStacktrace = type === 'trace' && cleanText.trim().startsWith('at ');
             const messageClass = isStacktrace ? 'text-[11px] opacity-75' : 'text-xs';
@@ -244,25 +312,69 @@ try {
 
     window.copyConsoleLogs = () => {
         if (!logConsole) return;
-        const text = logConsole.innerText;
-        navigator.clipboard.writeText(text).then(() => {
+
+        const visibleLogs = Array.from(logConsole.children)
+            .filter(line => !line.classList.contains('hidden'))
+            .map(line => line.innerText)
+            .join('\n');
+
+        if (!visibleLogs) {
+            showGenericToast("Nenhum log visível para copiar.");
+            return;
+        }
+
+        navigator.clipboard.writeText(visibleLogs).then(() => {
             showGenericToast("Logs copiados para a área de transferência!");
+
+            const btn = document.querySelector('button[onclick="copyConsoleLogs()"] i');
+            if (btn) {
+                const originalIcon = btn.getAttribute('data-lucide');
+                btn.setAttribute('data-lucide', 'check');
+                btn.classList.add('text-green-400');
+                lucide.createIcons();
+
+                setTimeout(() => {
+                    btn.setAttribute('data-lucide', originalIcon || 'copy');
+                    btn.classList.remove('text-green-400');
+                    lucide.createIcons();
+                }, 2000);
+            }
         }).catch(err => {
-            console.error("Falha ao copiar logs");
+            console.error("Falha ao copiar logs", err);
+            showGenericToast("Erro ao copiar logs.");
         });
     };
-
-    function showGenericToast(msg) {
+    function showGenericToast(msg, type = 'info') {
         let t = document.getElementById('toast');
+
         if (!t) {
             t = document.createElement('div');
             t.id = 'toast';
-            t.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full text-xs border border-white/10 shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none z-50";
+            t.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#0a0a0a]/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-bold border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 opacity-0 translate-y-8 pointer-events-none z-[99999] flex items-center gap-2 transform will-change-transform";
             document.body.appendChild(t);
         }
-        t.innerText = msg;
-        t.style.opacity = '1';
-        setTimeout(() => t.style.opacity = '0', 2000);
+
+        if (t.timeoutId) clearTimeout(t.timeoutId);
+
+        let iconColor = "text-amber-400";
+        let iconName = "info";
+
+        if (type === 'success') { iconColor = "text-green-400"; iconName = "check-circle"; }
+        if (type === 'error') { iconColor = "text-red-400"; iconName = "alert-circle"; }
+
+        t.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4 ${iconColor}"></i> <span>${msg}</span>`;
+
+        if (window.lucide) window.lucide.createIcons();
+
+        requestAnimationFrame(() => {
+            t.classList.remove('opacity-0', 'translate-y-8');
+            t.classList.add('opacity-100', 'translate-y-0');
+        });
+
+        t.timeoutId = setTimeout(() => {
+            t.classList.remove('opacity-100', 'translate-y-0');
+            t.classList.add('opacity-0', 'translate-y-8');
+        }, 3000);
     }
 
     if (isFirstRun) {
@@ -438,13 +550,21 @@ try {
     }
 
     document.getElementById('btn-toggle-accounts').addEventListener('click', () => {
+        const accountMenu = document.getElementById('account-menu');
+        accountMenu.setAttribute('data-open', 'true');
         const isActive = accountMenu.classList.contains('dropdown-active');
         toggleAccountMenu(!isActive);
     });
 
-    document.getElementById('btn-close-accounts').addEventListener('click', () => toggleAccountMenu(false));
+    document.getElementById('btn-close-accounts').addEventListener('click', () => {
+        const accountMenu = document.getElementById('account-menu');
+        accountMenu.setAttribute('data-open', 'false');
+        toggleAccountMenu(false)
+    });
 
     document.getElementById('btn-off-login').addEventListener('click', () => {
+        const accountMenu = document.getElementById('account-menu');
+        accountMenu.setAttribute('data-open', 'false');
         toggleAccountMenu(false);
         toggleModal(true);
     });
@@ -652,6 +772,7 @@ try {
     if (lastUser) selectAccount(lastUser, "a");
 
     window.addEventListener("load", () => {
+        setupLogFilters();
 
         setTimeout(() => document.getElementById("view-home").classList.add('fade-enter-active'), 10);
 
@@ -828,6 +949,7 @@ try {
         verificarAtualizarVersao();
 
         document.getElementById("f43fd").onclick = () => {
+            updateModalAc = false;
             showUpdateModal(donwoadversionapp);
         }
 
@@ -841,6 +963,7 @@ try {
     const versionTag = document.getElementById('update-version-tag');
 
     function showUpdateModal(versionName) {
+        if (updateModalAc) return;
         if (versionTag) versionTag.innerText = versionName;
 
         modalUpdate.classList.remove('hidden');
@@ -865,6 +988,7 @@ try {
     }
 
     document.getElementById('btn-update-later').addEventListener('click', () => {
+        updateModalAc = true;
         closeUpdateModal();
     });
 
