@@ -1,17 +1,21 @@
-<section id="view-home" class="flex-1 flex gap-8 fade-enter fade-enter">
-    <div class="flex-1 flex flex-col h-full">
-        <div class="mb-auto">
-            <div class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold mb-6"
-                id="status-pingserver">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span
-                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500"></span>
-                </span>
-                Pingando...
+<section id="view-home" class="flex-1 flex gap-8 fade-enter overflow-hidden relative p-4">
+    <div class="flex-1 flex flex-col h-full relative z-10">
+        <div class="mb-auto flex flex-col h-full">
+            
+            <div>
+                <div id="status-pingserver" 
+                    class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs font-bold mb-6 hover:bg-yellow-500/20 transition-colors cursor-help backdrop-blur-md"
+                    role="status">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"></span>
+                    </span>
+                    <span class="tracking-wide">PINGANDO...</span>
+                </div>
             </div>
-            <img src="./assets/logo_launcher.png" alt="WorthClient"
-                class="drop-shadow-2xl object-contain select-none mt-[-80px] mb-[-90px] z-[-1] relative" />
+
+            <img src="./assets/logo_launcher.png" alt="WorthClient Logo"
+                class="drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] object-contain select-none pointer-events-none mt-[-80px] mb-[-90px] z-[-1] relative opacity-90" />
 
             <div class="mt-8 mb-4">
                 <div class="flex items-center justify-between mb-4 px-1">
@@ -23,7 +27,7 @@
                     </h2>
                     <button id="btn-see-all"
                         class="text-[11px] font-bold text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 group border border-transparent hover:border-white/10">
-                        VER ARQUIVO
+                        VER TUDO
                         <i data-lucide="arrow-right" class="w-3 h-3 group-hover:translate-x-1 transition-transform"></i>
                     </button>
                 </div>
@@ -36,75 +40,89 @@
                 </div>
             </div>
         </div>
-
     </div>
 
-    <div class="w-80 flex flex-col gap-4 relative">
-        <div
-            class="glass p-6 rounded-3xl flex flex-col items-center text-center shadow-2xl relative overflow-hidden group border border-white/10">
+    <div class="w-80 flex flex-col gap-4 relative shrink-0">
+        
+        <div class="glass p-1 rounded-[2rem] shadow-2xl relative overflow-hidden group border border-white/10 bg-[#121212]/40 backdrop-blur-xl transition-all duration-300 hover:border-white/20">
+            
+            <div class="p-6 flex flex-col items-center text-center relative z-10">
+                <div class="w-full flex items-center justify-end absolute top-4 right-4 z-20">
+                    <button id="btn-toggle-accounts" aria-label="Gerenciar Contas" title-app="Selecionar Conta"
+                        class="text-gray-400 hover:text-white p-2.5 rounded-full hover:bg-white/10 active:bg-white/20 active:scale-95 transition-all duration-200 no-drag">
+                        <i data-lucide="settings-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
 
-            <div class="w-full flex items-center justify-end absolute top-4 right-4 z-20">
-                <button id="btn-toggle-accounts" title-app="Selecionar Conta"
-                    class="text-gray-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition no-drag">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                </button>
-            </div>
+                <div class="absolute inset-0 bg-gradient-to-b from-yellow-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
 
-            <div
-                class="absolute inset-0 bg-gradient-to-b from-yellow-500/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500">
-            </div>
+                <div class="relative w-28 h-28 mb-5 mt-2 group/avatar">
+                    <div class="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full opacity-0 group-hover/avatar:opacity-100 transition duration-500"></div>
+                    <img src="https://mc-heads.net/avatar/Steve" id="user-avatar"
+                        class="w-full h-full rounded-3xl shadow-2xl border-2 border-white/10 object-cover relative z-10 transform group-hover/avatar:scale-[1.02] transition duration-300" />
+                    
+                    <div id="status-indicator"
+                        class="absolute -bottom-1 -right-1 bg-red-500 w-7 h-7 rounded-full border-[5px] border-[#18181b] z-20 shadow-lg">
+                    </div>
+                </div>
 
-            <div class="relative w-24 h-24 mb-4 mt-2">
-                <img src="https://mc-heads.net/avatar/Steve" id="user-avatar"
-                    class="w-full h-full rounded-2xl shadow-2xl border border-white/10 object-cover relative z-10" />
-                <div id="status-indicator"
-                    class="absolute -bottom-1 -right-1 bg-red-500 w-6 h-6 rounded-full border-4 border-[#121212] z-20">
+                <h2 id="user-display" class="text-2xl font-black text-white tracking-tight drop-shadow-lg truncate w-full px-2">
+                    Convidado
+                </h2>
+                
+                <div class="flex items-center justify-center gap-2 mb-8 mt-1">
+                    <span id="user-type"
+                        class="text-[10px] font-bold bg-white/5 border border-white/5 px-2.5 py-1 rounded-md text-gray-400 uppercase tracking-widest hover:text-white transition-colors cursor-default">
+                        OFFLINE
+                    </span>
+                </div>
+
+                <div class="w-full relative mt-auto">
+                    <button id="btn-play"
+                        class="no-drag w-full h-16 btn-primary rounded-2xl font-black text-2xl tracking-[0.2em] shadow-lg shadow-yellow-900/20 btn-play-glow flex items-center justify-center gap-3 group-disabled:grayscale group-disabled:opacity-70 group-disabled:cursor-not-allowed cursor-pointer transform active:scale-[0.98] transition-all duration-200 bg-gradient-to-r from-yellow-600 to-yellow-500 hover:to-yellow-400 text-white border border-yellow-400/20">
+                        <i data-lucide="play" class="fill-current w-7 h-7 drop-shadow-md"></i>
+                        <span class="drop-shadow-md">JOGAR</span>
+                    </button>
+
+                    <div id="progress-container" class="mt-5 opacity-0 transition-opacity duration-300 select-none">
+                        <div class="flex justify-between text-[10px] text-gray-400 mb-1.5 font-bold uppercase tracking-wider px-1">
+                            <span id="progress-text" class="animate-pulse">Iniciando...</span>
+                            <span id="progress-percent" class="text-yellow-500">0%</span>
+                        </div>
+                        <div class="h-2.5 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-yellow-700 via-yellow-500 to-yellow-400 w-0 shadow-[0_0_10px_rgba(234,179,8,0.5)] transition-all duration-200 ease-out"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <h2 id="user-display" class="text-2xl font-black text-white tracking-tight">Convidado</h2>
-            <div class="flex items-center gap-2 mb-6">
-                <span id="user-type"
-                    class="text-[10px] font-bold bg-white/10 px-2 py-0.5 rounded text-gray-400 uppercase tracking-wider">OFFLINE</span>
-            </div>
-
-            <div class="w-full relative">
-                <button id="btn-play"
-                    class="no-drag w-full h-16 btn-primary rounded-xl font-black text-2xl tracking-widest shadow-xl btn-play-glow flex items-center justify-center gap-3 group-disabled:grayscale cursor-pointer transform transition">
-                    <i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR
-                </button>
-
-                <div id="progress-container" class="mt-4 opacity-0 transition-opacity duration-300">
-                    <div class="flex justify-between text-[10px] text-gray-400 mb-1 font-bold uppercase tracking-wider">
-                        <span id="progress-text">Iniciando...</span>
-                        <span id="progress-percent">0%</span>
-                    </div>
-                    <div class="h-2 w-full bg-[#1a1a1a] rounded-full overflow-hidden border border-white/5">
-                        <div id="progress-bar" class="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 w-0"></div>
-                    </div>
+            <div id="account-menu"
+                class="absolute inset-0 glass-dark rounded-[2rem] z-30 flex flex-col p-5 shadow-2xl border border-white/10 bg-[#121212]/95 backdrop-blur-xl transition-all duration-300 transform translate-y-full data-[open=true]:translate-y-0 opacity-0 data-[open=true]:opacity-100 pointer-events-none data-[open=true]:pointer-events-auto">
+                
+                <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="users" class="w-3 h-3"></i> Gerenciar Contas
+                    </span>
+                    <button id="btn-close-accounts" aria-label="Fechar" class="text-gray-400 hover:text-red-400 active:scale-90 transition-all no-drag p-1 rounded-md hover:bg-white/5">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
                 </div>
-            </div>
-        </div>
 
-        <div id="account-menu"
-            class="absolute top-0 left-0 w-full h-full glass-dark rounded-3xl z-30 dropdown-enter flex-col p-5 shadow-2xl border border-white/10">
-            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Contas</span>
-                <button id="btn-close-accounts" class="text-white hover:text-red-400 no-drag"><i data-lucide="x"
-                        class="w-5 h-5"></i></button>
-            </div>
+                <div id="accounts-list" class="flex-1 overflow-y-auto space-y-2 pr-1 mb-4 custom-scrollbar">
+                    </div>
 
-            <div id="accounts-list" class="flex-1 overflow-y-auto space-y-2 pr-1 mb-4"></div>
-
-            <div class="grid grid-cols-2 gap-3 mt-auto">
-                <button title-app="Login via Microsoft" id="btn-ms-login"
-                    class="no-drag bg-[#1a1a1a] hover:bg-[#252525] text-white py-3 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border border-white/5">
-                    <i data-lucide="gamepad-2" class="w-4 h-4 text-green-500"></i> Microsoft
-                </button>
-                <button title-app="Login conta Pirata" id="btn-off-login"
-                    class="no-drag bg-[#1a1a1a] hover:bg-[#252525] text-white py-3 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border border-white/5">
-                    <i data-lucide="user" class="w-4 h-4 text-gray-500"></i> Offline
-                </button>
+                <div class="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-white/5">
+                    <button title-app="Login via Microsoft" id="btn-ms-login"
+                        class="no-drag bg-[#1a1a1a] hover:bg-[#252525] active:scale-[0.98] text-white py-3.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-2 border border-white/5 hover:border-green-500/30 group/ms">
+                        <i data-lucide="gamepad-2" class="w-5 h-5 text-green-500 group-hover/ms:scale-110 transition-transform"></i> 
+                        Microsoft
+                    </button>
+                    <button title-app="Login conta Pirata" id="btn-off-login"
+                        class="no-drag bg-[#1a1a1a] hover:bg-[#252525] active:scale-[0.98] text-white py-3.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-2 border border-white/5 hover:border-gray-500/30 group/off">
+                        <i data-lucide="user" class="w-5 h-5 text-gray-500 group-hover/off:scale-110 transition-transform"></i> 
+                        Offline
+                    </button>
+                </div>
             </div>
         </div>
     </div>
