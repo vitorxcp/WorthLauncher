@@ -1,36 +1,84 @@
-<aside class="w-20 z-10 flex flex-col items-center py-6 gap-2 border-r border-white/5 bg-black/40">
+<style>
+    .tab-btn {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent;
+        border: 1px solid transparent;
+    }
+    
+    .tab-btn:focus, .tab-btn:active {
+        outline: none !important;
+        background-color: transparent;
+    }
+
+    .tab-btn.active {
+        background: linear-gradient(145deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05));
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        box-shadow: 0 0 20px rgba(251, 191, 36, 0.15), inset 0 0 10px rgba(251, 191, 36, 0.05);
+    }
+
+    .tab-btn.active i {
+        transform: scale(1.1);
+        filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.6));
+    }
+
+    .tab-btn:hover:not(.active) {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    @keyframes wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
+    @keyframes swing { 0% { transform: rotate(0deg); } 25% { transform: rotate(15deg); } 50% { transform: rotate(-10deg); } 75% { transform: rotate(5deg); } 100% { transform: rotate(0deg); } }
+    @keyframes pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+    .group:hover .anim-wiggle { animation: wiggle 0.4s ease-in-out; }
+    .group:hover .anim-swing { transform-origin: top center; animation: swing 0.6s ease-in-out; }
+    .group:hover .anim-pop { animation: pop 0.3s ease-in-out; }
+    .group:hover .anim-float { animation: float-up 0.4s ease-in-out; }
+</style>
+
+<aside class="w-20 flex flex-col items-center py-6 gap-3 border-r border-white/5 bg-[#080808]/90 backdrop-blur-xl h-full select-none">
+    
     <button onclick="switchTab('home')" title-app="Menu Principal" id="tab-home"
-        class="tab-btn active w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
-        <i data-lucide="gamepad-2" class="w-6 h-6"></i>
-        <span class="text-[9px] font-bold">JOGAR</span>
+        class="tab-btn active relative w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-zinc-100 group no-drag">
+        <i data-lucide="gamepad-2" class="w-6 h-6 anim-wiggle transition-colors duration-300"></i>
+        <span class="text-[9px] font-bold tracking-wider opacity-70 group-hover:opacity-100 transition-opacity">JOGAR</span>
     </button>
-    <button onclick="switchTab('store')" title-app="Cosméticos" id="tab-store"
-        class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
-        <i data-lucide="shirt" class="w-6 h-6"></i>
-        <span class="text-[9px] font-bold">COSMÉTICOS</span>
+
+    <button onclick="switchTab('store')" title-app="Loja de Cosméticos" id="tab-store"
+        class="tab-btn relative w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-zinc-100 group no-drag">
+        <i data-lucide="shirt" class="w-6 h-6 anim-swing transition-colors duration-300"></i>
+        <span class="text-[9px] font-bold tracking-wider opacity-70 group-hover:opacity-100 transition-opacity">SKINS</span>
     </button>
-    <button onclick="switchTab('social')" title-app="Amigos" id="tab-social"
-        class="relative tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
-        <i data-lucide="users" class="w-6 h-6"></i>
-        <span class="text-[9px] font-bold">AMIGOS</span>
+
+    <button onclick="switchTab('social')" title-app="Lista de Amigos" id="tab-social"
+        class="tab-btn relative w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-zinc-100 group no-drag">
+        <i data-lucide="users" class="w-6 h-6 anim-pop transition-colors duration-300"></i>
+        <span class="text-[9px] font-bold tracking-wider opacity-70 group-hover:opacity-100 transition-opacity">SOCIAL</span>
+        
         <div id="social-ping"
-            class="hidden-force absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#0a0a0a] animate-pulse pointer-events-none">
+            class="hidden-force absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)] border border-[#0a0a0a] animate-pulse pointer-events-none">
         </div>
     </button>
-    <button onclick="switchTab('resoucepacks')" title-app="Texturas Recomendadas" id="tab-resoucepacks"
-        class="relative tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
-        <i data-lucide="layers-plus" class="w-6 h-6"></i>
-        <span class="text-[9px] font-bold">TEXTURAS</span>
+
+    <button onclick="switchTab('resoucepacks')" title-app="Gerenciar Texturas" id="tab-resoucepacks"
+        class="tab-btn relative w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-zinc-100 group no-drag">
+        <i data-lucide="layers" class="w-6 h-6 anim-float transition-colors duration-300"></i>
+        <span class="text-[9px] font-bold tracking-wider opacity-70 group-hover:opacity-100 transition-opacity">PACKS</span>
     </button>
+
+    <div class="flex-1 w-[1px] bg-gradient-to-b from-transparent via-[#493a0f] to-transparent my-2"></div>
+
     <button onclick="switchTab('console')" title-app="Logs do Sistema" id="tab-console"
-        class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag transition-all hover:bg-yellow-500/10 hover:text-yellow-500">
-        <i data-lucide="terminal-square" class="w-6 h-6"></i>
-        <span class="text-[9px] font-bold">CONSOLE</span>
+        class="tab-btn relative w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 text-zinc-600 hover:text-emerald-400 hover:bg-emerald-500/10 group no-drag">
+        <i data-lucide="terminal-square" class="w-6 h-6 transition-all duration-300 group-hover:drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]"></i>
+        <span class="text-[9px] font-bold tracking-wider opacity-70 group-hover:opacity-100 transition-opacity">LOGS</span>
     </button>
-    <div class="flex-1"></div>
-    <button onclick="switchTab('settings')" title-app="Configurações" id="tab-settings"
-        class="tab-btn w-14 h-14 rounded-xl flex flex-col items-center justify-center gap-1 text-gray-400 group no-drag">
-        <i data-lucide="settings" class="w-6 h-6"></i>
-        <span class="text-[9px] font-bold">OPÇÕES</span>
+
+    <button onclick="switchTab('settings')" title-app="Configurações do Launcher" id="tab-settings"
+        class="tab-btn relative w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 text-zinc-500 hover:text-zinc-100 group no-drag mb-2">
+        <i data-lucide="settings" class="w-6 h-6 transition-transform duration-500 ease-out group-hover:rotate-90"></i>
+        <span class="text-[9px] font-bold tracking-wider opacity-70 group-hover:opacity-100 transition-opacity">OPÇÕES</span>
     </button>
 </aside>
