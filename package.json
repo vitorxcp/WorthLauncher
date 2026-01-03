@@ -98,6 +98,7 @@
       "preload.js",
       "package.json",
       "build/**/*",
+      "extra_files/**",
       "ui/**/*",
       "plugins/**/*"
     ],
