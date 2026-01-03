@@ -342,10 +342,10 @@ function createWindow() {
 
 const createSplashWindow = () => {
     splashWindow = new BrowserWindow({
-        width: 350,
-        height: 450,
+        width: 360,
+        height: 460,
         frame: false,
-        backgroundColor: '#00000000',
+        transparent: true,
         icon: path.join(__dirname, 'ui/public/assets/icon.png'),
         alwaysOnTop: false,
         resizable: false,
@@ -356,6 +356,9 @@ const createSplashWindow = () => {
         },
     });
     splashWindow.loadFile('ui/splash.html');
+    splashWindow.on('closed', () => {
+        splashWindow = null;
+    });
     splashWindow.setTitle("WorthLauncher");
 };
 
@@ -1040,9 +1043,12 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 });
 
 ipcMain.on("firstUpdate", (event, data) => {
-    createTray();
     createWindow();
-    splashWindow.close();
+    createTray();
+    
+    if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.close();
+    }
 })
 
 ipcMain.on("updateVersionApp", async (event, data) => {
@@ -1134,6 +1140,7 @@ async function downloadFile2(url, dest, sendLog) {
             method: 'GET',
             url: url,
             responseType: 'stream',
+            timeout: 30000,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
@@ -1355,3 +1362,16 @@ async function syncApiTextures() {
         console.error("[API] Erro ao sincronizar texturas:", error.message);
     }
 }
+
+process.on('uncaughtException', (error) => {
+    console.error(error);
+    if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.webContents.send('app:error-notification', "Erro Crítico: " + error.message);
+    }
+});
+
+autoUpdater.on('error', (err) => {
+    if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.webContents.send('app:error-notification', "Erro no Update: " + err.message);
+    }
+});

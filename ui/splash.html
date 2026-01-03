@@ -1,322 +1,378 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="titleAPP">WorthLauncher</title>
+    <title>WorthLauncher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap');
 
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            font-family: 'League Spartan', sans-serif;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'League Spartan', sans-serif; user-select: none; -webkit-user-drag: none; }
+        
         body {
             background-color: transparent;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            height: 100vh; width: 100vw;
+            display: flex; justify-content: center; align-items: center;
             overflow: hidden;
         }
 
-        .splash-wrapper {
+        .glass-panel {
             position: relative;
-            width: 350px;
-            height: 450px;
-            background: #080808;
+            width: 360px; height: 460px;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid rgba(251, 191, 36, 0.15);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             -webkit-app-region: drag;
-            border-radius: 12px;
         }
 
-        .splash-wrapper::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border: 1px solid rgba(251, 191, 36, 0.1);
-            pointer-events: none;
-            z-index: 50;
-            border-radius: 12px;
+        .grid-bg {
+            position: absolute; inset: -50%;
+            background-image: 
+                linear-gradient(rgba(251, 191, 36, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(251, 191, 36, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: moveGrid 20s linear infinite;
+            z-index: 0;
+            mask-image: radial-gradient(circle at center, black 30%, transparent 70%);
         }
 
-        .bg-visuals {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
+        @keyframes moveGrid {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(30px) rotate(2deg); }
         }
 
-        .ambient-glow {
-            position: absolute;
-            top: -10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            height: 50%;
-            background: radial-gradient(circle, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
-            filter: blur(40px);
+        .logo-container {
+            position: relative; width: 100px; height: 100px;
+            margin-bottom: 15px; z-index: 2; transition: all 0.3s ease;
         }
-
-        .grid-hud {
-            position: absolute;
-            inset: 0;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            background-size: 20px 20px;
-            mask-image: radial-gradient(circle at center, black, transparent 80%);
-        }
-
-        .logo-box {
-            position: relative;
-            width: 110px; 
-            height: 110px;
-            z-index: 10;
-            margin-bottom: 20px;
-        }
-
-        .logo-glow {
-            position: absolute;
-            inset: 0;
-            background: #fbbf24;
-            filter: blur(35px);
-            opacity: 0.12;
-            border-radius: 50%;
+        
+        .glass-panel.error-mode .logo-container {
+            width: 60px; height: 60px; margin-bottom: 10px;
         }
 
         .logo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));
-            animation: float 4s ease-in-out infinite;
+            width: 100%; height: 100%; object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.2));
+            animation: float 5s ease-in-out infinite;
+        }
+
+        .logo-glow {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140%; height: 140%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.15), transparent 70%);
+            filter: blur(20px); z-index: -1;
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        .orbital-loader {
-            position: relative;
-            width: 28px;
-            height: 28px;
-        }
-
-        .orbital-loader div {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 2px solid transparent;
-            border-top-color: #fbbf24;
-            border-radius: 50%;
-            animation: orbit 1s linear infinite;
-        }
-
-        @keyframes orbit {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .loader-track {
-            width: 180px;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.03);
+        .progress-container {
+            width: 220px; height: 4px;
+            background: rgba(255,255,255,0.05);
             border-radius: 10px;
             overflow: hidden;
+            position: relative; margin-top: 20px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
 
-        .loader-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f59e0b, #fbbf24);
-            width: 0%;
-            transition: width 0.4s ease;
+        .progress-bar {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #d97706, #fbbf24, #fcd34d);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.6);
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
         }
 
-        .status-text {
-            color: rgba(255, 255, 255, 0.4);
+        .fade-element { transition: opacity 0.3s ease, transform 0.3s ease; opacity: 1; }
+        .fade-out { opacity: 0; transform: translateY(5px); pointer-events: none; position: absolute; }
+        
+        .loader-spin {
+            border: 2px solid rgba(251, 191, 36, 0.1);
+            border-left-color: #fbbf24;
+            border-radius: 50%; width: 24px; height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .error-box {
+            background: rgba(255, 50, 50, 0.05);
+            border: 1px solid rgba(255, 50, 50, 0.2);
+            border-radius: 8px;
+            width: 90%;
+            padding: 10px;
+            -webkit-app-region: no-drag;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
             font-size: 9px;
-            font-weight: 800;
-            letter-spacing: 0.2em;
+            color: #fca5a5;
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 4px;
+            height: 80px;
+            -webkit-app-region: no-drag;
+            overflow-y: auto;
+            cursor: text;
+            word-break: break-all;
+            user-select: text; 
+            -webkit-user-drag: auto;
+        }
+
+        .code-block::-webkit-scrollbar { width: 4px; }
+        .code-block::-webkit-scrollbar-thumb { background: #7f1d1d; border-radius: 4px; }
+
+        .btn-action {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            font-size: 10px; font-weight: 700;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
             text-transform: uppercase;
-            margin-top: 15px;
-            height: 14px;
+            -webkit-app-region: no-drag;
+            letter-spacing: 1px;
         }
+        .btn-action:hover { background: rgba(255,255,255,0.1); border-color: white; }
+        
+        .btn-discord { background: #5865F2; border-color: #5865F2; }
+        .btn-discord:hover { background: #4752C4; }
 
-        .version-badge {
-            background: rgba(255,255,255,0.03);
-            padding: 3px 10px;
-            border-radius: 100px;
-            border: 1px solid rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.15);
-            font-size: 8px;
-            font-weight: 700;
-            position: absolute;
-            bottom: 25px;
-        }
-
-        .hidden { display: none !important; }
     </style>
 </head>
-
 <body>
 
-    <div class="splash-wrapper">
-        <div class="bg-visuals">
-            <div class="ambient-glow"></div>
-            <div class="grid-hud"></div>
-        </div>
+    <div class="glass-panel" id="main-panel">
+        <div class="grid-bg"></div>
 
-        <div class="logo-box">
+        <div class="logo-container">
             <div class="logo-glow"></div>
-            <img src="./public/assets/icon.png" class="logo-img">
+            <img src="./public/assets/icon.png" class="logo-img" alt="Logo">
         </div>
 
-        <div class="text-center z-10">
-            <h1 class="text-white text-xl font-black tracking-[0.3em] mb-1">WORTHLAUNCHER</h1>
-            <div id="subtitle" class="status-text">CARREGANDO...</div>
-        </div>
-
-        <div class="mt-8 flex flex-col items-center min-h-[50px] z-10">
+        <div class="z-10 text-center flex flex-col items-center w-full">
+            <h1 class="text-white text-xl font-black tracking-[0.25em] drop-shadow-lg">
+                WORTH<span class="text-amber-400">LAUNCHER</span>
+            </h1>
             
-            <div id="loader-spinner" class="orbital-loader">
-                <div></div>
-            </div>
-
-            <div id="loader-bar-container" class="hidden flex flex-col items-center w-full">
-                <div class="loader-track">
-                    <div id="loader-fill" class="loader-fill"></div>
-                </div>
-                <div class="flex justify-between w-[180px] mt-2 px-1 text-[8px] font-bold font-mono text-zinc-600">
-                    <span id="progress-text" class="text-amber-500/80">0%</span>
-                    <span id="size-text"></span>
+            <div class="h-6 flex items-center justify-center mt-1 w-full">
+                <div id="status-text" class="text-zinc-400 text-[10px] font-bold tracking-[0.2em] uppercase fade-element">
+                    INICIANDO SISTEMAS...
                 </div>
             </div>
+        </div>
 
-            <div id="loader-success" class="hidden text-amber-400">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+        <div class="mt-4 flex flex-col items-center min-h-[60px] z-10 w-full justify-center relative px-6">
+            
+            <div id="spinner-container" class="absolute inset-0 flex items-center justify-center fade-element">
+                <div class="loader-spin"></div>
+            </div>
+
+            <div id="bar-container" class="fade-element fade-out absolute inset-0 flex flex-col items-center justify-center w-full">
+                <div class="progress-container">
+                    <div id="progress-fill" class="progress-bar"></div>
+                </div>
+                <div class="flex justify-between w-[220px] mt-2 px-1 text-[9px] font-mono font-bold text-zinc-500">
+                    <span id="progress-percent" class="text-amber-400">0%</span>
+                    <span id="progress-detail">CALCULANDO...</span>
+                </div>
+            </div>
+
+            <div id="success-icon" class="fade-element fade-out absolute inset-0 flex items-center justify-center text-amber-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
+
+            <div id="error-container" class="fade-element fade-out w-full flex flex-col items-center">
+                <div class="error-box">
+                    <div class="flex items-center gap-2 text-red-400 border-b border-red-500/20 pb-2 mb-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Falha Crítica</span>
+                    </div>
+                    
+                    <div id="error-msg" class="code-block">
+                        Erro desconhecido.
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <button id="btn-copy" class="btn-action hover:text-amber-400">
+                            Copiar Erro
+                        </button>
+                        <button id="btn-retry" class="btn-action">
+                            Reiniciar
+                        </button>
+                    </div>
+                    <button id="btn-discord" class="btn-action btn-discord w-full flex items-center justify-center gap-2">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037 13.48 13.48 0 0 0-.54 1.11 18.07 18.07 0 0 0-5.626 0 13.48 13.48 0 0 0-.54-1.11.074.074 0 0 0-.079-.037A19.797 19.797 0 0 0 3.673 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.007-.127 9.752 9.752 0 0 0 .72-.574.07.07 0 0 1 .077-.01 17.275 17.275 0 0 0 11.234 0 .07.07 0 0 1 .078.01c.24.19.49.39.75.574a.077.077 0 0 1-.007.127 13.1 13.1 0 0 1-1.872.892.076.076 0 0 0-.04.106c.36.698.772 1.362 1.225 1.994a.076.076 0 0 0 .084.028 19.897 19.897 0 0 0 5.994-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                        Suporte Discord
+                    </button>
+                </div>
+            </div>
+
         </div>
 
-        <div class="version-badge">
-            <span id="app-version">BUILD-LOADING</span>
+        <div class="absolute bottom-4 z-10">
+            <div class="bg-white/5 border border-white/5 px-3 py-1 rounded-full backdrop-blur-sm">
+                <span id="app-version" class="text-[9px] font-bold text-white/20 tracking-wider">BUILD-LOADING</span>
+            </div>
         </div>
     </div>
 
     <script>
-        const { ipcRenderer } = require('electron');
+        const { ipcRenderer, shell } = require('electron');
 
-        const elSubtitle = document.getElementById('subtitle');
-        const elSpinner = document.getElementById('loader-spinner');
-        const elBarContainer = document.getElementById('loader-bar-container');
-        const elBarFill = document.getElementById('loader-fill');
-        const elSuccess = document.getElementById('loader-success');
-        const elProgressText = document.getElementById('progress-text');
-        const elSizeText = document.getElementById('size-text');
+        const DISCORD_URL = "https://discord.gg/SEU_LINK_AQUI"; 
 
-        const TEXTS = {
-            check: "VERIFICANDO ATUALIZAÇÕES",
-            pending: "NOVA VERSÃO ENCONTRADA",
-            downloading: "BAIXANDO ARQUIVOS",
-            extracting: "INSTALANDO ATUALIZAÇÃO",
-            success: "TUDO PRONTO",
-            starting: "ABRINDO LAUNCHER",
-            noupdate: "AMBIENTE SEGURO"
+        const els = {
+            panel: document.getElementById('main-panel'),
+            status: document.getElementById('status-text'),
+            spinner: document.getElementById('spinner-container'),
+            barCtx: document.getElementById('bar-container'),
+            fill: document.getElementById('progress-fill'),
+            percent: document.getElementById('progress-percent'),
+            detail: document.getElementById('progress-detail'),
+            success: document.getElementById('success-icon'),
+            version: document.getElementById('app-version'),
+            errorCtx: document.getElementById('error-container'),
+            errorMsg: document.getElementById('error-msg'),
+            btnCopy: document.getElementById('btn-copy'),
+            btnDiscord: document.getElementById('btn-discord'),
+            btnRetry: document.getElementById('btn-retry')
         };
 
-        function formatBytes(bytes) {
+        const setMode = (mode) => {
+            els.panel.classList.remove('error-mode');
+            
+            els.spinner.classList.add('fade-out');
+            els.barCtx.classList.add('fade-out');
+            els.success.classList.add('fade-out');
+            els.errorCtx.classList.add('fade-out');
+
+            if (mode === 'spin') els.spinner.classList.remove('fade-out');
+            if (mode === 'bar') els.barCtx.classList.remove('fade-out');
+            if (mode === 'success') els.success.classList.remove('fade-out');
+            if (mode === 'error') {
+                els.errorCtx.classList.remove('fade-out');
+                els.panel.classList.add('error-mode');
+                els.status.innerText = "SISTEMA INTERROMPIDO";
+                els.status.classList.add('text-red-500');
+            }
+        };
+
+        const setText = (text) => {
+            els.status.style.opacity = '0';
+            setTimeout(() => {
+                els.status.innerText = text;
+                els.status.style.opacity = '1';
+            }, 150);
+        };
+
+        const showError = (message) => {
+            console.error("Splash Error:", message);
+            els.errorMsg.innerText = message || "Erro desconhecido. Contate o suporte.";
+            setMode('error');
+        };
+
+        els.btnCopy.addEventListener('click', () => {
+            const text = els.errorMsg.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = els.btnCopy.innerText;
+                els.btnCopy.innerText = "COPIADO!";
+                els.btnCopy.classList.add('text-green-400');
+                setTimeout(() => {
+                    els.btnCopy.innerText = originalText;
+                    els.btnCopy.classList.remove('text-green-400');
+                }, 2000);
+            });
+        });
+
+        els.btnDiscord.addEventListener('click', () => {
+            shell.openExternal(DISCORD_URL);
+        });
+
+        els.btnRetry.addEventListener('click', () => {
+            location.reload();
+        });
+
+        ipcRenderer.on('app:error-notification', (event, message) => {
+            showError(message);
+        });
+
+        const formatBytes = (bytes) => {
             if (!+bytes) return "0 B";
-            const k = 1024;
-            const sizes = ["B", "KB", "MB", "GB"];
+            const k = 1024; const sizes = ["B", "KB", "MB", "GB"];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-        }
-
-        function setStatus(mode) {
-            elSpinner.classList.toggle('hidden', mode !== 'spin');
-            elBarContainer.classList.toggle('hidden', mode !== 'bar');
-            elSuccess.classList.toggle('hidden', mode !== 'success');
-        }
-
-        function updateText(txt) {
-            elSubtitle.innerText = txt;
-        }
+        };
 
         try {
-            const package = require("../package.json");
-            document.getElementById("app-version").innerText = `BUILD-${package.version}`.toUpperCase();
-        } catch(e) {
-            document.getElementById("app-version").innerText = "BUILD-PRODUCTION";
-        }
+            const pkg = require("../package.json");
+            els.version.innerText = `V ${pkg.version}`.toUpperCase();
+        } catch(e) { els.version.innerText = "DEV MODE"; }
 
         setTimeout(() => {
-            updateText(TEXTS.check);
-            setStatus('spin');
+            setText("VERIFICANDO UPDATE");
+            setMode('spin');
             ipcRenderer.send('updateVerify');
-        }, 1000);
+        }, 800);
 
         ipcRenderer.on('yepUpdate', () => {
-            updateText(TEXTS.pending);
-            setStatus('spin');
+            setText("ATUALIZAÇÃO ENCONTRADA");
+            setMode('spin');
         });
 
-        let hasStartedDownload = false;
-        ipcRenderer.on('outputPercentUpdate', (event, data) => {
-            if (!hasStartedDownload) {
-                hasStartedDownload = true;
-                updateText(TEXTS.downloading);
-                setStatus('bar');
-            }
-
-            let percent = (typeof data === "object") ? data.percent : data;
-            elBarFill.style.width = percent + '%';
-            elProgressText.innerText = Math.round(percent) + '%';
-
-            if (data.total > 0) {
-                elSizeText.innerText = `${formatBytes(data.transferred)} / ${formatBytes(data.total)}`;
-            }
+        ipcRenderer.on('updateDonwloadFirst', () => {
+             setMode('bar');
         });
 
-        let hasStartedExtract = false;
-        ipcRenderer.on('outputPercentExtractedFiles', (event, percent) => {
-            if (!hasStartedExtract) {
-                hasStartedExtract = true;
-                updateText(TEXTS.extracting);
-                setStatus('bar');
+        let downloadStarted = false;
+        ipcRenderer.on('outputPercentUpdate', (_, data) => {
+            if (!downloadStarted) {
+                downloadStarted = true;
+                setText("BAIXANDO ARQUIVOS");
+                setMode('bar');
             }
-            elBarFill.style.width = percent + '%';
-            elProgressText.innerText = Math.round(percent) + '%';
-            elSizeText.innerText = "DESCOMPACTANDO...";
+            const pct = (typeof data === 'object') ? data.percent : data;
+            els.fill.style.width = `${pct}%`;
+            els.percent.innerText = `${Math.round(pct)}%`;
+            if(data.total) els.detail.innerText = formatBytes(data.total);
         });
 
-        ipcRenderer.on('firstUpdate', (event, success) => {
+        ipcRenderer.on('outputPercentExtractedFiles', (_, percent) => {
+            setText("INSTALANDO NOVO CLIENT");
+            setMode('bar');
+            els.fill.style.width = `${percent}%`;
+            els.percent.innerText = `${Math.round(percent)}%`;
+            els.detail.innerText = "DESCOMPACTANDO";
+        });
+
+        ipcRenderer.on('firstUpdate', (_, success) => {
             if (success) {
-                updateText(TEXTS.success);
-                setStatus('success');
-                setTimeout(() => {
-                    updateText(TEXTS.starting);
-                    setStatus('spin');
-                    setTimeout(() => ipcRenderer.send('firstUpdate'), 500);
-                }, 2000);
+                setText("ATUALIZADO COM SUCESSO");
+                setMode('success');
             } else {
-                updateText(TEXTS.noupdate);
-                setStatus('success');
-                setTimeout(() => {
-                    updateText(TEXTS.starting);
-                    setStatus('spin');
-                    setTimeout(() => ipcRenderer.send('firstUpdate'), 800);
-                }, 1000);
+                setText("INICIANDO LAUNCHER");
+                setMode('spin');
             }
+            setTimeout(() => {
+                 ipcRenderer.send('firstUpdate');
+            }, success ? 2500 : 1500);
         });
     </script>
 </body>
