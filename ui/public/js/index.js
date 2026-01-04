@@ -677,7 +677,7 @@ try {
     `;
 
         btnPlay.disabled = true;
-        btnPlay.innerHTML = `<span class="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full"></span>`;
+        btnPlay.innerHTML = `<span class="animate-spin border-2 border-white border-t-transparent rounded-full fill-current w-7 h-7 drop-shadow-md"></span>`;
         progressContainer.style.opacity = "1";
 
         const res = await window.api.launchGame(
@@ -691,7 +691,7 @@ try {
             console.error(`ERRO DE LANÇAMENTO: ${res.error}`);
             btnPlay.disabled = false;
             btnPlay.as3cd = false;
-            btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
+            btnPlay.innerHTML = `<i data-lucide="play" class="fill-current w-7 h-7 drop-shadow-md"></i> JOGAR`;
             lucide.createIcons();
             progressContainer.style.opacity = "0";
             if (res.error.includes("expirada")) {
@@ -727,7 +727,7 @@ try {
         sendSocketLauncherEvent("close:client");
         btnPlay.disabled = false;
         btnPlay.as3cd = false;
-        btnPlay.innerHTML = `<i data-lucide="play" class="fill-black w-6 h-6"></i> JOGAR`;
+        btnPlay.innerHTML = `<i data-lucide="play" class="fill-current w-7 h-7 drop-shadow-md"></i> JOGAR`;
         lucide.createIcons();
         progressContainer.style.opacity = "0";
         progressBar.style.width = '0%';
@@ -757,7 +757,7 @@ try {
         addLog("Inicializando JVM e Assets...", 'info');
         btnPlay.disabled = true;
         btnPlay.as3cd = true;
-        btnPlay.innerHTML = `<i data-lucide="loader" class="fill-black w-6 h-6"></i> INICIANDO JOGO`;
+        btnPlay.innerHTML = `<i data-lucide="loader" class="fill-current w-7 h-7 drop-shadow-md"></i> INICIANDO JOGO`;
         lucide.createIcons();
         progressContainer.style.opacity = "0";
         processPercentText.textContent = "0%"
