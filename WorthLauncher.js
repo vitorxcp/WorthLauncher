@@ -24,6 +24,7 @@ const API_TEXTURES = `${API_URL}/api/v1/resoucepack/community`;
 
 let isScanning = false;
 let watchdogInterval = null;
+let isGameLaunchCancelled = false;
 
 autoUpdater.autoDownload = false;
 autoUpdater.allowPrerelease = true;
@@ -132,6 +133,10 @@ function downloadFile(url, dest, sendLog) {
     return new Promise((resolve, reject) => {
         sendLog(`[NETWORK] Conectando: ${url}`);
 
+        if (dest.includes("java") || dest.includes("jdk")) {
+            updateDiscordActivity("Baixando Dependências", "Instalando Java...", rpc, nickname);
+        }
+
         const request = https.get(url, (response) => {
             if (response.statusCode === 301 || response.statusCode === 302) {
                 if (response.headers.location) {
@@ -221,7 +226,7 @@ function startRPC() {
     rpc.on('ready', () => {
         console.log("[DEBUG] - RPC Discord iniciado com sucesso.");
 
-        updateDiscordActivity("Navegando no Launcher", "Ocioso", rpc, nickname);
+        updateDiscordActivity("No Menu Principal", "Worth Launcher", rpc, nickname);
     });
 
     rpc.on('disconnected', () => {
@@ -501,7 +506,7 @@ ipcMain.handle('texture:check-all', async () => {
         await Promise.all(texturePacks.map(async (pack) => {
             const folderPath = path.join(packsDir, pack.nameFile);
             const zipPath = path.join(packsDir, `${pack.nameFile}.zip`);
-            
+
             const [folderExists, zipExists] = await Promise.all([
                 fs.pathExists(folderPath),
                 fs.pathExists(zipPath)
@@ -534,12 +539,12 @@ ipcMain.handle('texture:check-all', async () => {
             const isZip = filename.endsWith('.zip');
             const nameRaw = isZip ? filename.replace('.zip', '') : filename;
             const nameClean = stripColors(nameRaw);
-            
+
             const officialMatch = texturePacks.find(p => stripColors(p.nameFile) === nameClean);
 
             if (officialMatch) {
                 if (!installedIDs.includes(officialMatch.id)) installedIDs.push(officialMatch.id);
-                
+
                 localPackCache.set(fullPath, {
                     mtimeMs,
                     data: { isOfficial: true, id: officialMatch.id }
@@ -567,7 +572,7 @@ ipcMain.handle('texture:check-all', async () => {
             };
 
             localPacks.push(packData);
-            
+
             localPackCache.set(fullPath, {
                 mtimeMs,
                 data: packData
@@ -595,7 +600,7 @@ ipcMain.handle('texture:check-all', async () => {
 });
 
 async function getAllPotentialPacksAsync(dirPath, fileList = [], depth = 0) {
-    if (depth > 3) return fileList; 
+    if (depth > 3) return fileList;
 
     try {
         const files = await fs.readdir(dirPath);
@@ -631,7 +636,7 @@ async function getPackImageAsync(filePath, isZip) {
             const zip = new AdmZip(filePath);
             const zipEntries = zip.getEntries();
             const entry = zipEntries.find(e => e.entryName.toLowerCase() === "pack.png");
-            
+
             if (entry) {
                 return `data:image/png;base64,${entry.getData().toString('base64')}`;
             }
@@ -652,6 +657,8 @@ ipcMain.handle('texture:install', async (event, packId) => {
     if (!pack) {
         return { success: false, error: "Textura não encontrada no registro." };
     }
+
+    updateDiscordActivity("Baixando Recurso", `Instalando: ${pack.name}`, rpc, nickname)
 
     const packsDir = getGameResourcePacksPath();
     const tempDir = app.getPath('temp');
@@ -695,6 +702,9 @@ ipcMain.handle('texture:install', async (event, packId) => {
         } catch (e) { console.error("Erro ao limpar temp:", e); }
 
         logToWindow(`[TEXTURE] Instalação concluída: ${name}`);
+
+        updateDiscordActivity("No Menu Principal", "Worth Launcher", rpc, nickname);
+
         return { success: true };
 
     } catch (err) {
@@ -703,6 +713,8 @@ ipcMain.handle('texture:install', async (event, packId) => {
             if (fs.existsSync(tempZipPath)) fs.unlinkSync(tempZipPath);
             if (fs.existsSync(tempExtractPath)) fs.removeSync(tempExtractPath);
         } catch (e) { }
+
+        updateDiscordActivity("No Menu Principal", "Worth Launcher", rpc, nickname);
 
         return { success: false, error: err.message };
     }
@@ -800,6 +812,8 @@ ipcMain.handle("auth:offline", async (event, username) => {
 });
 
 ipcMain.handle("game:launch", async (event, authDetails, config) => {
+    isGameLaunchCancelled = false;
+
     configApp = config;
     gamePID = null;
 
@@ -808,6 +822,8 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             mainWindow.webContents.send("log", msg);
         }
     };
+
+    updateDiscordActivity("Iniciando Minecraft", "Verificando arquivos...", rpc, nickname)
 
     const ROOT = getLauncherRoot();
     const FORGE_PATH = getForgePath();
@@ -913,7 +929,8 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
         root: ROOT,
         version: {
             number: "1.8.9",
-            type: "release"
+            type: "release",
+            custom: "worthclient-1.8.9"
         },
         forge: FORGE_PATH,
         memory: {
@@ -926,6 +943,9 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             width: parseInt(config.width) || 854,
             height: parseInt(config.height) || 480
         },
+        overrides: {
+            detached: false
+        }
     };
 
     launcher.removeAllListeners();
@@ -957,6 +977,12 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
     });
 
     launcher.on("data", (e) => {
+
+        if (!gamePID && launcher.child && launcher.child.pid) {
+            gamePID = launcher.child.pid;
+            console.log(`[SYSTEM] PID Recuperado via LOGS: ${gamePID}`);
+        }
+
         checkPID();
         sendLog(`[GAME] ${e}`);
 
@@ -1034,6 +1060,11 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
     });
 
     try {
+        if (isGameLaunchCancelled) {
+            console.log("[LAUNCH] Cancelado pelo usuário antes de iniciar o Java.");
+            return { success: false };
+        }
+
         sendLog(`[SYSTEM] Iniciando JVM...`);
         await launcher.launch(opts);
         return { success: true };
@@ -1045,7 +1076,7 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
 ipcMain.on("firstUpdate", (event, data) => {
     createWindow();
     createTray();
-    
+
     if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.close();
     }
@@ -1069,6 +1100,70 @@ ipcMain.on("updateVerify", () => {
             splashWindow.webContents.send("firstUpdate", false);
         }
     });
+});
+
+ipcMain.handle('game:stop', async () => {
+    isGameLaunchCancelled = true;
+    console.log("[SYSTEM] Solicitado encerramento forçado do jogo...");
+    let killed = false;
+
+    if (!gamePID) {
+        if (launcher && launcher.child && launcher.child.pid) {
+            gamePID = launcher.child.pid;
+            console.log(`[KILL] PID encontrado no objeto launcher: ${gamePID}`);
+        }
+    }
+
+    if (gamePID) {
+        console.log(`[KILL] Matando processo específico: ${gamePID}`);
+        try {
+            process.kill(gamePID);
+            killed = true;
+        } catch (e) {
+            console.log("[KILL] Erro kill node:", e.message);
+        }
+
+        if (process.platform === 'win32') {
+            try {
+                exec(`taskkill /F /PID ${gamePID} /T`, (err) => {
+                    if (!err) console.log("[KILL] Taskkill por PID sucesso.");
+                });
+                killed = true;
+            } catch (e) { }
+        }
+    }
+    else {
+        console.log("[KILL] PID não encontrado (NULL). Iniciando protocolo de emergência (Matar javaw.exe).");
+        if (process.platform === 'win32') {
+            try {
+                exec(`taskkill /F /IM javaw.exe /T`, (err) => {
+                    if (!err) console.log("[KILL] Todos os processos javaw.exe foram encerrados.");
+                });
+                killed = true;
+            } catch (e) {
+                console.error("[KILL] Falha ao matar javaw.exe:", e);
+            }
+        }
+    }
+
+    if (launcher) {
+        if (launcher.child) {
+            try { launcher.child.kill(); } catch (e) { }
+        }
+        try { launcher.kill(); } catch (e) { }
+    }
+
+    gamePID = null;
+
+    try {
+        updateDiscordActivity("No Menu Principal", "Worth Launcher", rpc, nickname);
+    } catch (e) { }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("game:closed");
+    }
+
+    return { success: true };
 });
 
 autoUpdater.on('update-available', (info) => {
@@ -1293,7 +1388,7 @@ function getAllPotentialPacks(dirPath, fileList = []) {
 
             if (stats.isDirectory()) {
                 if (fs.existsSync(path.join(fullPath, 'pack.mcmeta'))) {
-                    fileList.push(fullPath); 
+                    fileList.push(fullPath);
                 } else {
                     getAllPotentialPacks(fullPath, fileList);
                 }
@@ -1353,7 +1448,7 @@ async function syncApiTextures() {
             }));
 
             texturePacks = remotePacks;
-            
+
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.webContents.send("texture:registry-updated", texturePacks);
             }
