@@ -37,15 +37,21 @@ module.exports.updateDiscordActivity = (detailsa, statea, rpca, nick) => {
                 return;
             };
 
+            const buttons = [
+                { label: "Baixar Cliente", url: "https://worthclient.com" },
+                { label: "Discord", url: "https://discord.gg/seu-link" }
+            ];
+
             rpc.setActivity({
                 details: details,
                 state: state,
                 largeImageKey: 'large_image',
-                largeImageText: 'WorthLauncher',
+                largeImageText: 'Worth Client 1.8.9',
                 smallImageKey: `https://mc-heads.net/avatar/${nickname}/128`,
                 smallImageText: nickname,
                 instance: false,
-                startTimestamp: dateNow
+                startTimestamp: dateNow,
+                buttons: buttons
             }).catch((err) => {
                 console.error("[RPC] Erro ao atualizar:", err);
             });
