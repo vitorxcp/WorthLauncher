@@ -450,6 +450,7 @@ try {
 
     function renderAccountsList() {
         accountsListEl.innerHTML = '';
+
         if (savedAccounts.length === 0) {
             accountsListEl.innerHTML = '<div class="text-xs text-gray-600 text-center py-4 font-mono">Sem contas salvas</div>';
             return;
@@ -457,30 +458,48 @@ try {
 
         savedAccounts.forEach((acc, idx) => {
             const div = document.createElement('div');
-            div.className = "flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition group cursor-pointer border border-transparent hover:border-white/10 mb-2";
+
+            const isActive = (typeof currentUser !== 'undefined' && currentUser.user === acc.user);
+
+            const activeClasses = isActive
+                ? "bg-white/10 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                : "bg-white/5 hover:bg-white/10 border-transparent hover:border-white/10";
+
+            div.className = `flex items-center gap-3 p-3 rounded-xl transition group cursor-pointer border mb-2 ${activeClasses}`;
+
+            const statusIndicator = isActive
+                ? `<div class="text-[9px] text-green-400 font-bold uppercase tracking-wider flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Ativo</div>`
+                : `<div class="text-[9px] text-gray-500 uppercase font-bold mt-1">${acc.type}</div>`;
+
             div.innerHTML = `
-                <img src="https://mc-heads.net/avatar/${acc.user}" class="w-8 h-8 rounded-lg bg-black/50">
-                <div class="flex-1 overflow-hidden">
-                    <div class="text-sm font-bold text-white truncate leading-none">${acc.user}</div>
-                    <div class="text-[9px] text-gray-500 uppercase font-bold mt-1">${acc.type}</div>
-                </div>
-                <button title-app="Remover Conta" class="text-gray-600 hover:text-red-500 p-2 rounded-lg hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition btn-remove-acc no-drag">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
-            `;
+            <img src="https://mc-heads.net/avatar/${acc.user}" class="w-8 h-8 rounded-lg bg-black/50 shadow-sm">
+            <div class="flex-1 overflow-hidden">
+                <div class="text-sm font-bold text-white truncate leading-none ${isActive ? 'text-green-50' : ''}">${acc.user}</div>
+                ${statusIndicator}
+            </div>
+            <button title-app="Remover Conta" class="text-gray-600 hover:text-red-500 p-2 rounded-lg hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition btn-remove-acc no-drag">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+        `;
 
             div.addEventListener('click', (e) => {
-                if (!e.target.closest('.btn-remove-acc')) selectAccount(acc);
+                if (!e.target.closest('.btn-remove-acc')) {
+                    selectAccount(acc);
+
+                    currentUser = acc;
+
+                    renderAccountsList();
+                }
             });
 
             div.querySelector('.btn-remove-acc').addEventListener('click', (e) => {
                 e.stopPropagation();
-
                 openDeleteModal(idx, acc.user);
             });
 
             accountsListEl.appendChild(div);
         });
+
         lucide.createIcons();
     }
 
@@ -672,6 +691,12 @@ try {
             return;
         }
 
+        if (btnPlay.as3cd) {
+            await handleStopClick();
+            btnPlay.innerHTML = `<i data-lucide="loader" class="fill-current w-7 h-7 drop-shadow-md"></i> FINALIZANDO...`;
+            return;
+        }
+
         if (logConsole) logConsole.innerHTML = `
         <div class="text-gray-500 italic border-b border-white/5 pb-1 mb-2 text-[10px]">Terminal limpo pelo Sistema (novo client iniciando).</div>
     `;
@@ -744,9 +769,9 @@ try {
     window.api.onGameStarted(() => {
         addLog("Minecraft iniciado e janela detectada.", 'success');
         sendSocketLauncherEvent("open:client");
-        btnPlay.disabled = true;
+        btnPlay.disabled = false;
         btnPlay.as3cd = true;
-        btnPlay.innerHTML = `JOGANDO`;
+        btnPlay.innerHTML = `<i data-lucide="pause" class="fill-current w-7 h-7 drop-shadow-md"></i> JOGANDO`;
         lucide.createIcons();
         progressContainer.style.opacity = "0";
         progressBar.style.width = '0%';
@@ -903,12 +928,13 @@ try {
         const day = String(now.getDate()).padStart(2, '0');
         const buildString = `build-${year}.${month}.${day}-rc1-${window.api.version}`;
 
+        document.getElementById("versiona12").textContent = `v${window.api.version}`;
         document.getElementById("version-app-normal").textContent = `v${window.api.version}`;
         document.getElementById("version-app-build").onclick = () => {
             navigator.clipboard.writeText(buildString)
         };
         document.getElementById("version-app-build").innerHTML = `
-    <span class="text-gray-300 font-mono text-xs">${buildString}</span>
+    <span class="text-gray-300 font-mono text-xs">${buildString}</span> 
                     <i data-lucide="copy" class="w-3 h-3 text-gray-600 group-hover:text-white transition"></i>
     `
 
@@ -1140,21 +1166,48 @@ function showCrashPopup(errorMessage, url, line) {
 }
 
 const loadingScreen = document.getElementById('modal-loadPage');
+const curtainLeft = document.getElementById('curtain-left');
+const curtainRight = document.getElementById('curtain-right');
+const loadingContent = document.getElementById('loading-content');
+
+document.addEventListener("DOMContentLoaded", () => {
+    const video = document.getElementById('intro-video');
+    if (video) {
+        video.addEventListener('loadedmetadata', () => { video.currentTime = 3; });
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+            playPromise.then(_ => { video.classList.remove('opacity-0'); })
+                .catch(error => { console.error("Erro autoplay:", error); video.classList.remove('opacity-0'); });
+        }
+        video.addEventListener('ended', () => {
+            video.currentTime = 3;
+            video.play();
+        });
+    }
+});
 
 function hideLoading() {
-    loadingScreen.classList.remove('modal-visible');
-    loadingScreen.classList.add('modal-hidden');
+    loadingContent.style.opacity = '0';
+    loadingContent.style.transform = 'scale(0.9)';
+
+    curtainLeft.style.transform = 'translateX(-100%)';
+    curtainRight.style.transform = 'translateX(100%)';
+
+    setTimeout(() => {
+        loadingScreen.style.pointerEvents = 'none';
+        loadingScreen.style.display = 'none';
+    }, 1200);
 }
 
 function showLoading() {
-    requestAnimationFrame(() => {
-        loadingScreen.classList.remove('modal-hidden');
-        loadingScreen.classList.add('modal-visible');
-    });
+    loadingScreen.style.pointerEvents = 'auto';
+    loadingContent.style.opacity = '1';
+    loadingContent.style.transform = 'scale(1)';
+    curtainLeft.style.transform = 'translateX(0)';
+    curtainRight.style.transform = 'translateX(0)';
 }
 
 const tempoAleatorio = Math.floor(Math.random() * (7000 - 2000 + 1)) + 3000;
-
 setTimeout(() => {
     hideLoading();
 }, tempoAleatorio);
@@ -1176,3 +1229,14 @@ if (window.api && window.api.onErrorNotification) {
         }
     });
 }
+
+const handleStopClick = async () => {
+    console.log("Parando o jogo...");
+
+    const result = await window.api.stopGame();
+
+    if (result.success) {
+        console.log("Jogo finalizado com sucesso!");
+        setGameState("MENU");
+    }
+};
