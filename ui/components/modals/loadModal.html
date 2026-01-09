@@ -1,64 +1,65 @@
-<div id="modal-loadPage"
-     class="fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center transition-opacity duration-500 ease-in-out select-none no-drag text-white font-mono">
+<div id="modal-loadPage" class="fixed inset-0 z-[999] flex flex-col items-center justify-center select-none no-drag text-white font-mono pointer-events-auto overflow-hidden">
+    
+    <div id="curtain-left" 
+         class="absolute top-0 left-0 w-[51%] h-full bg-gradient-to-r from-zinc-950 to-black z-10 
+                 shadow-2xl transition-transform duration-[1000ms] will-change-transform">
+    </div>
 
-    <video id="intro-video" 
-           width="200" 
-           height="450" 
-           muted 
-           playsinline 
-           preload="auto"
-           class="opacity-0 transition-opacity duration-700 rounded-lg ml-[20px]">
-        <source src="assets/quebrandotudo.mp4" type="video/mp4">
-    </video>
+    <div id="curtain-right" 
+         class="absolute top-0 right-0 w-[51%] h-full bg-gradient-to-l from-zinc-950 to-black z-10 
+                 shadow-2xl transition-transform duration-[1000ms] will-change-transform">
+    </div>
 
-    <div class="flex flex-col items-center gap-3">
-        <h2 class="text-2xl font-black tracking-[0.2em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 drop-shadow-md">
-            Carregando
-        </h2>
+    <div id="center-line" 
+         class="absolute left-1/2 top-0 bottom-0 w-[1px] -ml-[0.5px] bg-yellow-500/0 z-20 
+                shadow-[0_0_15px_rgba(234,179,8,0)] transition-all duration-300">
+    </div>
+
+    <div id="loading-content" class="relative z-30 flex flex-col items-center justify-center transition-all duration-500 ease-out">
         
-        <div class="w-32 h-1 bg-gray-800 rounded-full overflow-hidden mt-1">
-            <div class="w-full h-full bg-yellow-600 animate-[loading_1.5s_infinite]"></div>
+        <div class="relative group">
+            <div class="absolute -inset-1 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+            <video id="intro-video" 
+                   width="200" 
+                   height="450" 
+                   muted 
+                   playsinline 
+                   preload="auto"
+                   class="relative opacity-0 scale-95 transition-all duration-700 ease-out rounded-lg shadow-2xl ">
+                <source src="assets/quebrandotudo.mp4" type="video/mp4">
+            </video>
         </div>
 
-        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2">
-            Iniciando WorthLauncher...
-        </span>
+        <div class="flex flex-col items-center gap-4 mt-6">
+            <h2 class="text-3xl font-black tracking-[0.3em] uppercase text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 drop-shadow-sm">
+                Carregando
+            </h2>
+            
+            <div class="w-48 h-[2px] bg-zinc-800 rounded-full overflow-hidden">
+                <div class="w-full h-full bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600 animate-[loading_2s_infinite]"></div>
+            </div>
+
+            <span class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em]">
+                WorthLauncher &bull; <span id="versiona12">{version}</span>
+            </span>
+        </div>
     </div>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        const video = document.getElementById('intro-video');
-
-        if (video) {
-            video.addEventListener('loadedmetadata', () => {
-                video.currentTime = 3; 
-            });
-
-            const playPromise = video.play();
-
-            if (playPromise !== undefined) {
-                playPromise.then(_ => {
-                    video.classList.remove('opacity-0');
-                })
-                .catch(error => {
-                    console.error("Erro no autoplay:", error);
-                    video.classList.remove('opacity-0');
-                });
-            }
-
-            video.addEventListener('ended', () => {
-                video.currentTime = 3;
-                video.play();
-            });
-        }
-    });
-</script>
-
 <style>
+    #curtain-left, #curtain-right {
+        transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
     @keyframes loading {
         0% { transform: translateX(-100%); }
-        50% { transform: translateX(0%); }
+        50% { transform: translateX(100%); }
         100% { transform: translateX(100%); }
+    }
+
+    .content-exit-active {
+        opacity: 0;
+        transform: scale(0.90) translateY(10px);
+        filter: blur(10px);
     }
 </style>
