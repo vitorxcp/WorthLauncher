@@ -28,5 +28,6 @@ contextBridge.exposeInMainWorld('api', {
     isInstallerLaunch: () => ipcRenderer.invoke('app:check-installer-launch'),
     updateLauncher: () => ipcRenderer.send('updateVersionApp'),
     updateNickName: (nick) => ipcRenderer.invoke('user:update-nick', nick),
-    updateSettings: (settings) => { ipcRenderer.invoke('settings:update', settings); }
+    updateSettings: (settings) => { ipcRenderer.invoke('settings:update', settings); },
+    stopGame: () => ipcRenderer.invoke('game:stop'),
 });
