@@ -926,41 +926,76 @@ io.on("connection", (socket) => {
 const app2 = express();
 const port2 = 9075;
 
-app2.use(cors());
+app2.use(cors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Content-Length', 'X-Requested-With'],
+    credentials: true
+}));
 app2.disable('x-powered-by');
 app2.disable('etag');
+app2.options('*', (req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.set('Access-Control-Allow-Headers', '*');
+    res.sendStatus(204);
+});
 
 app2.get('/api/intel', async (req, res) => {
     try {
         const controller = new AbortController();
-        setTimeout(() => controller.abort(), 2000);
-        const r = await fetch('http://ip-api.com/json/?fields=status,countryCode,regionName,city,isp,query,as,org', { signal: controller.signal });
+        setTimeout(() => controller.abort(), 3000);
+
+        const r = await fetch('http://ip-api.com/json/?fields=status,countryCode,regionName,city,isp,query,as,org,lat,lon,timezone', { signal: controller.signal });
+
+        if (!r.ok) throw new Error('API Error');
         const d = await r.json();
         res.json(d);
-    } catch { 
-        res.json({status:'fail', isp:'Rede Local / Host', query:'127.0.0.1', city:'Local', regionName:'Servidor Interno', as:'AS-LOCAL'}); 
+    } catch (e) {
+        res.json({
+            status: 'fail',
+            isp: 'Rede Local / Privada',
+            query: '127.0.0.1',
+            city: 'Desconhecido',
+            regionName: 'Localhost',
+            as: 'AS-N/A',
+            lat: 0,
+            lon: 0,
+            timezone: 'UTC'
+        });
     }
 });
 
-app2.get('/ping', (req, res) => { 
-    res.set('Cache-Control', 'no-store');
-    res.send('pong'); 
+app2.get('/ping', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.send('pong');
 });
 
 app2.post('/upload', (req, res) => {
-    req.on('data', () => {});
-    req.on('end', () => res.send('ok'));
-});
+    req.on('data', () => {}); 
+    req.on('end', () => {
+        res.send('ok');
+    });
+});;
 
-const randomBuffer = Buffer.allocUnsafe(2 * 1024 * 1024);
+const downloadBuffer = Buffer.allocUnsafe(4 * 1024 * 1024);
 app2.get('/download', (req, res) => {
-    const size = (parseInt(req.query.size) || 20) * 1024 * 1024;
-    res.writeHead(200, { 'Content-Type': 'app2lication/octet-stream', 'Content-Length': size, 'Cache-Control': 'no-store' });
+    const size = (parseInt(req.query.size) || 50) * 1024 * 1024;
+    res.writeHead(200, { 
+        'Content-Type': 'application/octet-stream', 
+        'Content-Length': size, 
+        'Cache-Control': 'no-store' 
+    });
+    
     let sent = 0;
     const send = () => {
         while(sent < size) {
-            if(!res.write(randomBuffer)) { res.once('drain', send); return; }
-            sent += randomBuffer.length;
+            const chunkSize = Math.min(downloadBuffer.length, size - sent);
+            if(!res.write(downloadBuffer.slice(0, chunkSize))) { 
+                res.once('drain', send); 
+                return; 
+            }
+            sent += chunkSize;
         }
         res.end();
     };
