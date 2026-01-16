@@ -1,5 +1,8 @@
 lucide.createIcons();
 
+const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 900, height: 550, discordRichPresence: true };
+let settings = JSON.parse(localStorage.getItem('worth_settings')) || defaultSettings;
+
 let currentUser = null;
 let userSelect = null;
 let savedAccounts = JSON.parse(localStorage.getItem('worth_accounts')) || [];
@@ -7,7 +10,6 @@ let donwoadversionapp = "";
 let updateModalAc = false;
 
 try {
-    const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 900, height: 550, discordRichPresence: true };
     const logConsole = document.getElementById('log-console');
     const btnPlay = document.getElementById('btn-play');
     const progressBar = document.getElementById('progress-bar');
@@ -21,7 +23,6 @@ try {
     const modalWelcome = document.getElementById('modal-welcome');
     const isFirstRun = !localStorage.getItem('setup_complete');
 
-    let settings = JSON.parse(localStorage.getItem('worth_settings')) || defaultSettings;
 
     const getTimestamp = () => {
         const now = new Date();
@@ -1240,3 +1241,302 @@ const handleStopClick = async () => {
         setGameState("MENU");
     }
 };
+
+let serverGeneratedCode = "";
+let tempUserData = {};
+
+function getElement(id) {
+    const el = document.getElementById(id);
+    if (!el) console.error(`[ERRO CRÍTICO] Elemento HTML com ID '${id}' não existe na página! Verifique o HTML.`);
+    return el;
+}
+
+function openModal(modalId) {
+    console.log(`[UI] Tentando abrir: ${modalId}`);
+    const modal = getElement(modalId);
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+    void modal.offsetWidth;
+
+    modal.classList.remove('opacity-0');
+    const content = modal.querySelector('div.relative');
+    if (content) {
+        content.classList.remove('scale-95');
+        content.classList.add('scale-100');
+    }
+}
+
+function closeModal(modalId) {
+    console.log(`[UI] Tentando fechar: ${modalId}`);
+    const modal = getElement(modalId);
+    if (!modal) return;
+
+    modal.classList.add('opacity-0');
+    const content = modal.querySelector('div.relative');
+    if (content) {
+        content.classList.add('scale-95');
+        content.classList.remove('scale-100');
+    }
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+function sendCode() {
+    const idInput = document.getElementById('input-discord-id');
+    const btnSend = document.getElementById('btn-send-discord');
+    const errorContainer = document.getElementById('discord-id-error');
+    
+    if(errorContainer) errorContainer.classList.add('hidden');
+    if(idInput) idInput.classList.remove('border-red-500', 'animate-pulse');
+    
+    const helpBox = document.getElementById('discord-help-box');
+    const infoBox = document.getElementById('discord-info-box');
+    if(helpBox) helpBox.classList.add('hidden');
+    if(infoBox) infoBox.classList.remove('hidden');
+
+    const id = idInput.value.trim();
+
+    if (!/^\d{17,20}$/.test(id)) {
+        showDiscordError("ID inválido. Use apenas números.");
+        return;
+    }
+
+    const originalBtnContent = btnSend.innerHTML;
+    btnSend.disabled = true;
+    btnSend.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...`;
+    if(window.lucide) window.lucide.createIcons();
+
+    console.log(`[Socket] Enviando pedido para ID: ${id}`);
+
+    socket.emit("discord:verifyUserId", { id: id }, (response) => {
+        console.log("[Socket] Resposta Bruta:", response);
+
+        let data = response;
+        if (Array.isArray(response)) {
+            data = response[0];
+        }
+
+        btnSend.disabled = false;
+        btnSend.innerHTML = originalBtnContent;
+        if(window.lucide) window.lucide.createIcons();
+
+        if (!data || data.error) {
+            console.warn("[Socket] Erro retornado:", data?.error);
+            showDiscordError(data?.error || "Erro de conexão."); 
+            return;
+        }
+
+        if (data.success) {
+            serverGeneratedCode = data.serverCode;
+            tempUserData = { tag: data.tag, avatar: data.avatar };
+
+            closeModal('modal-discord-connect');
+
+            setTimeout(() => {
+                const verifyInput = document.getElementById('input-verify-code');
+                if(verifyInput) {
+                    verifyInput.value = "";
+                    verifyInput.classList.remove('border-red-500', 'text-red-400');
+                }
+                const errorMsg = document.getElementById('verify-error-msg');
+                if(errorMsg) errorMsg.classList.add('opacity-0');
+                
+                openModal('modal-discord-verify');
+                
+                if(verifyInput) setTimeout(() => verifyInput.focus(), 100);
+            }, 300);
+        }
+    });
+}
+
+function showDiscordError(msg) {
+    console.log(`[UI] Mostrando erro: ${msg}`);
+    const idInput = getElement('input-discord-id');
+    const errorContainer = getElement('discord-id-error');
+    
+    if(idInput) {
+        idInput.classList.add('border-red-500');
+        idInput.classList.add('animate-pulse');
+        setTimeout(() => idInput.classList.remove('animate-pulse'), 500);
+    }
+
+    if(errorContainer) {
+        errorContainer.classList.remove('hidden');
+        const span = errorContainer.querySelector('span');
+        if(span) span.innerText = msg;
+        else errorContainer.innerText = msg;
+    }
+
+    const helpBox = document.getElementById('discord-help-box');
+    const infoBox = document.getElementById('discord-info-box');
+
+    if(helpBox && infoBox) {
+        infoBox.classList.add('hidden');
+        helpBox.classList.remove('hidden');
+        
+        if(window.lucide) window.lucide.createIcons();
+    }
+}
+
+async function verifyCode() {
+    const input = getElement('input-verify-code');
+    const errorMsg = getElement('verify-error-msg');
+
+    if (!input) return;
+
+    const userCode = input.value.trim();
+    const btnConfirm = event.currentTarget;
+
+    if (userCode !== serverGeneratedCode) {
+        input.classList.add('border-red-500', 'text-red-400');
+        if (errorMsg) errorMsg.classList.remove('opacity-0');
+        return;
+    }
+
+    const originalText = btnConfirm.innerHTML;
+    btnConfirm.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>`;
+    btnConfirm.disabled = true;
+    if (window.lucide) window.lucide.createIcons();
+
+    try {
+        const discordId = document.getElementById('input-discord-id').value.trim();
+
+        const response = await fetch(`https://japi.rest/discord/v1/user/${discordId}`);
+        const json = await response.json();
+
+        let finalData = {};
+
+        if (json && json.data) {
+            finalData = json.data;
+        } else {
+            finalData = {
+                id: discordId,
+                username: tempUserData.tag,
+                avatarURL: tempUserData.avatar
+            };
+        }
+
+        settings.discordData = finalData;
+        saveSettings();
+
+        if (socket && socket.connected) {
+            socket.emit("client:discord_link", finalData);
+        }
+
+        updateDiscordSettingsUI();
+
+        closeModal('modal-discord-verify');
+
+        const usernameEl = document.getElementById('connected-username');
+        const avatarEl = document.getElementById('connected-avatar');
+
+        if (usernameEl) usernameEl.innerText = finalData.username || tempUserData.tag;
+        if (avatarEl) avatarEl.src = finalData.avatarURL || tempUserData.avatar;
+
+        setTimeout(() => {
+            openModal('modal-discord-success');
+        }, 300);
+
+    } catch (err) {
+        console.error("Erro ao finalizar vínculo:", err);
+        showGenericToast("Erro ao salvar dados, mas verificado com sucesso.", "error");
+        closeModal('modal-discord-verify');
+    } finally {
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = originalText;
+    }
+}
+
+function updateDiscordSettingsUI() {
+    const wrapper = document.getElementById('discord-settings-wrapper');
+    if (!wrapper) return;
+
+    const discordData = settings.discordData;
+
+    if (!discordData) {
+        wrapper.innerHTML = `
+            <div class="flex items-center justify-between bg-[#5865F2]/5 p-4 rounded-xl border border-[#5865F2]/20 cursor-pointer hover:bg-[#5865F2]/10 hover:border-[#5865F2]/40 transition no-drag group"
+                onclick="openModal('modal-discord-connect')">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 rounded-lg bg-[#5865F2]/10 group-hover:bg-[#5865F2]/20 transition">
+                        <i data-lucide="link" class="text-[#5865F2] w-5 h-5 transition"></i>
+                    </div>
+                    <div>
+                        <span class="text-sm font-bold text-gray-200 block group-hover:text-white transition">Vincular Conta</span>
+                        <span class="text-[10px] text-[#5865F2]/70 group-hover:text-[#5865F2] transition">Clique para definir seu ID</span>
+                    </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-gray-600 group-hover:text-[#5865F2] transition"></i>
+            </div>
+        `;
+    } else {
+        const avatarUrl = discordData.avatarURL || `https://cdn.discordapp.com/avatars/${discordData.id}/${discordData.avatar}.png`;
+
+        wrapper.innerHTML = `
+            <div class="bg-[#5865F2]/10 p-4 rounded-xl border border-[#5865F2]/30 relative overflow-hidden group">
+                <div class="flex items-center justify-between relative z-10">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <img src="${avatarUrl}" class="w-10 h-10 rounded-full border-2 border-[#5865F2] shadow-sm">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#1e1f22] rounded-full"></div>
+                        </div>
+                        <div>
+                            <span class="text-xs text-[#5865F2] font-bold uppercase tracking-widest block mb-0.5">Conectado como</span>
+                            <span class="text-sm font-bold text-white block leading-none">${discordData.username || 'Usuário'}</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="unlinkDiscord()" 
+                        class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 transition hover:shadow-red-500/20 shadow-lg" 
+                        title="Desconectar">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="absolute -right-4 -bottom-6 text-[#5865F2]/5 transform rotate-12 pointer-events-none">
+                    <i data-lucide="webhook" class="w-24 h-24"></i>
+                </div>
+            </div>
+        `;
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+}
+
+window.unlinkDiscord = () => {
+    if (!confirm("Deseja realmente desvincular sua conta do Discord?")) return;
+
+    if (socket && socket.connected) {
+        socket.emit("client:discord_unlink");
+    }
+
+    delete settings.discordData;
+    saveSettings();
+
+    updateDiscordSettingsUI();
+    showGenericToast("Conta desconectada com sucesso.", "success");
+    addLog("Discord desvinculado.");
+};
+
+updateDiscordSettingsUI();
+
+function backToStep1() {
+    closeModal('modal-discord-verify');
+
+    setTimeout(() => {
+        const idInput = document.getElementById('input-discord-id');
+        const errorContainer = document.getElementById('discord-id-error');
+        const helpBox = document.getElementById('discord-help-box');
+        const infoBox = document.getElementById('discord-info-box');
+
+        if (idInput) idInput.classList.remove('border-red-500', 'animate-pulse');
+        if (errorContainer) errorContainer.classList.add('hidden');
+        
+        if (helpBox) helpBox.classList.add('hidden');
+        if (infoBox) infoBox.classList.remove('hidden');
+
+        openModal('modal-discord-connect');
+    }, 300);
+}
