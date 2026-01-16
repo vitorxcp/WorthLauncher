@@ -1004,6 +1004,10 @@ ipcMain.handle("game:launch", async (event, authDetails, config) => {
             }
         }
 
+        if (String(e).toLowerCase().includes("desconectado do servidor")) {
+            updateDiscordActivity("No jogo", `Jogando como ${nickname}`, rpc, nickname);
+        }
+
         if (!hasStarted && e) {
             if (String(e).includes("LWJGL") || String(e).includes("OpenAL") || String(e).includes("Setting user") || String(e).includes("[Client thread/INFO]")) {
                 if (!String(e).includes("MinecraftForge v11.15.1.2318 Initialized")) return;
