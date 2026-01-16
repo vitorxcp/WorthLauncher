@@ -379,9 +379,13 @@ let playingUsers = [];
 let usersSessionGames = {};
 
 function updateOnlineCount() {
-    const usersCount = Object.keys(onlineUsers).length - Object.keys(usersSessionGames).length;
+    const allNicks = Object.keys(onlineUsers);
+
+    const realPlayers = allNicks.filter(nick => nick !== "WorthClient");
+
     const launchCount = Object.keys(usersSessionGames).length;
-    const totalCount = Object.keys(onlineUsers).length;
+    const totalCount = realPlayers.length;
+    const usersCount = totalCount - launchCount;
 
     io.emit("server:online_count", {
         users: usersCount,
@@ -391,9 +395,6 @@ function updateOnlineCount() {
 
     const playingData = Object.keys(usersSessionGames).map(playerNick => {
         const userCosmetics = usersDB[playerNick]?.cosmetics || {};
-
-        console.log(userCosmetics);
-
         const activeCosmetics = Object.keys(userCosmetics).filter(id => userCosmetics[id] === true);
 
         return {
@@ -432,8 +433,17 @@ io.on("connection", (socket) => {
             return socket.disconnect();
         }
         usersDB[nick].status = status;
+        usersDB[nick].lastLogin = Date.now();
     } else {
-        usersDB[nick] = { uuid, friends: [], requests: [], status, cosmetics: [] };
+        usersDB[nick] = { 
+            uuid, 
+            friends: [], 
+            requests: [], 
+            status, 
+            cosmetics: {},
+            registeredAt: Date.now(),
+            lastLogin: Date.now()
+        };
         saveData('users');
     }
 
@@ -443,6 +453,7 @@ io.on("connection", (socket) => {
     }
 
     onlineUsers[nick] = socket.id;
+
     socket.join(nick);
     updateOnlineCount();
 
@@ -690,6 +701,60 @@ io.on("connection", (socket) => {
         socket.emit('ticket:list_update', isStaff ? ticketsDB : ticketsDB.filter(t => t.author === nick));
     });
 
+    socket.on("discord:verifyUserId", ({ id }, callback) => {
+        const botSocketId = onlineUsers["WorthClient"];
+
+        if (!botSocketId) {
+            return callback({ error: "O sistema de verificação está offline no momento." });
+        }
+
+        io.to(botSocketId).timeout(5000).emit("bot:verifyId", id, (err, responseFromBot) => {
+
+            if (err) {
+                return callback({ error: "O bot demorou muito para responder." });
+            }
+
+            callback(responseFromBot);
+        });
+    });
+
+    socket.on("client:discord_link", (discordData) => {
+        if (!usersDB[nick]) return;
+
+        usersDB[nick].discord = {
+            id: discordData.id,
+            username: discordData.username,
+            linkedAt: Date.now()
+        };
+
+        saveData('users');
+
+        socket.emit("success", "Conta do Discord vinculada e salva no servidor!");
+
+        const botSocketId = onlineUsers["WorthClient"];
+        if (botSocketId) {
+            io.to(botSocketId).emit("bot:player_linked", { nick, discordId: discordData.id });
+        }
+    });
+
+    socket.on("client:discord_unlink", () => {
+        if (!usersDB[nick]) return;
+
+        if (usersDB[nick].discord) {
+            discordData = usersDB[nick].discord;
+
+            delete usersDB[nick].discord;
+            saveData('users');
+
+            socket.emit("success", "Conta do Discord desconectada.");
+
+            const botSocketId = onlineUsers["WorthClient"];
+            if (botSocketId) {
+                io.to(botSocketId).emit("bot:player_unlinked", { nick, discordId: discordData.id });
+            }
+        }
+    });
+
     socket.on('chat:staff_send', ({ text }, callback) => {
         if (!isUserStaff(nick)) {
             return callback({ 'error': 'Comando desconhecido ou sem permissão.' });
@@ -927,7 +992,7 @@ const app2 = express();
 const port2 = 9075;
 
 app2.use(cors({
-    origin: '*', 
+    origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Content-Length', 'X-Requested-With'],
     credentials: true
@@ -972,7 +1037,7 @@ app2.get('/ping', (req, res) => {
 });
 
 app2.post('/upload', (req, res) => {
-    req.on('data', () => {}); 
+    req.on('data', () => { });
     req.on('end', () => {
         res.send('ok');
     });
@@ -981,19 +1046,19 @@ app2.post('/upload', (req, res) => {
 const downloadBuffer = Buffer.allocUnsafe(4 * 1024 * 1024);
 app2.get('/download', (req, res) => {
     const size = (parseInt(req.query.size) || 50) * 1024 * 1024;
-    res.writeHead(200, { 
-        'Content-Type': 'application/octet-stream', 
-        'Content-Length': size, 
-        'Cache-Control': 'no-store' 
+    res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': size,
+        'Cache-Control': 'no-store'
     });
-    
+
     let sent = 0;
     const send = () => {
-        while(sent < size) {
+        while (sent < size) {
             const chunkSize = Math.min(downloadBuffer.length, size - sent);
-            if(!res.write(downloadBuffer.slice(0, chunkSize))) { 
-                res.once('drain', send); 
-                return; 
+            if (!res.write(downloadBuffer.slice(0, chunkSize))) {
+                res.once('drain', send);
+                return;
             }
             sent += chunkSize;
         }
@@ -1003,3 +1068,94 @@ app2.get('/download', (req, res) => {
 });
 
 app2.listen(port2, () => console.log(`🚀 SpeedTestVX Server ON: http://localhost:${port2}`));
+
+app.get("/api/v1/server/stats", (req, res) => {
+    try {
+        const os = require("os");
+        const totalMem = os.totalmem() / (1024 * 1024 * 1024);
+        const freeMem = os.freemem() / (1024 * 1024 * 1024);
+        const usedMem = totalMem - freeMem;
+
+        const onlineCount = Object.keys(onlineUsers).filter(n => n !== "WorthClient").length;
+        const playingCount = Object.keys(usersSessionGames).length;
+        const registeredCount = Object.keys(usersDB).length;
+
+        const lastPost = blogDB.length > 0 ? blogDB[blogDB.length - 1] : null;
+
+        res.json({
+            success: true,
+            status: "online",
+            network: {
+                online: onlineCount,
+                playing: playingCount,
+                registered: registeredCount,
+            },
+            content: {
+                tickets: ticketsDB.length,
+                texturePacks: texturePacks.length,
+                lastUpdate: lastPost ? lastPost.dateFormatted : "N/A"
+            },
+            host: {
+                uptime: process.uptime(),
+                ramUsage: `${usedMem.toFixed(2)}GB / ${totalMem.toFixed(2)}GB`,
+                cpuLoad: os.loadavg()[0]
+            }
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Erro ao gerar métricas." });
+    }
+});
+
+app.get("/api/v1/player/:nick", (req, res) => {
+    try {
+        const targetNick = req.params.nick;
+        
+        const realNick = Object.keys(usersDB).find(k => k.toLowerCase() === targetNick.toLowerCase());
+
+        if (!realNick) {
+            return res.status(404).json({ success: false, message: "Jogador não encontrado." });
+        }
+
+        const userData = usersDB[realNick];
+        const isOnline = !!onlineUsers[realNick];
+        const isPlaying = !!usersSessionGames[realNick];
+
+        const activeCosmetics = [];
+        if (userData.cosmetics) {
+            for (const [cosmeticId, isActive] of Object.entries(userData.cosmetics)) {
+                if (isActive) {
+                    const cosmeticInfo = cosmeticsListDB.find(c => c.id === cosmeticId);
+                    activeCosmetics.push(cosmeticInfo ? { id: cosmeticId, name: cosmeticInfo.name, type: cosmeticInfo.category } : { id: cosmeticId });
+                }
+            }
+        }
+
+        const responseData = {
+            success: true,
+            nick: realNick,
+            uuid: userData.uuid || null,
+            status: isOnline ? (isPlaying ? "playing" : "online") : "offline",
+            social: {
+                discord: userData.discord ? {
+                    username: userData.discord.username,
+                    linkedAt: userData.discord.linkedAt
+                } : null
+            },
+            game: {
+                cosmetics: activeCosmetics,
+                friendsCount: userData.friends ? userData.friends.length : 0
+            },
+            meta: {
+                registeredAt: userData.registeredAt || null,
+                lastLogin: userData.lastLogin || null
+            }
+        };
+
+        res.json(responseData);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Erro interno ao buscar jogador." });
+    }
+});
