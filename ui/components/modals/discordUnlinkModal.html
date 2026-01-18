@@ -1,0 +1,29 @@
+<div id="modal-discord-unlink"
+    class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 transition-opacity duration-300">
+    <div
+        class="relative bg-[#0a0a0a] border border-white/10 p-8 rounded-2xl shadow-2xl w-full max-w-md transform scale-95 transition-transform duration-300">
+
+        <div class="text-center mb-6">
+            <div
+                class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                <i data-lucide="link-2-off" class="w-8 h-8 text-red-500"></i>
+            </div>
+            <h3 class="text-xl font-black text-white uppercase italic tracking-wide">Desvincular Conta?</h3>
+            <p class="text-gray-400 text-xs mt-2 font-mono text-center">
+                Atenção: Desvincular a conta resultará na perda imediata de cargos e benefícios sincronizados no
+                Discord. Confirma a ação?
+            </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <button id="btn-cancel-unlink"
+                class="bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition flex items-center justify-center gap-2">
+                Cancelar
+            </button>
+            <button id="btn-confirm-unlink"
+                class="bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-900/20 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition flex items-center justify-center gap-2">
+                <i data-lucide="trash-2" class="w-4 h-4"></i> Desvincular
+            </button>
+        </div>
+    </div>
+</div>
