@@ -347,18 +347,18 @@
             const sock = window.getSocket();
             if (!sock) { setTimeout(initStore, 500); return; }
 
-            setupStoreSocketEvents(sock);
-            renderCategories();
+            // setupStoreSocketEvents(sock);
+            // renderCategories();
             
-            if (sock.connected) sock.emit("store:get_data");
-            else sock.once('connect', () => sock.emit("store:get_data"));
+            // if (sock.connected) sock.emit("store:get_data");
+            // else sock.once('connect', () => sock.emit("store:get_data"));
 
-            const searchInput = document.getElementById('store-search');
-            if (searchInput) {
-                searchInput.removeEventListener('input', handleSearchInput);
-                searchInput.addEventListener('input', handleSearchInput);
-            }
-            if(typeof lucide !== 'undefined') lucide.createIcons();
+            // const searchInput = document.getElementById('store-search');
+            // if (searchInput) {
+            //     searchInput.removeEventListener('input', handleSearchInput);
+            //     searchInput.addEventListener('input', handleSearchInput);
+            // }
+            // if(typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function handleSearchInput(e) {
