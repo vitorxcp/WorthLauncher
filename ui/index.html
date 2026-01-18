@@ -5,11 +5,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>WorthLauncher</title>
+
+  <link rel="preload" href="./styles/index.css" as="style">
+  <link rel="preload" href="./js/tailwindcss_3.4.17.js" as="script">
+  <link rel="preload" href="./js/socket.io.min.js" as="script">
+  <link rel="stylesheet" href="./styles/index.css">
+
   <script src="./js/tailwindcss_3.4.17.js"></script>
   <script src="./js/marked.min.js"></script>
   <script src="./js/lucide.min.js"></script>
   <script src="./js/socket.io.min.js"></script>
-  <link rel="stylesheet" href="./styles/index.css">
+
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-J75FLT254J"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -17,20 +23,31 @@
     gtag('js', new Date());
     gtag('config', 'G-J75FLT254J');
   </script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+          }
+        }
+      }
+    }
+  </script>
 </head>
 
 <body
   class="bg-transparent h-screen w-screen overflow-hidden flex flex-col rounded-xl border border-white/10 shadow-2xl">
-<div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#0a0a0a]/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-bold border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 transform will-change-transform opacity-0 translate-y-8 pointer-events-none z-[99999] flex items-center gap-2">
-    </div>
+  <div id="toast"
+    class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#0a0a0a]/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-bold border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 transform will-change-transform opacity-0 translate-y-8 pointer-events-none z-[99999] flex items-center gap-2">
+  </div>
   <load src="./components/header.html" />
   <div class="h-10"></div>
   <load src="./components/modals/loadModal.html" />
 
   <div class="flex flex-1 overflow-hidden bg-[#0a0a0a] relative">
     <div class="absolute inset-0 z-0">
-      <div
-        class="absolute inset-0 bg-[url('./assets/background_blur.png')] bg-cover bg-center transform opacity-40">
+      <div class="absolute inset-0 bg-[url('./assets/background_blur.png')] bg-cover bg-center transform opacity-40">
       </div>
       <div class="absolute inset-0 bg-gradient-to-r from-black via-[#050505]/50 to-[#050505]/40"></div>
     </div>
@@ -49,6 +66,7 @@
 
   <load src="./components/modals/authErrorModal.html" />
   <load src="./components/modals/discordModal.html" />
+  <load src="./components/modals/discordUnlinkModal.html" />
   <load src="./components/modals/removeFriendModal.html" />
   <load src="./components/modals/closeTicketModal.html" />
   <load src="./components/modals/clearHistoryModal.html" />
