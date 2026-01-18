@@ -816,13 +816,24 @@ function renderChatLoading() {
 
 function setupSocketEvents() {
     socket.removeAllListeners();
-
     socket.on("connect", () => {
         socketinf = true;
         updateMyStatusUI(localStorage.getItem('status-account') || "online")
         socket.emit('ticket:list');
     });
     socket.on("disconnect", () => { });
+
+    setupStoreSocketEvents(socket);
+    renderCategories();
+
+    socket.emit("store:get_data");
+
+    const searchInput = document.getElementById('store-search');
+    if (searchInput) {
+        searchInput.removeEventListener('input', handleSearchInput);
+        searchInput.addEventListener('input', handleSearchInput);
+    }
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 
     socket.on("init:data", (data) => {
         requestAnimationFrame(() => {
