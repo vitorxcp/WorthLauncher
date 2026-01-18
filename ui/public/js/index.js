@@ -1173,39 +1173,66 @@ const loadingContent = document.getElementById('loading-content');
 
 document.addEventListener("DOMContentLoaded", () => {
     const video = document.getElementById('intro-video');
+
     if (video) {
-        video.addEventListener('loadedmetadata', () => { video.currentTime = 3; });
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-            playPromise.then(_ => { video.classList.remove('opacity-0'); })
-                .catch(error => { console.error("Erro autoplay:", error); video.classList.remove('opacity-0'); });
-        }
+        video.muted = true;
+        video.playsInline = true;
+
+        video.addEventListener('loadedmetadata', () => {
+            if (video.currentTime < 3) video.currentTime = 3;
+        });
+
+        const attemptPlay = async () => {
+            try {
+                await video.play();
+                video.classList.remove('opacity-0');
+            } catch (error) {
+                console.warn("Autoplay pausado pelo navegador (economia de energia):", error);
+                video.classList.remove('opacity-0');
+            }
+        };
+
+        attemptPlay();
+
         video.addEventListener('ended', () => {
             video.currentTime = 3;
-            video.play();
+            attemptPlay();
         });
     }
 });
 
 function hideLoading() {
-    loadingContent.style.opacity = '0';
-    loadingContent.style.transform = 'scale(0.9)';
+    if (loadingContent) {
+        loadingContent.style.opacity = '0';
+        loadingContent.style.transform = 'scale(0.9)';
+    }
 
-    curtainLeft.style.transform = 'translateX(-100%)';
-    curtainRight.style.transform = 'translateX(100%)';
+    if (curtainLeft) curtainLeft.style.transform = 'translateX(-100%)';
+    if (curtainRight) curtainRight.style.transform = 'translateX(100%)';
 
     setTimeout(() => {
-        loadingScreen.style.pointerEvents = 'none';
-        loadingScreen.style.display = 'none';
+        if (loadingScreen) {
+            loadingScreen.style.pointerEvents = 'none';
+            loadingScreen.style.display = 'none';
+        }
+
+        const video = document.getElementById('intro-video');
+        if (video) video.pause();
+
     }, 1200);
 }
 
 function showLoading() {
-    loadingScreen.style.pointerEvents = 'auto';
-    loadingContent.style.opacity = '1';
-    loadingContent.style.transform = 'scale(1)';
-    curtainLeft.style.transform = 'translateX(0)';
-    curtainRight.style.transform = 'translateX(0)';
+    if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+        loadingScreen.style.pointerEvents = 'auto';
+    }
+    if (loadingContent) {
+        loadingContent.style.opacity = '1';
+        loadingContent.style.transform = 'scale(1)';
+    }
+    if (curtainLeft) curtainLeft.style.transform = 'translateX(0)';
+    if (curtainRight) curtainRight.style.transform = 'translateX(0)';
 }
 
 const tempoAleatorio = Math.floor(Math.random() * (7000 - 2000 + 1)) + 3000;
@@ -1288,14 +1315,14 @@ function sendCode() {
     const idInput = document.getElementById('input-discord-id');
     const btnSend = document.getElementById('btn-send-discord');
     const errorContainer = document.getElementById('discord-id-error');
-    
-    if(errorContainer) errorContainer.classList.add('hidden');
-    if(idInput) idInput.classList.remove('border-red-500', 'animate-pulse');
-    
+
+    if (errorContainer) errorContainer.classList.add('hidden');
+    if (idInput) idInput.classList.remove('border-red-500', 'animate-pulse');
+
     const helpBox = document.getElementById('discord-help-box');
     const infoBox = document.getElementById('discord-info-box');
-    if(helpBox) helpBox.classList.add('hidden');
-    if(infoBox) infoBox.classList.remove('hidden');
+    if (helpBox) helpBox.classList.add('hidden');
+    if (infoBox) infoBox.classList.remove('hidden');
 
     const id = idInput.value.trim();
 
@@ -1307,7 +1334,7 @@ function sendCode() {
     const originalBtnContent = btnSend.innerHTML;
     btnSend.disabled = true;
     btnSend.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enviando...`;
-    if(window.lucide) window.lucide.createIcons();
+    if (window.lucide) window.lucide.createIcons();
 
     console.log(`[Socket] Enviando pedido para ID: ${id}`);
 
@@ -1321,11 +1348,11 @@ function sendCode() {
 
         btnSend.disabled = false;
         btnSend.innerHTML = originalBtnContent;
-        if(window.lucide) window.lucide.createIcons();
+        if (window.lucide) window.lucide.createIcons();
 
         if (!data || data.error) {
             console.warn("[Socket] Erro retornado:", data?.error);
-            showDiscordError(data?.error || "Erro de conexão."); 
+            showDiscordError(data?.error || "Erro de conexão.");
             return;
         }
 
@@ -1337,16 +1364,16 @@ function sendCode() {
 
             setTimeout(() => {
                 const verifyInput = document.getElementById('input-verify-code');
-                if(verifyInput) {
+                if (verifyInput) {
                     verifyInput.value = "";
                     verifyInput.classList.remove('border-red-500', 'text-red-400');
                 }
                 const errorMsg = document.getElementById('verify-error-msg');
-                if(errorMsg) errorMsg.classList.add('opacity-0');
-                
+                if (errorMsg) errorMsg.classList.add('opacity-0');
+
                 openModal('modal-discord-verify');
-                
-                if(verifyInput) setTimeout(() => verifyInput.focus(), 100);
+
+                if (verifyInput) setTimeout(() => verifyInput.focus(), 100);
             }, 300);
         }
     });
@@ -1356,28 +1383,28 @@ function showDiscordError(msg) {
     console.log(`[UI] Mostrando erro: ${msg}`);
     const idInput = getElement('input-discord-id');
     const errorContainer = getElement('discord-id-error');
-    
-    if(idInput) {
+
+    if (idInput) {
         idInput.classList.add('border-red-500');
         idInput.classList.add('animate-pulse');
         setTimeout(() => idInput.classList.remove('animate-pulse'), 500);
     }
 
-    if(errorContainer) {
+    if (errorContainer) {
         errorContainer.classList.remove('hidden');
         const span = errorContainer.querySelector('span');
-        if(span) span.innerText = msg;
+        if (span) span.innerText = msg;
         else errorContainer.innerText = msg;
     }
 
     const helpBox = document.getElementById('discord-help-box');
     const infoBox = document.getElementById('discord-info-box');
 
-    if(helpBox && infoBox) {
+    if (helpBox && infoBox) {
         infoBox.classList.add('hidden');
         helpBox.classList.remove('hidden');
-        
-        if(window.lucide) window.lucide.createIcons();
+
+        if (window.lucide) window.lucide.createIcons();
     }
 }
 
@@ -1533,7 +1560,7 @@ function backToStep1() {
 
         if (idInput) idInput.classList.remove('border-red-500', 'animate-pulse');
         if (errorContainer) errorContainer.classList.add('hidden');
-        
+
         if (helpBox) helpBox.classList.add('hidden');
         if (infoBox) infoBox.classList.remove('hidden');
 
