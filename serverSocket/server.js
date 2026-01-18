@@ -17,6 +17,20 @@ const ADMINS_FILE = path.join(__dirname, 'admins.json');
 const TICKETS_FILE = path.join(__dirname, 'tickets.json');
 const RESOURCEPSCKS_FILE = path.join(__dirname, 'resourcepacks.json');
 const COSMETICS_DB_FILE = path.join(__dirname, 'cosmetics.json');
+const SYSTEM_ROLES = [
+    { id: "owner_client", name: "Owner - WorthClient", color: "#ff0000" },
+    { id: "colead_client", name: "Co-Lead - WorthClient", color: "#ff5555" },
+    { id: "staff_client", name: "Staff - WorthClient", color: "#ffff55" },
+    { id: "partner", name: "Parceiro", color: "#55ff55" },
+    { id: "master_rede", name: "Master - RedeWorth", color: "#aa0000" },
+    { id: "gerente_rede", name: "Gerente - RedeWorth", color: "#aa00aa" },
+    { id: "dev_rede", name: "Developer - RedeWorth", color: "#00aaaa" },
+    { id: "admin_rede", name: "Admin - RedeWorth", color: "#ff5555" },
+    { id: "mod_rede", name: "Moderador - RedeWorth", color: "#55ff55" },
+    { id: "ajud_rede", name: "Ajudante - RedeWorth", color: "#ffff55" },
+    { id: "jhbruno", name: "JH_BRUNO", color: "#aa00aa" },
+    { id: "worthmais", name: "Worth+", color: "#ffaa00" }
+];
 
 let blogDB = [];
 let usersDB = {};
@@ -57,6 +71,7 @@ function saveData(type) {
         if (type === 'blog') fs.writeFileSync(BLOG_FILE, JSON.stringify(blogDB, null, 2));
         if (type === 'tickets') fs.writeFileSync(TICKETS_FILE, JSON.stringify(ticketsDB, null, 2));
         if (type === 'packs') fs.writeFileSync(RESOURCEPSCKS_FILE, JSON.stringify(texturePacks, null, 2));
+        if (type === 'cosmetics') fs.writeFileSync(COSMETICS_DB_FILE, JSON.stringify(cosmeticsListDB, null, 2));
     } catch (e) { console.error("Erro ao salvar DB:", e); }
 }
 
@@ -104,6 +119,7 @@ const checkAdminAuth = (req, res, next) => {
         if (req.xhr || req.headers.accept.indexOf('json') > -1) {
             return res.status(401).json({ success: false, message: "Não autenticado." });
         }
+        req.session.returnTo = req.originalUrl;
         return res.redirect("/admin/login");
     }
 
@@ -134,7 +150,11 @@ app.post("/admin/login", (req, res) => {
             nick: admin.nick,
             email: admin.email
         };
-        return res.redirect("/admin/painel/blog");
+
+        const redirectTo = req.session.returnTo || "/admin/painel/blog";
+        delete req.session.returnTo;
+
+        return res.redirect(redirectTo);
     } else {
         return res.render("admin/login.html", { error: "Credenciais inválidas." });
     }
@@ -364,6 +384,170 @@ app.post("/api/v1/files/upload", async (req, res) => {
     });
 });
 
+app.get("/teste/capas", (req, res) => {
+    res.render("teste_capas.html");
+});
+
+
+app.get("/admin/painel/cosmetics", checkAdminAuth, (req, res) => {
+    res.render("admin/cosmetics/index.html", { cosmetics: cosmeticsListDB, user: req.session.user });
+});
+
+app.get("/admin/painel/cosmetics/new", checkAdminAuth, (req, res) => {
+    res.render("admin/cosmetics/new.html", {
+        user: req.session.user,
+        roles: SYSTEM_ROLES
+    });
+});
+
+app.post("/admin/painel/cosmetics/new/post", checkAdminAuth, async (req, res) => {
+    try {
+        const { name, type, rarity, price, description, customId, tagsAccess } = req.body;
+
+        if (!req.files || !req.files.storeImage) {
+            return res.json({ success: false, message: "A imagem da loja é obrigatória." });
+        }
+
+        if (customId) {
+            const exists = cosmeticsListDB.some(c => c.id === customId);
+            if (exists) {
+                return res.json({ success: false, message: "Este ID já está em uso por outro cosmético." });
+            }
+        }
+
+        const imageFile = req.files.storeImage;
+        const ext = imageFile.name.split('.').pop();
+        const imageFileName = `store_${makeid(10)}.${ext}`;
+
+        const uploadPath = path.join(__dirname, "app/web/upload/images", imageFileName);
+
+        if (!fs.existsSync(path.dirname(uploadPath))) {
+            fs.mkdirSync(path.dirname(uploadPath), { recursive: true });
+        }
+
+        await imageFile.mv(uploadPath);
+
+        const finalId = customId ? customId.trim() : `${type.toLowerCase()}_${makeid(6)}`;
+
+        let accessList = [];
+        let isGlobalFree = false;
+
+        if (tagsAccess) {
+            const rawTags = Array.isArray(tagsAccess) ? tagsAccess : [tagsAccess];
+
+            if (rawTags.includes("global")) {
+                isGlobalFree = true;
+                accessList = ["global"];
+            } else {
+                accessList = rawTags;
+            }
+        }
+
+        const newCosmetic = {
+            id: finalId,
+            name: name,
+            description: description,
+            type: type,
+            rarity: rarity,
+            price: parseFloat(price) || 0,
+            currency: "BRL",
+            image: `http://elgae-sp1-b001.elgaehost.com.br:10379/upload/images/${imageFileName}`,
+            author: req.session.user.nick,
+            isFree: isGlobalFree,
+            freeForTags: accessList
+        };
+
+        cosmeticsListDB.push(newCosmetic);
+        saveData('cosmetics');
+
+        res.json({ success: true, message: "Cosmético criado com sucesso!", redirect: "/admin/painel/cosmetics" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Erro interno ao salvar." });
+    }
+});
+
+app.post("/admin/painel/cosmetics/:id/remove", checkAdminAuth, (req, res) => {
+    const initialLen = cosmeticsListDB.length;
+    cosmeticsListDB = cosmeticsListDB.filter(c => c.id !== req.params.id);
+
+    if (cosmeticsListDB.length === initialLen) return res.json({ success: false, message: "Item não encontrado." });
+
+    saveData('cosmetics');
+    res.json({ success: true, message: "Item removido." });
+});
+
+app.get("/admin/painel/users/roles", checkAdminAuth, (req, res) => {
+    res.render("admin/users/roles.html", {
+        user: req.session.user,
+        roles: SYSTEM_ROLES
+    });
+});
+
+app.get("/api/admin/users/search", checkAdminAuth, (req, res) => {
+    try {
+        const query = req.query.q ? req.query.q.toLowerCase().trim() : "";
+
+        const foundUsers = Object.keys(usersDB)
+            .filter(nick => {
+                const u = usersDB[nick];
+                return nick.toLowerCase().includes(query) || (u.uuid && u.uuid.includes(query));
+            })
+            .map(nick => {
+                const u = usersDB[nick];
+                return {
+                    nick: nick,
+                    uuid: u.uuid,
+                    tags: u.tags || [],
+                    lastLogin: u.lastLogin
+                };
+            })
+            .slice(0, 10);
+
+        res.json({ success: true, users: foundUsers });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Erro ao buscar." });
+    }
+});
+
+app.post("/api/admin/users/update_tags", checkAdminAuth, (req, res) => {
+    try {
+        const { nick, tags } = req.body;
+
+        if (!usersDB[nick]) {
+            return res.status(404).json({ success: false, message: "Usuário não encontrado." });
+        }
+
+        if (!Array.isArray(tags)) {
+            return res.status(400).json({ success: false, message: "Formato de tags inválido." });
+        }
+
+        const validTagIds = SYSTEM_ROLES.map(r => r.id);
+        const filteredTags = tags.filter(t => validTagIds.includes(t));
+
+        usersDB[nick].tags = filteredTags;
+        saveData('users');
+
+        console.log(`[Admin] ${req.session.user.nick} alterou as tags de ${nick} para: [${filteredTags.join(', ')}]`);
+
+        const socketId = onlineUsers[nick];
+        if (socketId) {
+            io.to(socketId).emit("client:tags_updated", filteredTags);
+            const userCosmetics = usersDB[nick].cosmetics || {};
+            const activeList = Object.keys(userCosmetics).filter(k => userCosmetics[k] === true);
+        }
+
+        res.json({ success: true, message: "Cargos atualizados com sucesso!", tags: filteredTags });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Erro ao salvar tags." });
+    }
+});
+
 app.listen(10379, () => {
     console.log("Servidor Web/API iniciado na porta 10379");
 });
@@ -435,12 +619,14 @@ io.on("connection", (socket) => {
         usersDB[nick].status = status;
         usersDB[nick].lastLogin = Date.now();
     } else {
-        usersDB[nick] = { 
-            uuid, 
-            friends: [], 
-            requests: [], 
-            status, 
+        usersDB[nick] = {
+            uuid,
+            friends: [],
+            requests: [],
+            status,
             cosmetics: {},
+            tags: [],
+            ownedCosmetics: [],
             registeredAt: Date.now(),
             lastLogin: Date.now()
         };
@@ -475,11 +661,23 @@ io.on("connection", (socket) => {
             return socket.emit("error", "Cosmético não encontrado no sistema.");
         }
 
-        if (itemInfo.isPaid) {
-            const userPurchased = usersDB[nick].purchasedCosmetics || [];
-            if (!userPurchased.includes(cosmeticId)) {
-                return socket.emit("error", `Você precisa comprar a ${itemInfo.name} antes de equipar.`);
-            }
+        const userData = usersDB[nick];
+        const userOwned = userData.ownedCosmetics || [];
+        const userTags = userData.tags || [];
+
+        let hasAccess = false;
+
+        if (itemInfo.isFree) hasAccess = true;
+
+        if (userOwned.includes(cosmeticId)) hasAccess = true;
+
+        if (itemInfo.freeForTags && Array.isArray(itemInfo.freeForTags)) {
+            const tagMatch = itemInfo.freeForTags.some(tagId => userTags.includes(tagId));
+            if (tagMatch) hasAccess = true;
+        }
+
+        if (!hasAccess) {
+            return socket.emit("error", "Você precisa comprar este item ou ter o cargo necessário.");
         }
 
         const userActiveCosmetics = usersDB[nick].cosmetics || {};
@@ -494,9 +692,19 @@ io.on("connection", (socket) => {
             }
         }
 
+        const userActive = usersDB[nick].cosmetics || {};
+        Object.keys(userActive).forEach(key => {
+            if (userActive[key] === true) {
+                const equippedItem = cosmeticsListDB.find(c => c.id === key);
+                if (equippedItem && equippedItem.type === itemInfo.type) {
+                    usersDB[nick].cosmetics[key] = false;
+                }
+            }
+        });
+
         usersDB[nick].cosmetics[cosmeticId] = true;
         saveData('users');
-        socket.emit("success", `${itemInfo.name} equipado com sucesso!`);
+        socket.emit("success", `${itemInfo.name} equipado!`);
         console.log("[Cosmetics] Atualizando jogadores online...");
         updateOnlineCount();
         socket.emit("launcher:cosmetics:player", true, { name: cosmeticId });
@@ -972,6 +1180,101 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("store:get_data", () => {
+        const userTags = usersDB[nick].tags || [];
+        const userOwned = usersDB[nick].ownedCosmetics || [];
+        const isAdminRole = userTags.includes("owner_client") || userTags.includes("colead_client");
+        const filteredCatalog = cosmeticsListDB.filter(item => {
+            if (isAdminRole) return true;
+            if (item.price > 0 || item.isFree) return true;
+            if (item.freeForTags && Array.isArray(item.freeForTags) && item.freeForTags.length > 0) {
+                return item.freeForTags.some(tagId => userTags.includes(tagId));
+            }
+            return false;
+        });
+
+        let effectiveOwned;
+
+        if (isAdminRole) {
+            effectiveOwned = cosmeticsListDB.map(c => c.id);
+        } else {
+            effectiveOwned = [...userOwned];
+
+            cosmeticsListDB.forEach(item => {
+                if (effectiveOwned.includes(item.id)) return;
+
+                if (item.isFree) {
+                    effectiveOwned.push(item.id);
+                    return;
+                }
+
+                if (item.freeForTags && item.freeForTags.length > 0) {
+                    if (item.freeForTags.some(tagId => userTags.includes(tagId))) {
+                        effectiveOwned.push(item.id);
+                    }
+                }
+            });
+        }
+
+        socket.emit("store:catalog", filteredCatalog);
+        socket.emit("store:owned_list", effectiveOwned);
+
+        const active = usersDB[nick].cosmetics || {};
+        const activeList = Object.keys(active).filter(k => active[k] === true);
+        socket.emit("launcher:cosmetic:player", true, activeList.map(id => ({ name: id })));
+    });
+
+    socket.on("launcher:cosmetic:player:add", (cosmeticId) => {
+        const itemInfo = cosmeticsListDB.find(c => c.id === cosmeticId);
+
+        if (!itemInfo) return socket.emit("error", "Item não existe.");
+
+        const userData = usersDB[nick];
+        const userOwned = userData.ownedCosmetics || [];
+        const userTags = userData.tags || [];
+        const isAdminRole = userTags.includes("owner_client") || userTags.includes("colead_client");
+
+        let hasAccess = false;
+
+        if (isAdminRole) {
+            hasAccess = true;
+        }
+        else if (itemInfo.isFree) {
+            hasAccess = true;
+        }
+        else if (userOwned.includes(cosmeticId)) {
+            hasAccess = true;
+        }
+        else if (itemInfo.freeForTags && Array.isArray(itemInfo.freeForTags)) {
+            const tagMatch = itemInfo.freeForTags.some(tagId => userTags.includes(tagId));
+            if (tagMatch) hasAccess = true;
+        }
+
+        if (!hasAccess) {
+            return socket.emit("error", "Você precisa comprar este item ou ter o cargo necessário.");
+        }
+
+        const userActiveCosmetics = usersDB[nick].cosmetics || {};
+        const equippedIds = Object.keys(userActiveCosmetics).filter(k => userActiveCosmetics[k] === true);
+
+        for (const equippedId of equippedIds) {
+            const equippedItemInfo = cosmeticsListDB.find(c => c.id === equippedId);
+            if (equippedItemInfo && equippedItemInfo.category === itemInfo.category) {
+                if (equippedId === cosmeticId) return;
+                usersDB[nick].cosmetics[equippedId] = false;
+            }
+        }
+
+        usersDB[nick].cosmetics[cosmeticId] = true;
+        saveData('users');
+
+        socket.emit("success", `${itemInfo.name} equipado!`);
+        updateOnlineCount();
+
+        const activeList = Object.keys(usersDB[nick].cosmetics).filter(k => usersDB[nick].cosmetics[k] === true);
+        socket.emit("launcher:cosmetic:player", true, activeList.map(id => ({ name: id })));
+    });
+
     socket.on("disconnect", () => {
         if (usersSessionGames[nick]) {
             delete usersSessionGames[nick];
@@ -1110,7 +1413,7 @@ app.get("/api/v1/server/stats", (req, res) => {
 app.get("/api/v1/player/:nick", (req, res) => {
     try {
         const targetNick = req.params.nick;
-        
+
         const realNick = Object.keys(usersDB).find(k => k.toLowerCase() === targetNick.toLowerCase());
 
         if (!realNick) {
