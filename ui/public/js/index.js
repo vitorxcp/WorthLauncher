@@ -726,7 +726,6 @@ try {
             }
         } else {
             addLog("Processo do jogo iniciado com PID: " + (res.pid || 'N/A'), 'success');
-            if (settings.closeLauncher) setTimeout(() => window.api.close(), 5000);
         }
     });
 
