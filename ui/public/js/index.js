@@ -1,6 +1,6 @@
 lucide.createIcons();
 
-const defaultSettings = { ram: '4G', fullscreen: false, closeLauncher: false, width: 900, height: 550, discordRichPresence: true };
+const defaultSettings = { ram: '4G', fullscreen: true, closeLauncher: true, width: 900, height: 550, discordRichPresence: true };
 let settings = JSON.parse(localStorage.getItem('worth_settings')) || defaultSettings;
 
 let currentUser = null;
@@ -1533,7 +1533,15 @@ function updateDiscordSettingsUI() {
 }
 
 window.unlinkDiscord = () => {
-    if (!confirm("Deseja realmente desvincular sua conta do Discord?")) return;
+    openModal('modal-discord-unlink');
+};
+
+document.getElementById('btn-cancel-unlink').addEventListener('click', () => {
+    closeModal('modal-discord-unlink');
+});
+
+document.getElementById('btn-confirm-unlink').addEventListener('click', () => {
+    closeModal('modal-discord-unlink');
 
     if (socket && socket.connected) {
         socket.emit("client:discord_unlink");
@@ -1543,9 +1551,10 @@ window.unlinkDiscord = () => {
     saveSettings();
 
     updateDiscordSettingsUI();
+
     showGenericToast("Conta desconectada com sucesso.", "success");
-    addLog("Discord desvinculado.");
-};
+    addLog("Discord desvinculado pelo usuário.");
+});
 
 updateDiscordSettingsUI();
 
