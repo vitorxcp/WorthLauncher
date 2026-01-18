@@ -1418,12 +1418,12 @@ function startWatchdog(win) {
 
         win.webContents.send('app:heartbeat');
 
-        if (Date.now() - lastHeartbeat > 30000 && !gamePID) {
+        if (Date.now() - lastHeartbeat > 60000 && !gamePID) {
             console.warn("[WATCHDOG] Interface não responde. Recarregando...");
             win.reload();
             lastHeartbeat = Date.now();
         }
-    }, 15000);
+    }, 30000);
 }
 
 ipcMain.on('app:heartbeat-ack', () => {
