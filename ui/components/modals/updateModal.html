@@ -1,144 +1,460 @@
-<div id="modal-step-1"
-    class="absolute inset-0 z-[200] bg-black/80 flex items-center justify-center hidden-force no-drag transition-all duration-500"
-    style="transition: opacity 0.3s ease, visibility 0.3s ease;">
+<section id="view-store" class="flex-1 hidden-force fade-enter flex flex-col overflow-hidden rounded-[10px] relative bg-[#09090b]">
 
-    <div
-        class="relative bg-[#09090b] border border-white/10 w-full max-w-md rounded-3xl p-8 shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
-
-
-        <div class="relative z-10 text-center mb-8">
-            <div class="w-20 h-20 mx-auto mb-4 relative group">
-                <div
-                    class="absolute inset-0 bg-yellow-500/30 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+    <div class="p-6 border-b border-white/5 flex flex-col gap-4 shrink-0 z-20 bg-[#000000c9] backdrop-blur-md">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-3xl font-black text-white tracking-tighter flex items-center gap-2">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Worth</span> Store
+                </h2>
+                <p class="text-gray-400 text-xs mt-1 font-mono">Personalize sua experiência in-game.</p>
+            </div>
+            
+            <button onclick="window.toggleCart()" class="relative group bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 rounded-xl transition-all">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="shopping-cart" class="w-4 h-4 text-gray-300 group-hover:text-purple-400 transition-colors"></i>
+                    <span class="text-sm font-bold text-white">Carrinho</span>
                 </div>
-                <img src="./assets/icon.png"
-                    class="w-full h-full object-contain relative z-10 drop-shadow-2xl transform transition duration-500 hover:scale-110">
-            </div>
-
-            <h1 class="text-3xl font-black text-white tracking-tight mb-1">
-                WorthClient
-            </h1>
-
-            <div
-                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-gray-400 mt-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                Nova Versão Disponível
-            </div>
-            <p class="text-[#fafafa]/50 mt-[5px]">Confira o changelog completo:</p>
+                <div id="cart-badge" class="absolute -top-2 -right-2 w-5 h-5 bg-purple-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-[#09090b] hidden scale-0 transition-transform">0</div>
+            </button>
         </div>
 
-        <div class="space-y-2 mb-8 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-green-500/30 transition group">
-                <div class="p-2 rounded-lg bg-green-500/10 text-green-400 shrink-0">
-                    <i data-lucide="zap" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Performance Extrema</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Sistema de renderização melhorado com muito mais
-                        FPS.</p>
-                </div>
+        <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div class="flex gap-2 overflow-x-auto custom-scrollbar w-full pb-1" id="store-categories"></div>
+            <div class="relative w-full md:w-64 group">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-purple-400 transition-colors"></i>
+                <input type="text" id="store-search" placeholder="Buscar item..." class="w-full bg-black/40 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-purple-500/50 transition-all font-mono">
             </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-cyan-500/30 transition group">
-                <div class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0">
-                    <i data-lucide="wifi" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Conexão Reformada</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Conexão mais rápida e baixa latência em
-                        servidores.</p>
-                </div>
-            </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-blue-500/30 transition group">
-                <div class="p-2 rounded-lg bg-blue-500/10 text-blue-400 shrink-0">
-                    <i data-lucide="zoom-in" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Novo Zoom</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Correções aplicadas e animação mais fluida.</p>
-                </div>
-            </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-purple-500/30 transition group">
-                <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400 shrink-0">
-                    <i data-lucide="eye" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Perspective Mod</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Sistema 360º otimizado e corrigido.</p>
-                </div>
-            </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-orange-500/30 transition group">
-                <div class="p-2 rounded-lg bg-orange-500/10 text-orange-400 shrink-0">
-                    <i data-lucide="rocket" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Launcher Update</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Melhorias no sistema de atualização e
-                        estabilidade.</p>
-                </div>
-            </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-pink-500/30 transition group">
-                <div class="p-2 rounded-lg bg-pink-500/10 text-pink-400 shrink-0">
-                    <i data-lucide="image" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Tela de Carregamento</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Novo visual moderno ao iniciar o client.</p>
-                </div>
-            </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-red-500/30 transition group">
-                <div class="p-2 rounded-lg bg-red-500/10 text-red-400 shrink-0">
-                    <i data-lucide="key" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Auto-Login (Crack)</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Login automático para contas não-originais.</p>
-                </div>
-            </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-yellow-500/30 transition group">
-                <div class="p-2 rounded-lg bg-yellow-500/10 text-yellow-400 shrink-0">
-                    <i data-lucide="message-square-plus" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Auto Text</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Novo módulo de macros de texto adicionado.</p>
-                </div>
-            </div>
-
-            <div
-                class="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition group">
-                <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 shrink-0">
-                    <i data-lucide="shield" class="w-4 h-4"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white mb-0.5">Armor HUD</h4>
-                    <p class="text-[11px] text-gray-400 leading-snug">Agora você pode mover cada peça individualmente.
-                    </p>
-                </div>
-            </div>
-
         </div>
-
-        <button id="btn-goto-step2"
-            class="group w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] hover:-translate-y-1 no-drag flex items-center justify-center gap-2">
-            <span>Verificar</span>
-            <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
-        </button>
-
     </div>
-</div>
+
+    <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-[#050505]" id="store-container">
+        <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4"></div>
+        <div id="store-loading" class="flex flex-col items-center justify-center py-20 text-gray-500">
+            <i data-lucide="loader-2" class="w-8 h-8 animate-spin mb-2 opacity-50"></i>
+            <p class="text-xs font-mono">Carregando catálogo...</p>
+        </div>
+        <div id="store-empty" class="hidden flex-col items-center justify-center py-20 text-gray-600">
+            <i data-lucide="package-open" class="w-12 h-12 mb-2 opacity-30"></i>
+            <p class="text-xs">Nenhum item encontrado.</p>
+        </div>
+    </div>
+
+    <div id="cart-sidebar" class="absolute top-0 right-0 w-80 h-full bg-[#0f0f10] border-l border-white/10 z-[5000] transform translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+        <div class="p-4 border-b border-white/10 flex justify-between items-center bg-[#0a0a0a]">
+            <h3 class="text-white font-bold flex items-center gap-2"><i data-lucide="shopping-bag" class="w-4 h-4 text-purple-400"></i> Seu Carrinho</h3>
+            <button onclick="window.toggleCart()" class="text-gray-500 hover:text-white transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="cart-items" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
+            <div class="text-center text-gray-600 text-xs py-10 italic">Seu carrinho está vazio.</div>
+        </div>
+        <div class="p-4 border-t border-white/10 bg-[#0a0a0a] space-y-3">
+            <div class="flex justify-between text-sm text-gray-400">
+                <span>Total</span>
+                <span id="cart-total" class="text-white font-bold font-mono">R$ 0,00</span>
+            </div>
+            <button onclick="window.initCheckout()" id="btn-checkout" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-sm transition-all shadow-lg shadow-purple-900/20 disabled:opacity-50 disabled:cursor-not-allowed">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <div id="modal-pix" class="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center hidden opacity-0 transition-opacity duration-300 backdrop-blur-sm">
+        <div class="bg-[#121212] border border-white/10 p-6 rounded-2xl w-96 shadow-2xl scale-95 transition-transform duration-300 transform" id="modal-pix-content">
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-3 border border-green-500/20">
+                    <i data-lucide="qr-code" class="w-6 h-6 text-green-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Pagamento via Pix</h3>
+            </div>
+            <div class="bg-white p-2 rounded-xl mb-4 w-40 h-40 mx-auto">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-4266141740005204000053039865802BR5913WorthLauncher6008SaoPaulo62070503***63041D3D" class="w-full h-full object-contain">
+            </div>
+            <div class="bg-white/5 p-3 rounded-lg border border-white/10 flex items-center gap-2 mb-4">
+                <code class="text-[10px] text-gray-300 font-mono truncate flex-1" id="pix-code-text">00020126580014BR.GOV.BCB.PIX...</code>
+                <button onclick="window.copyPix()" class="p-1.5 hover:bg-white/10 rounded text-gray-400 hover:text-white transition"><i data-lucide="copy" class="w-4 h-4"></i></button>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.closePixModal()" class="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 text-xs font-bold transition">Cancelar</button>
+                <button onclick="window.confirmPixPayment()" class="flex-1 py-2 rounded-lg bg-green-600 hover:bg-green-500 text-white text-xs font-bold transition shadow-lg shadow-green-900/20">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-remove-cosmetic" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center hidden opacity-0 transition-all duration-300 select-none">
+        <div class="relative bg-[#0f0f10] border border-white/10 p-8 rounded-[2rem] w-96 shadow-2xl transform scale-95 transition-all duration-300" id="modal-remove-box">
+            <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                    <i data-lucide="minus-circle" class="w-8 h-8 text-red-500"></i>
+                </div>
+                <h3 class="text-2xl font-black text-white mb-2 tracking-tight">Desequipar?</h3>
+                <p class="text-sm text-zinc-400 mb-6 leading-relaxed">Você vai remover este item.</p>
+                <div class="flex gap-3 w-full">
+                    <button onclick="window.closeRemoveModal()" class="flex-1 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 text-xs font-bold transition border border-transparent hover:border-white/5">Cancelar</button>
+                    <button onclick="window.confirmRemoveAction()" class="flex-1 py-3.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition shadow-lg shadow-red-900/20">Desequipar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-conflict-cosmetic" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center hidden opacity-0 transition-all duration-300 select-none">
+        <div class="relative bg-[#0f0f10] border border-white/10 p-8 rounded-[2rem] w-96 shadow-2xl transform scale-95 transition-all duration-300" id="modal-conflict-box">
+            <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-yellow-500/10 rounded-2xl flex items-center justify-center mb-6 border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                    <i data-lucide="arrow-left-right" class="w-8 h-8 text-yellow-500"></i>
+                </div>
+                <h3 class="text-xl font-black text-white mb-2 tracking-tight">Trocar Item?</h3>
+                <p class="text-sm text-zinc-400 mb-6 leading-relaxed">Substituir o item atual?</p>
+                
+                <div class="flex items-center justify-center gap-4 w-full mb-6 bg-black/30 p-3 rounded-xl border border-white/5">
+                    <div class="flex flex-col items-center gap-1 opacity-50">
+                        <span class="text-[9px] text-red-400 font-bold uppercase">Sai</span>
+                        <div class="w-12 h-12 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                            <img id="conflict-old-img" src="" class="w-8 h-8 object-contain">
+                        </div>
+                        <span id="conflict-old-name" class="text-[9px] text-zinc-500 max-w-[80px] truncate">Antigo</span>
+                    </div>
+                    <i data-lucide="arrow-right" class="text-zinc-600"></i>
+                    <div class="flex flex-col items-center gap-1">
+                        <span class="text-[9px] text-green-400 font-bold uppercase">Entra</span>
+                        <div class="w-12 h-12 rounded-lg bg-green-500/10 border border-green-500/20 flex items-center justify-center">
+                            <img id="conflict-new-img" src="" class="w-8 h-8 object-contain">
+                        </div>
+                        <span id="conflict-new-name" class="text-[9px] text-white max-w-[80px] truncate">Novo</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 w-full">
+                    <button onclick="window.closeConflictModal()" class="flex-1 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 text-xs font-bold transition">Cancelar</button>
+                    <button onclick="window.confirmConflictAction()" class="flex-1 py-3.5 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold transition shadow-lg shadow-yellow-900/20">Substituir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* =========================================
+           WORTH STORE LOGIC - FIXED MODALS & SOCKET
+           ========================================= */
+
+        const getSocket = () => window.socket || (typeof socket !== 'undefined' ? socket : null);
+
+        if (typeof window.STORE_API === 'undefined') window.STORE_API = { base: "http://elgae-sp1-b001.elgaehost.com.br:10379" };
+
+        if (typeof window.storeData === 'undefined') {
+            window.storeData = {
+                catalog: [], owned: [], equipped: [], cart: [],
+                categories: ["Todos", "Capas", "Pets", "Chapeus", "Bandanas", "Outros"],
+                currentCategory: "Todos", searchQuery: "", pendingRemoveId: null, pendingSwap: null 
+            };
+        }
+
+        window.resetAllLoadingButtons = function() { renderCatalog(); };
+        
+        window.reloadCosmetics = function(itemName) {
+            const sock = getSocket();
+            if(sock && sock.connected) sock.emit("store:get_data");
+        };
+
+        /* --- INICIALIZAÇÃO --- */
+        async function initStore() {
+            const sock = getSocket();
+            if (!sock) { setTimeout(initStore, 500); return; }
+
+            setupStoreSocketEvents();
+            renderCategories();
+            
+            if (sock.connected) sock.emit("store:get_data");
+            else sock.once('connect', () => sock.emit("store:get_data"));
+
+            const searchInput = document.getElementById('store-search');
+            if (searchInput) {
+                searchInput.removeEventListener('input', handleSearchInput);
+                searchInput.addEventListener('input', handleSearchInput);
+            }
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function handleSearchInput(e) {
+            window.storeData.searchQuery = e.target.value.toLowerCase();
+            renderCatalog();
+        }
+
+        function setupStoreSocketEvents() {
+            const sock = getSocket();
+            if (!sock) return;
+
+            sock.off("store:catalog").off("store:owned_list").off("launcher:cosmetic:player").off("store:purchase:success").off("launcher:cosmetic:player:removed_success");
+
+            sock.on("store:catalog", (items) => {
+                window.storeData.catalog = items.map(item => ({ ...item, image: item.image || null }));
+                document.getElementById('store-loading')?.classList.add('hidden');
+                renderCatalog();
+            });
+
+            sock.on("store:owned_list", (ids) => { window.storeData.owned = ids || []; renderCatalog(); });
+
+            sock.on("launcher:cosmetic:player", (isActive, activeItems) => {
+                window.storeData.equipped = Array.isArray(activeItems) ? activeItems.map(i => i.name) : (activeItems?.name ? [activeItems.name] : []);
+                renderCatalog();
+            });
+
+            sock.on("launcher:cosmetic:player:removed_success", (id) => {
+                window.storeData.equipped = window.storeData.equipped.filter(e => e !== id);
+                renderCatalog();
+            });
+
+            sock.on("store:purchase:success", (data) => {
+                if(typeof showToast !== 'undefined') showToast(data.message, "success");
+                window.storeData.cart = [];
+                updateCartUI();
+                window.closePixModal();
+                window.toggleCart(false);
+            });
+        }
+
+        /* --- RENDERIZAÇÃO --- */
+        function renderCategories() {
+            const container = document.getElementById('store-categories');
+            if(!container) return;
+            container.innerHTML = window.storeData.categories.map(cat => `
+                <button onclick="window.setCategory('${cat}')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${window.storeData.currentCategory === cat ? 'bg-purple-600/20 text-purple-400 border-purple-500/50' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10 hover:text-white'}">${cat}</button>
+            `).join('');
+        }
+
+        window.setCategory = function(cat) {
+            window.storeData.currentCategory = cat;
+            renderCategories();
+            renderCatalog();
+        }
+
+        function renderCatalog() {
+            const grid = document.getElementById('products-grid');
+            const empty = document.getElementById('store-empty');
+            if(!grid || !empty) return;
+            
+            const filtered = window.storeData.catalog.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(window.storeData.searchQuery);
+                const matchesCat = window.storeData.currentCategory === "Todos" || item.type === window.storeData.currentCategory;
+                return matchesSearch && matchesCat;
+            });
+
+            filtered.length === 0 ? empty.classList.replace('hidden', 'flex') : empty.classList.replace('flex', 'hidden');
+            grid.innerHTML = filtered.length === 0 ? '' : filtered.map(item => createProductCard(item)).join('');
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function createProductCard(item) {
+            const isOwned = window.storeData.owned.includes(item.id) || item.isFree;
+            const isEquipped = window.storeData.equipped.includes(item.id);
+            const isInCart = window.storeData.cart.some(c => c.id === item.id);
+            const rarityColors = { 'COMUM': 'text-gray-400 bg-gray-500/10 border-gray-500/20', 'RARO': 'text-blue-400 bg-blue-500/10 border-blue-500/20', 'EPICO': 'text-purple-400 bg-purple-500/10 border-purple-500/20', 'LENDARIO': 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' };
+            const rarityStyle = rarityColors[item.rarity] || rarityColors['COMUM'];
+
+            let btnHTML = '';
+            if (isEquipped) btnHTML = `<button onclick="window.openRemoveModal('${item.id}')" class="w-full py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"><i data-lucide="minus-circle" class="w-3 h-3"></i> Desequipar</button>`;
+            else if (isOwned) btnHTML = `<button onclick="window.equipItem('${item.id}')" class="w-full py-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"><i data-lucide="check" class="w-3 h-3"></i> Equipar</button>`;
+            else if (isInCart) btnHTML = `<button onclick="window.removeFromCart('${item.id}')" class="w-full py-2 rounded-lg bg-red-900/20 hover:bg-red-900/40 text-red-400 text-xs font-bold transition cursor-pointer">Remover</button>`;
+            else btnHTML = `<button onclick="window.addToCart('${item.id}')" class="w-full py-2 rounded-lg bg-white/5 hover:bg-purple-600 text-white text-xs font-bold transition flex items-center justify-center gap-2 group/btn cursor-pointer"><span>Adicionar</span><span class="bg-black/30 px-1.5 py-0.5 rounded text-[10px] font-mono group-hover/btn:bg-white/20">R$ ${item.price.toFixed(2)}</span></button>`;
+
+            return `
+                <div class="bg-[#0f0f10] border border-white/5 rounded-xl overflow-hidden hover:border-purple-500/30 transition-all group flex flex-col relative" id="card-${item.id}">
+                    <div class="aspect-square bg-[#151516] relative flex items-center justify-center p-4 group-hover:bg-[#1a1a1c] transition-colors">
+                        <div class="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-bold border uppercase tracking-wider ${rarityStyle}">${item.rarity}</div>
+                        ${item.isFree ? '<div class="absolute top-2 right-2 px-2 py-0.5 rounded text-[9px] font-bold bg-green-500 text-black uppercase">GRÁTIS</div>' : ''}
+                        <img src="${item.image || ''}" class="w-3/4 h-3/4 object-contain drop-shadow-xl group-hover:scale-110 transition-transform duration-500" loading="lazy" onerror="this.src='data:image/svg+xml;base64,PHN2Zy4uLz4='"> 
+                    </div>
+                    <div class="p-3 flex-1 flex flex-col">
+                        <h3 class="text-white font-bold text-sm truncate" title="${item.name}">${item.name}</h3>
+                        <p class="text-gray-500 text-[10px] line-clamp-2 mb-3 flex-1">${item.description}</p>
+                        <div class="mt-auto action-btn-container z-20 relative">${btnHTML}</div>
+                    </div>
+                </div>`;
+        }
+
+        /* --- MODAIS DE FORÇA BRUTA (classList hidden) --- */
+        window.openRemoveModal = function(id) {
+            console.log("[Store] Abrindo modal remover:", id);
+            window.storeData.pendingRemoveId = id;
+            const modal = document.getElementById('modal-remove-cosmetic');
+            const box = document.getElementById('modal-remove-box');
+            if (modal && box) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
+            }
+        }
+
+        window.closeRemoveModal = function() {
+            window.storeData.pendingRemoveId = null;
+            const modal = document.getElementById('modal-remove-cosmetic');
+            const box = document.getElementById('modal-remove-box');
+            if (modal && box) {
+                modal.classList.add('opacity-0');
+                box.classList.remove('scale-100'); box.classList.add('scale-95');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        }
+
+        window.confirmRemoveAction = function() {
+            const id = window.storeData.pendingRemoveId;
+            if (!id) return;
+            const sock = getSocket();
+            if(sock) {
+                console.log("[Store] Enviando socket remove:", id);
+                sock.emit("launcher:cosmetic:player:remove", id);
+                // Feedback visual imediato
+                const btnContainer = document.querySelector(`#card-${id} .action-btn-container`);
+                if(btnContainer) btnContainer.innerHTML = `<div class="text-xs text-red-400 font-bold text-center">Removendo...</div>`;
+            }
+            window.closeRemoveModal();
+        }
+
+        window.openConflictModal = function(newItem, currentItemId) {
+            console.log("[Store] Conflito:", newItem.id, currentItemId);
+            window.storeData.pendingSwap = { newId: newItem.id, oldId: currentItemId };
+            const modal = document.getElementById('modal-conflict-cosmetic');
+            const box = document.getElementById('modal-conflict-box');
+            
+            const currentItem = window.storeData.catalog.find(i => i.id === currentItemId);
+            try {
+                if(currentItem) {
+                    document.getElementById('conflict-old-name').innerText = currentItem.name;
+                    document.getElementById('conflict-old-img').src = currentItem.image || '';
+                }
+                document.getElementById('conflict-new-name').innerText = newItem.name;
+                document.getElementById('conflict-new-img').src = newItem.image || '';
+            } catch(e) { console.error("Erro modal populate", e); }
+
+            if (modal && box) {
+                modal.classList.remove('hidden');
+                setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
+            }
+        }
+
+        window.closeConflictModal = function() {
+            window.storeData.pendingSwap = null;
+            const modal = document.getElementById('modal-conflict-cosmetic');
+            const box = document.getElementById('modal-conflict-box');
+            if (modal && box) {
+                modal.classList.add('opacity-0');
+                box.classList.remove('scale-100'); box.classList.add('scale-95');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        }
+
+        window.confirmConflictAction = function() {
+            const swapData = window.storeData.pendingSwap;
+            if (!swapData) return;
+            const sock = getSocket();
+            if(sock) {
+                console.log("[Store] Enviando socket troca:", swapData.newId);
+                sock.emit("launcher:cosmetic:player:add", swapData.newId);
+                // Feedback visual imediato
+                const btnContainer = document.querySelector(`#card-${swapData.newId} .action-btn-container`);
+                if(btnContainer) btnContainer.innerHTML = `<div class="text-xs text-yellow-400 font-bold text-center">Trocando...</div>`;
+            }
+            window.closeConflictModal();
+        }
+
+        /* --- AÇÕES DE ITEMS --- */
+        window.equipItem = function(id) {
+            console.log("[Store] Equipar:", id);
+            const newItem = window.storeData.catalog.find(i => i.id === id);
+            if (!newItem) return console.error("Item não achado:", id);
+
+            const currentEquippedId = window.storeData.equipped.find(eqId => {
+                const eqItem = window.storeData.catalog.find(i => i.id === eqId);
+                return eqItem && eqItem.type === newItem.type && eqId !== id;
+            });
+
+            if (currentEquippedId) {
+                window.openConflictModal(newItem, currentEquippedId);
+            } else {
+                const sock = getSocket();
+                if(sock) {
+                    const btnContainer = document.querySelector(`#card-${id} .action-btn-container`);
+                    if (btnContainer) btnContainer.innerHTML = `<div class="w-full py-2 bg-green-600/20 text-green-400 border border-green-500/30 text-xs font-bold rounded-lg flex justify-center items-center gap-2"><i data-lucide="loader-2" class="animate-spin w-3 h-3"></i> Equipando...</div>`;
+                    if(typeof lucide !== 'undefined') lucide.createIcons();
+                    sock.emit("launcher:cosmetic:player:add", id);
+                }
+            }
+        }
+
+        /* --- UI HELPERS --- */
+        window.toggleCart = function(forceState) {
+            const sidebar = document.getElementById('cart-sidebar');
+            if(!sidebar) return;
+            const isOpen = !sidebar.classList.contains('translate-x-full');
+            const shouldOpen = forceState !== undefined ? forceState : !isOpen;
+            shouldOpen ? sidebar.classList.remove('translate-x-full') : sidebar.classList.add('translate-x-full');
+        }
+
+        window.addToCart = function(itemId) {
+            const item = window.storeData.catalog.find(i => i.id === itemId);
+            if (!item) return;
+            window.storeData.cart.push(item);
+            updateCartUI();
+            renderCatalog();
+            window.toggleCart(true);
+        }
+
+        window.removeFromCart = function(itemId) {
+            window.storeData.cart = window.storeData.cart.filter(i => i.id !== itemId);
+            updateCartUI();
+            renderCatalog();
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+            const badge = document.getElementById('cart-badge');
+            const checkoutBtn = document.getElementById('btn-checkout');
+            if(!container) return;
+
+            badge.innerText = window.storeData.cart.length;
+            window.storeData.cart.length === 0 ? badge.classList.add('scale-0') : badge.classList.remove('hidden', 'scale-0');
+            const total = window.storeData.cart.reduce((acc, item) => acc + item.price, 0);
+            totalEl.innerText = `R$ ${total.toFixed(2)}`;
+
+            if (window.storeData.cart.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-600 text-xs py-10 italic">Seu carrinho está vazio.</div>`;
+                checkoutBtn.disabled = true;
+                checkoutBtn.innerText = "Carrinho Vazio";
+            } else {
+                checkoutBtn.disabled = false;
+                checkoutBtn.innerText = `Pagar R$ ${total.toFixed(2)}`;
+                container.innerHTML = window.storeData.cart.map(item => `
+                    <div class="flex gap-3 items-center bg-white/5 p-2 rounded-lg border border-white/5">
+                        <img src="${item.image}" class="w-10 h-10 object-contain bg-black/20 rounded">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-white text-xs font-bold truncate">${item.name}</div>
+                            <div class="text-purple-400 text-[10px] font-mono">R$ ${item.price.toFixed(2)}</div>
+                        </div>
+                        <button onclick="window.removeFromCart('${item.id}')" class="text-gray-500 hover:text-red-400 transition p-1"><i data-lucide="trash" class="w-3 h-3"></i></button>
+                    </div>
+                `).join('');
+            }
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        window.initCheckout = function() {
+            const modal = document.getElementById('modal-pix');
+            if(modal) { modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); document.getElementById('modal-pix-content')?.classList.add('scale-100'); }, 10); }
+        }
+
+        window.closePixModal = function() {
+            const modal = document.getElementById('modal-pix');
+            if(modal) { modal.classList.add('opacity-0'); document.getElementById('modal-pix-content')?.classList.remove('scale-100'); setTimeout(() => { modal.classList.add('hidden'); }, 300); }
+        }
+
+        window.confirmPixPayment = function() {
+            const sock = getSocket();
+            if(!sock) return;
+            const btn = document.querySelector('#modal-pix button.bg-green-600');
+            if(btn) btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processando...`;
+            setTimeout(() => { sock.emit("store:purchase:pix_confirm", window.storeData.cart.map(i => i.id)); }, 1500);
+        }
+
+        window.redirectToTicket = function() { window.closePixModal(); if(typeof showToast !== 'undefined') showToast("Abra um ticket no Discord.", "info"); }
+        window.copyPix = function() { navigator.clipboard.writeText(document.getElementById('pix-code-text')?.innerText || ""); }
+
+        initStore();
+    </script>
+</section>
