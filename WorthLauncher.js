@@ -727,6 +727,11 @@ ipcMain.handle('texture:uninstall', async (event, packId) => {
         return { success: false, error: "Textura não encontrada no registro." };
     }
 
+    if (isScanning) {
+        console.log("[TEXTURE] Aguardando fim do scan para desinstalar...");
+        await new Promise(r => setTimeout(r, 1000));
+    }
+
     const packsDir = getGameResourcePacksPath();
     const possiblePaths = [
         path.join(packsDir, pack.nameFile),
@@ -737,7 +742,7 @@ ipcMain.handle('texture:uninstall', async (event, packId) => {
         let removed = false;
         for (const p of possiblePaths) {
             if (fs.existsSync(p)) {
-                await fs.remove(p);
+                await forceDelete(p);
                 removed = true;
             }
         }
@@ -750,8 +755,8 @@ ipcMain.handle('texture:uninstall', async (event, packId) => {
         }
 
     } catch (err) {
-        console.error(err);
-        return { success: false, error: err.message };
+        console.error(`[TEXTURE ERROR] Falha ao desinstalar:`, err);
+        return { success: false, error: `Erro ao deletar: ${err.message}` };
     }
 });
 
@@ -759,13 +764,18 @@ ipcMain.handle('texture:uninstall-local', async (event, relativePath) => {
     const packsDir = getGameResourcePacksPath();
     const filePath = path.join(packsDir, relativePath);
 
+    if (!filePath.startsWith(packsDir)) {
+        return { success: false, error: "Caminho inválido." };
+    }
+
     try {
         if (fs.existsSync(filePath)) {
-            await fs.remove(filePath);
+            await forceDelete(filePath);
             return { success: true };
         }
         return { success: false, error: "Arquivo não encontrado." };
     } catch (e) {
+        console.error("[TEXTURE LOCAL ERROR]", e);
         return { success: false, error: e.message };
     }
 });
@@ -1387,3 +1397,42 @@ autoUpdater.on('error', (err) => {
         splashWindow.webContents.send('app:error-notification', "Erro no Update: " + err.message);
     }
 });
+
+async function forceDelete(targetPath, retries = 5, delay = 500) {
+    if (!fs.existsSync(targetPath)) return true;
+
+    try {
+        try {
+            await fs.chmod(targetPath, 0o777); 
+        } catch (e) { }
+
+        await fs.remove(targetPath);
+        return true;
+
+    } catch (err) {
+        console.warn(`[DELETE] Node.js falhou (${err.code}). Tentando comando nativo do Windows...`);
+
+        if (process.platform === 'win32') {
+            try {
+                await new Promise((resolve, reject) => {
+                    exec(`rmdir /s /q "${targetPath}"`, (error) => {
+                        if (error) reject(error);
+                        else resolve();
+                    });
+                });
+
+                if (!fs.existsSync(targetPath)) return true;
+            } catch (winErr) {
+                console.error("[DELETE] Comando nativo falhou:", winErr.message);
+            }
+        }
+
+        if (retries > 0) {
+            console.warn(`[DELETE] Falha persistente. Tentando novamente em ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return forceDelete(targetPath, retries - 1, delay + 200);
+        }
+
+        throw err;
+    }
+}
