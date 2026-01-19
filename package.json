@@ -1,6 +1,6 @@
 {
   "name": "worthlauncher",
-  "version": "1.7.3444-alpha",
+  "version": "1.7.3445-alpha",
   "description": "Launcher Otimizado para 1.8.9.",
   "main": "WorthLauncher.js",
   "email": "vitor.xp.1958@gmail.com",
@@ -15,11 +15,11 @@
   },
   "author": "vitorxp",
   "license": "MIT",
-  "homepage": "https://github.com/vitorxcp/WorthLauncher",
+  "homepage": "https://github.com/vitorxcp/WorthLauncherProject",
   "icon": "ui/public/assets/Logo-Worth-256x256.png",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vitorxcp/WorthLauncher.git"
+    "url": "git+https://github.com/vitorxcp/WorthLauncherProject.git"
   },
   "workspaces": [
     "plugins/*"
@@ -85,7 +85,7 @@
       {
         "provider": "github",
         "owner": "vitorxcp",
-        "repo": "WorthLauncher"
+        "repo": "WorthLauncherProject"
       }
     ],
     "copyright": "Copyright © 2025 vitorxp",
