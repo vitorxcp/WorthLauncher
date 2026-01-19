@@ -294,7 +294,6 @@ try {
 
     console.log = (...args) => {
         originalLog(...args);
-        // addLogToUI(args.join(' '), 'info');
     };
     console.error = (...args) => {
         originalError(...args);
@@ -442,7 +441,11 @@ try {
     function updateUserUI(user, type) {
         document.getElementById('user-display').innerText = user;
         document.getElementById('user-type').innerText = type === 'microsoft' ? 'MICROSOFT' : (type === 'none' ? 'OFFLINE' : 'OFFLINE');
-        document.getElementById('user-avatar').src = type === 'none' ? 'https://mc-heads.net/avatar/Steve' : `https://mc-heads.net/avatar/${user}`;
+        const avatarUrl = type === 'none'
+            ? 'https://mc-heads.net/avatar/Steve'
+            : `https://mc-heads.net/avatar/${user}`;
+
+        document.getElementById('user-avatar').style.backgroundImage = `url('${avatarUrl}')`;
 
         const ind = document.getElementById('status-indicator');
         if (type !== 'none') ind.classList.replace('bg-red-500', 'bg-green-500');
@@ -459,8 +462,7 @@ try {
 
         savedAccounts.forEach((acc, idx) => {
             const div = document.createElement('div');
-
-            const isActive = (typeof currentUser !== 'undefined' && currentUser.user === acc.user);
+            const isActive = (currentUser && currentUser.user === acc.user);
 
             const activeClasses = isActive
                 ? "bg-white/10 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.1)]"
@@ -549,9 +551,11 @@ try {
 
     function toggleAccountMenu(show) {
         if (show) {
+            accountMenu.setAttribute('data-open', 'true');
             accountMenu.classList.add('dropdown-active');
             renderAccountsList();
         } else {
+            accountMenu.setAttribute('data-open', 'false');
             accountMenu.classList.remove('dropdown-active');
         }
     }
@@ -571,7 +575,6 @@ try {
 
     document.getElementById('btn-toggle-accounts').addEventListener('click', () => {
         const accountMenu = document.getElementById('account-menu');
-        accountMenu.setAttribute('data-open', 'true');
         const isActive = accountMenu.classList.contains('dropdown-active');
         toggleAccountMenu(!isActive);
     });
@@ -1031,7 +1034,7 @@ try {
 
     async function verificarAtualizarVersao() {
         try {
-            const response = await fetch('https://api.github.com/repos/vitorxcp/WorthLauncher/releases/latest');
+            const response = await fetch('https://api.github.com/repos/vitorxcp/WorthLauncherProject/releases/latest');
             if (!response.ok) return;
 
             const data = await response.json();
@@ -1264,7 +1267,6 @@ const handleStopClick = async () => {
 
     if (result.success) {
         console.log("Jogo finalizado com sucesso!");
-        setGameState("MENU");
     }
 };
 
