@@ -34,7 +34,7 @@ autoUpdater.logger.transports.file.level = "info";
 autoUpdater.setFeedURL({
     provider: 'github',
     owner: 'vitorxcp',
-    repo: 'WorthLauncher'
+    repo: 'WorthLauncherProject'
 });
 
 const path7za = app.isPackaged
