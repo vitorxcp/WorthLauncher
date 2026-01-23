@@ -30,4 +30,8 @@ contextBridge.exposeInMainWorld('api', {
     updateNickName: (nick) => ipcRenderer.invoke('user:update-nick', nick),
     updateSettings: (settings) => { ipcRenderer.invoke('settings:update', settings); },
     stopGame: () => ipcRenderer.invoke('game:stop'),
+    translate: (tr) => {
+        var trans = require("../resouces/languages/" + tr)
+        return trans;
+    }
 });
