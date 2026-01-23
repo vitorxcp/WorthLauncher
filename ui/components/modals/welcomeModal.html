@@ -1,56 +1,317 @@
-<div id="modal-welcome"
-    class="absolute inset-0 z-[200] bg-black/95 flex items-center justify-center hidden-force no-drag transition-opacity duration-700 ease-in-out">
+<div id="modal-welcome" class="absolute inset-0 z-[201] bg-black/95 flex items-center justify-center hidden-force no-drag transition-opacity duration-700 ease-in-out opacity-0">
 
-    <div class="relative w-full max-w-lg p-[1px] bg-gradient-to-b from-white/10 to-transparent rounded-3xl shadow-2xl scale-100 transition-transform duration-500"
-        id="welcome-card">
+    <div class="relative w-full max-w-3xl bg-[#0a0a0a] rounded-3xl shadow-2xl border border-white/5 flex flex-col overflow-hidden transition-transform duration-500 scale-90" id="welcome-card">
 
-        <div class="bg-[#0a0a0a] rounded-3xl p-10 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20 pointer-events-none">
+            <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
+        </div>
 
+        <div class="relative z-20 flex justify-between items-center p-6 pb-0">
+            <div class="flex items-center gap-2">
+                <img src="./assets/icon.png" class="w-6 h-6 object-contain drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]">
+                <span class="text-sm font-bold text-white tracking-widest uppercase opacity-50">WorthClient</span>
+            </div>
+            <button id="btn-skip" class="text-xs font-medium text-zinc-500 hover:text-white transition-colors uppercase tracking-wider">
+                Pular Intro
+            </button>
+        </div>
 
-            <div class="relative z-10 flex flex-col items-center text-center">
+        <div class="relative z-10 w-full overflow-hidden flex-1">
+            <div id="slides-track" class="flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] h-full">
 
-                <div
-                    class="w-24 h-24 mb-6 flex items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-black rounded-2xl border border-white/5 shadow-2xl shadow-yellow-900/20 group">
-                    <img src="./assets/icon.png"
-                        class="w-12 h-12 object-contain drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] transition-transform duration-500 group-hover:scale-110"
-                        alt="Logo">
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center h-full">
+                    <div class="relative group mb-8">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-[24px] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                        <div class="relative w-24 h-24 flex items-center justify-center bg-[#0F0F0F] rounded-[22px] border border-white/10 shadow-2xl">
+                            <img src="./assets/icon.png" class="w-12 h-12 object-contain drop-shadow-[0_0_15px_rgba(234,179,8,0.2)]">
+                        </div>
+                    </div>
+
+                    <h1 class="text-4xl font-black text-white mb-3 tracking-tight">
+                        Bem-vindo ao <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">WorthClient</span>
+                    </h1>
+                    <p class="text-zinc-500 text-sm font-medium max-w-sm mb-10 leading-relaxed">
+                        Sua experiência definitiva começa aqui. Selecione seu idioma para configurarmos o ambiente ideal.
+                    </p>
+
+                    <div class="relative w-72 z-50 text-left" id="custom-lang-wrapper">
+                        <input type="hidden" id="language-select" value="pt">
+                        
+                        <button id="lang-trigger" class="relative w-full flex items-center justify-between bg-zinc-900/80 backdrop-blur-md border border-white/10 hover:border-yellow-500/50 text-white p-4 rounded-xl transition-all duration-300 group shadow-lg shadow-black/50">
+                            <div class="flex items-center gap-3">
+                                <span id="current-flag" class="text-lg filter grayscale group-hover:grayscale-0 transition-all">🇧🇷</span>
+                                <div class="flex flex-col items-start">
+                                    <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Idioma</span>
+                                    <span id="current-lang-text" class="text-sm font-semibold">Português (Brasil)</span>
+                                </div>
+                            </div>
+                            <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-yellow-500/10 group-hover:text-yellow-500 transition-colors">
+                                <i data-lucide="chevron-down" id="lang-arrow" class="w-4 h-4 transition-transform duration-300"></i>
+                            </div>
+                        </button>
+
+                        <div id="lang-options" class="absolute top-full mt-2 left-0 w-full bg-[#111] border border-white/10 rounded-xl overflow-hidden shadow-2xl origin-top scale-95 opacity-0 invisible transition-all duration-200 z-[60] relative">
+                            <button onclick="selectLanguage('pt', '🇧🇷', 'Português (Brasil)')" class="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors text-left group">
+                                <span class="text-lg grayscale group-hover:grayscale-0 transition-all">🇧🇷</span>
+                                <span class="text-sm text-zinc-300 group-hover:text-white font-medium">Português (Brasil)</span>
+                                <i data-lucide="check" class="w-4 h-4 text-yellow-500 ml-auto opacity-100 check-icon" data-val="pt"></i>
+                            </button>
+                            <button onclick="selectLanguage('en', '🇺🇸', 'English (US)')" class="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors text-left group border-t border-white/5">
+                                <span class="text-lg grayscale group-hover:grayscale-0 transition-all">🇺🇸</span>
+                                <span class="text-sm text-zinc-300 group-hover:text-white font-medium">English (US)</span>
+                                <i data-lucide="check" class="w-4 h-4 text-yellow-500 ml-auto opacity-0 check-icon" data-val="en"></i>
+                            </button>
+                            <button onclick="selectLanguage('es', '🇪🇸', 'Español')" class="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors text-left group border-t border-white/5">
+                                <span class="text-lg grayscale group-hover:grayscale-0 transition-all">🇪🇸</span>
+                                <span class="text-sm text-zinc-300 group-hover:text-white font-medium">Español</span>
+                                <i data-lucide="check" class="w-4 h-4 text-yellow-500 ml-auto opacity-0 check-icon" data-val="es"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <h1 class="text-4xl font-black text-white mb-2 tracking-tight">
-                    Worth<span
-                        class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">Client</span>
-                </h1>
-                <p class="text-gray-400 text-sm mb-8 font-medium">Sua jornada para a performance máxima começa agora.
-                </p>
-
-                <div class="grid grid-cols-3 gap-3 w-full mb-8">
-                    <div
-                        class="bg-white/5 border border-white/5 p-3 rounded-xl flex flex-col items-center gap-2 hover:bg-white/10 transition duration-300">
-                        <i data-lucide="zap" class="w-5 h-5 text-yellow-400"></i>
-                        <span class="text-[10px] font-bold text-gray-300 uppercase">FPS Boost</span>
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full"></div>
+                        <i data-lucide="zap" class="relative w-16 h-16 text-yellow-400"></i>
                     </div>
-                    <div
-                        class="bg-white/5 border border-white/5 p-3 rounded-xl flex flex-col items-center gap-2 hover:bg-white/10 transition duration-300">
-                        <i data-lucide="shield-check" class="w-5 h-5 text-green-400"></i>
-                        <span class="text-[10px] font-bold text-gray-300 uppercase">Seguro</span>
-                    </div>
-                    <div
-                        class="bg-white/5 border border-white/5 p-3 rounded-xl flex flex-col items-center gap-2 hover:bg-white/10 transition duration-300">
-                        <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
-                        <span class="text-[10px] font-bold text-gray-300 uppercase">Cosméticos</span>
+                    <h2 class="text-2xl font-bold text-white mb-3">Performance Extrema</h2>
+                    <p class="text-zinc-400 text-sm max-w-sm leading-relaxed">
+                        Nosso sistema de otimização de chunks e gerenciamento de memória garante que você tenha o maior FPS possível.
+                    </p>
+                    <div class="mt-6 flex gap-2">
+                        <span class="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-xs font-bold">FPS Boost</span>
+                        <span class="px-3 py-1 rounded-full bg-zinc-800 border border-white/5 text-zinc-400 text-xs">Sem Lags</span>
                     </div>
                 </div>
 
-                <button id="btn-finish-setup"
-                    class="group w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:-translate-y-1 no-drag flex items-center justify-center gap-2">
-                    <span>Começar a Jogar</span>
-                    <i data-lucide="arrow-right" class="w-5 h-5 transition-transform group-hover:translate-x-1"></i>
-                </button>
-
-                <div class="mt-4 text-[10px] text-gray-600">
-                    Ao continuar, você aceita os termos da Rede Worth.
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-green-500/20 blur-xl rounded-full"></div>
+                        <i data-lucide="shield-check" class="relative w-16 h-16 text-green-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3 a2">Segurança Total</h2>
+                    <p class="text-zinc-400 text-sm max-w-sm leading-relaxed a2">
+                        Jogue sem preocupações. Client verificado e livre de qualquer código malicioso.
+                    </p>
                 </div>
+
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+                        <i data-lucide="shirt" class="relative w-16 h-16 text-purple-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3 a3">Estilo Único</h2>
+                    <p class="text-zinc-400 text-sm max-w-sm leading-relaxed a3">
+                        Acesse capas, asas e bandanas exclusivas. Personalize sua interface (HUD) totalmente.
+                    </p>
+                </div>
+
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-blue-500/20 blur-xl rounded-full"></div>
+                        <i data-lucide="message-circle" class="relative w-16 h-16 text-blue-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3 a4">Conecte-se</h2>
+                    <p class="text-zinc-400 text-sm max-w-sm leading-relaxed a4">
+                        Converse com seus amigos diretamente pelo launcher. Mantenha a comunidade sempre por perto.
+                    </p>
+                </div>
+
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-rose-500/20 blur-xl rounded-full"></div>
+                        <i data-lucide="newspaper" class="relative w-16 h-16 text-rose-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3 a5">Fique por Dentro</h2>
+                    <p class="text-zinc-400 text-sm max-w-sm leading-relaxed a5">
+                        Veja as novidades em nosso blog integrado. Changelogs, eventos e atualizações em primeira mão.
+                    </p>
+                </div>
+
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full"></div>
+                        <i data-lucide="sliders-horizontal" class="relative w-16 h-16 text-cyan-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3 a6">Controle Total</h2>
+                    <p class="text-zinc-400 text-sm max-w-sm leading-relaxed a6">
+                        Altere as coisas com facilidade. Configurações intuitivas para deixar o jogo do seu jeito.
+                    </p>
+                </div>
+
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <div class="relative mb-6">
+                        <div class="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full"></div>
+                        <i data-lucide="users" class="relative w-16 h-16 text-indigo-400"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white mb-3 a7">Para Todos</h2>
+                    <p class="text-zinc-400 text-sm max-w-sm leading-relaxed a7">
+                        Aceitamos contas Originais e Piratas. A diversão não tem barreiras no WorthClient.
+                    </p>
+                    <div class="mt-6 flex gap-2">
+                        <span class="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 text-xs font-bold">Original</span>
+                        <span class="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold">Offline</span>
+                    </div>
+                </div>
+
+                <div class="min-w-full flex flex-col items-center justify-center p-10 text-center">
+                    <h2 class="text-3xl font-black text-white mb-2">Tudo Pronto!</h2>
+                    <p class="text-zinc-400 text-sm mb-8 a1">Sua configuração foi aplicada. Clique abaixo para iniciar.</p>
+
+                    <button id="btn-finish-setup" class="group relative w-64 py-4 bg-white text-black font-black uppercase tracking-widest rounded-xl overflow-hidden transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                        <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span class="relative z-10 flex items-center justify-center gap-2 group-hover:text-white transition-colors">
+                            Começar
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </span>
+                    </button>
+                </div>
+
             </div>
         </div>
+
+        <div class="p-6 pt-0 flex justify-between items-center z-20">
+            <button id="btn-prev" class="w-10 h-10 rounded-full flex items-center justify-center border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white transition-all disabled:opacity-0 disabled:pointer-events-none">
+                <i data-lucide="chevron-left" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex gap-2" id="slider-dots">
+                </div>
+
+            <button id="btn-next" class="w-10 h-10 rounded-full flex items-center justify-center bg-white text-black hover:bg-yellow-400 transition-all shadow-lg shadow-white/10">
+                <i data-lucide="chevron-right" class="w-5 h-5"></i>
+            </button>
+        </div>
+
     </div>
 </div>
+
+<script>
+    const track = document.getElementById('slides-track');
+    const dotsContainer = document.getElementById('slider-dots');
+    const btnNext = document.getElementById('btn-next');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnSkip = document.getElementById('btn-skip');
+    const btnFinish = document.getElementById('btn-finish-setup');
+    const modal = document.getElementById('modal-welcome');
+    const card = document.getElementById('welcome-card');
+    const langTrigger = document.getElementById('lang-trigger');
+    const langOptions = document.getElementById('lang-options');
+    const langArrow = document.getElementById('lang-arrow');
+    const hiddenInput = document.getElementById('language-select');
+    const currentFlag = document.getElementById('current-flag');
+    const currentText = document.getElementById('current-lang-text');
+    let currentSlide = 0;
+    const totalSlides = 9;
+
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? 'bg-yellow-500 w-6' : 'bg-white/20'}`;
+        dotsContainer.appendChild(dot);
+    }
+
+    function updateSlider() {
+        track.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+        const dots = dotsContainer.children;
+        Array.from(dots).forEach((dot, index) => {
+            if (index === currentSlide) {
+                dot.className = 'w-6 h-2 rounded-full bg-yellow-500 transition-all duration-300';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-white/20 transition-all duration-300';
+            }
+        });
+
+        btnPrev.disabled = currentSlide === 0;
+        
+        if (currentSlide === totalSlides - 1) {
+            btnNext.classList.add('opacity-0', 'pointer-events-none');
+            btnSkip.classList.add('opacity-0', 'pointer-events-none');
+        } else {
+            btnNext.classList.remove('opacity-0', 'pointer-events-none');
+            btnSkip.classList.remove('opacity-0', 'pointer-events-none');
+        }
+    }
+
+    btnNext.addEventListener('click', () => {
+        if (currentSlide < totalSlides - 1) {
+            currentSlide++;
+            updateSlider();
+        }
+    });
+
+    btnPrev.addEventListener('click', () => {
+        if (currentSlide > 0) {
+            currentSlide--;
+            updateSlider();
+        }
+    });
+
+    btnSkip.addEventListener('click', () => {
+        currentSlide = totalSlides - 1;
+        updateSlider();
+    });
+
+    langTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isLangOpen = !isLangOpen;
+        toggleLangMenu();
+    });
+
+    document.addEventListener('click', () => {
+        if (isLangOpen) {
+            isLangOpen = false;
+            toggleLangMenu();
+        }
+    });
+
+    function toggleLangMenu() {
+        if (isLangOpen) {
+            langOptions.classList.remove('invisible', 'opacity-0', 'scale-95');
+            langOptions.classList.add('visible', 'opacity-100', 'scale-100');
+            langArrow.style.transform = 'rotate(180deg)';
+            langTrigger.classList.add('border-yellow-500/50');
+        } else {
+            langOptions.classList.add('invisible', 'opacity-0', 'scale-95');
+            langOptions.classList.remove('visible', 'opacity-100', 'scale-100');
+            langArrow.style.transform = 'rotate(0deg)';
+            langTrigger.classList.remove('border-yellow-500/50');
+        }
+    }
+
+    btnFinish.addEventListener('click', async () => {
+        btnFinish.innerHTML = `<span class="animate-spin h-5 w-5 border-2 border-current border-t-transparent rounded-full mr-2"></span> INICIANDO...`;
+        btnFinish.classList.add('opacity-80', 'cursor-wait', 'scale-95');
+
+        setTimeout(() => {
+            localStorage.setItem('setup_complete_v1', 'true');
+
+            card.classList.remove('scale-100');
+            card.classList.add('scale-90', 'opacity-0');
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden-force');
+                if (typeof addLog === 'function') addLog("Setup finalizado.");
+            }, 500);
+        }, 800);
+    });
+
+    function showWelcomeModal() {
+        modal.classList.remove('hidden-force');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            card.classList.remove('scale-90');
+            card.classList.add('scale-100');
+        }, 50);
+    }
+
+    if (!localStorage.getItem('setup_complete_v1')) {
+        showWelcomeModal();
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+</script>
