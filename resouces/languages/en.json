@@ -1,0 +1,602 @@
+{
+    "modals": {
+        "welcomeModal": {
+            "btn-skip": "Skip Intro",
+            "slides": [
+                {
+                    "title": "Welcome to",
+                    "description": "Your definitive experience starts here. Select your language to set up the ideal environment.",
+                    "inputs": [
+                        {
+                            "title": "Language"
+                        }
+                    ]
+                },
+                {
+                    "title": "Extreme Performance",
+                    "description": "Our chunk optimization and memory management system ensures you get the highest FPS possible.",
+                    "divs": [
+                        {
+                            "content": "FPS Boost"
+                        },
+                        {
+                            "content": "No Lag"
+                        }
+                    ]
+                },
+                {
+                    "title": "Total Security",
+                    "description": "Play without worries. Verified client and free from any malicious code."
+                },
+                {
+                    "title": "Unique Style",
+                    "description": "Access exclusive capes, wings, and bandanas. Customize your interface (HUD) fully."
+                },
+                {
+                    "title": "Connect",
+                    "description": "Chat with your friends directly through the launcher. Keep the community always close."
+                },
+                {
+                    "title": "Stay Updated",
+                    "description": "See the latest news on our integrated blog. Changelogs, events, and updates firsthand."
+                },
+                {
+                    "title": "Total Control",
+                    "description": "Change things with ease. Intuitive settings to make the game your own."
+                },
+                {
+                    "title": "For Everyone",
+                    "description": "We accept Premium and Cracked accounts. Fun has no barriers at WorthClient.",
+                    "divs": [
+                        {
+                            "content": "Premium"
+                        },
+                        {
+                            "content": "Cracked"
+                        }
+                    ]
+                },
+                {
+                    "title": "All Set!",
+                    "description": "Your configuration has been applied. Click below to start.",
+                    "buttons": [
+                        {
+                            "content": "Start"
+                        }
+                    ]
+                }
+            ]
+        },
+        "authErrorModal": {
+            "title": "Access Denied",
+            "descriptions": [
+                "Authentication Error",
+                "Your session has expired or is invalid."
+            ],
+            "buttons": [
+                {
+                    "content": "Got it, Logout"
+                }
+            ]
+        },
+        "clearHistoryModal": {
+            "title": "Clear History?",
+            "descriptions": [
+                "Are you sure? This will erase all messages in this conversation for",
+                "both users"
+            ],
+            "buttons": [
+                {
+                    "content": "Cancel"
+                },
+                {
+                    "content": "Clear"
+                }
+            ]
+        },
+        "newBlogModal": {
+            "title": "Archive"
+        },
+        "closeTicketModal": {
+            "title": "Close Ticket?",
+            "description": "This ticket will be archived as resolved.<br>Do you want to confirm closing it?",
+            "buttons": [
+                {
+                    "content": "Back"
+                },
+                {
+                    "content": "Close"
+                }
+            ]
+        },
+        "deleteAccountModal": {
+            "title": "Remove Account?",
+            "descriptions": [
+                "Are you sure you want to remove the account",
+                "This action cannot be undone."
+            ],
+            "buttons": [
+                {
+                    "content": "Cancel"
+                },
+                {
+                    "content": "Remove"
+                }
+            ]
+        },
+        "discordModal": [
+            {
+                "title": "Link Discord",
+                "description": "Connect your account to sync roles, cosmetics, and access exclusive benefits.",
+                "label": "Your Discord ID",
+                "content": "Error",
+                "divs": [
+                    {
+                        "title": "Connection issues?",
+                        "description": "Maybe you aren't in our server or your DMs are closed. The bot needs to find you.",
+                        "button": {
+                            "content": "Join Community"
+                        }
+                    },
+                    {
+                        "title": "Where do I find this?",
+                        "descriptions": [
+                            "Enable",
+                            "Developer Mode",
+                            "on Discord, right-click your profile and go to \"Copy User ID\"."
+                        ]
+                    }
+                ],
+                "buttons": [
+                    {
+                        "content": "Cancel"
+                    },
+                    {
+                        "content": "Send Code"
+                    }
+                ]
+            },
+            {
+                "title": "Verification",
+                "descriptions": [
+                    "We sent a code to your Discord DM.",
+                    "Enter it below to confirm."
+                ],
+                "divs": [
+                    {
+                        "title": "Invalid Code"
+                    }
+                ],
+                "buttons": [
+                    {
+                        "content": "Back"
+                    },
+                    {
+                        "content": "Confirm"
+                    }
+                ]
+            },
+            {
+                "title": "All Set!",
+                "description": "Your account has been successfully linked.",
+                "divs": [
+                    {
+                        "title": "Linked",
+                        "span": "User"
+                    }
+                ],
+                "buttons": [
+                    {
+                        "content": "Finish"
+                    }
+                ]
+            }
+        ],
+        "discordUnlinkModal": {
+            "title": "Unlink Account?",
+            "description": "Warning: Unlinking the account will result in immediate loss of roles and benefits synced on Discord. Do you confirm this action?",
+            "buttons": [
+                {
+                    "content": "Cancel"
+                },
+                {
+                    "content": "Unlink"
+                }
+            ]
+        },
+        "errorConnectionModal": {
+            "titles": [
+                "Server",
+                "Offline"
+            ],
+            "descriptions": [
+                "Error connecting to server. We are probably under",
+                "maintenance",
+                ".",
+                "Don't worry! As soon as the system is back online, we will release access automatically."
+            ],
+            "divs": [
+                {
+                    "title": "API Status",
+                    "description": "NO SIGNAL"
+                },
+                {
+                    "title": "Reconnecting..."
+                }
+            ],
+            "buttons": [
+                {
+                    "content": "Try Now"
+                }
+            ]
+        },
+        "errorCrashModal": {
+            "titles": [
+                "Error",
+                "Critical"
+            ],
+            "description": "An unexpected problem occurred in the code and the launcher needs to be restarted.",
+            "divs": [
+                {
+                    "title": "Error Log",
+                    "title-app-1": "Copy error",
+                    "description": "Uncaught ReferenceError: variable is not defined..."
+                }
+            ],
+            "buttons": [
+                {
+                    "content": "Restart Launcher"
+                }
+            ]
+        },
+        "loadModal": {
+            "title": "Loading"
+        },
+        "offlineModal": {
+            "title": "Login as Cracked",
+            "description": "Create a local profile to play without authentication.",
+            "buttons": [
+                {
+                    "content": "Cancel"
+                },
+                {
+                    "content": "Register"
+                }
+            ]
+        },
+        "removeFriendModal": {
+            "title": "Unfriend?",
+            "descriptions": [
+                "Do you want to remove",
+                "from your list?",
+                "You won't be able to chat anymore."
+            ],
+            "buttons": [
+                {
+                    "content": "Cancel"
+                },
+                {
+                    "content": "Remove"
+                }
+            ]
+        },
+        "updateAttModal": {
+            "title": "Update Available!",
+            "descriptions": [
+                "A new version",
+                "was found.",
+                "New features and fixes await you."
+            ],
+            "buttons": [
+                {
+                    "content": "Later"
+                },
+                {
+                    "content": "Download Now"
+                }
+            ]
+        }
+    },
+    "categorys": {
+        "console": {
+            "title": "CONSOLE",
+            "description": "Monitoring processes in real-time"
+        },
+        "home": {
+            "tracking-wide": "PINGING...",
+            "divs": [
+                {
+                    "title": "Latest News",
+                    "description": "SEE ALL"
+                },
+                {
+                    "title": "PLAY"
+                },
+                {
+                    "title": "Manage Accounts",
+                    "description": "Cracked"
+                }
+            ]
+        },
+        "resoucespacks": {
+            "description": "Community recommended textures.",
+            "divs": [
+                {
+                    "title": "Hide Installed",
+                    "placeholder": "Search texture...",
+                    "description": "No textures found."
+                }
+            ],
+            "modals": [
+                {
+                    "title": "Uninstall Texture?",
+                    "descriptions": [
+                        "You are about to remove this texture from your files.",
+                        "Do you wish to confirm deletion?"
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Cancel"
+                        },
+                        {
+                            "content": "Confirm"
+                        }
+                    ]
+                }
+            ],
+            "scripts": {
+                "getButtonHTMLAndClass": [
+                    "Installed",
+                    "Install"
+                ],
+                "setButtonState": [
+                    "Removing..."
+                ]
+            }
+        },
+        "settings": {},
+        "social": {
+            "title": "Social & Support",
+            "description": "Connect or ask for help",
+            "divs": [
+                {
+                    "title": "Online",
+                    "description": "Visible to everyone",
+                    "sets": [
+                        "Online",
+                        "Busy",
+                        "Away",
+                        "Invisible"
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Friends"
+                        },
+                        {
+                            "content": "Support"
+                        }
+                    ]
+                },
+                {
+                    "title": "No friends yet"
+                },
+                {
+                    "title": "Open New Ticket",
+                    "description": "No open tickets"
+                },
+                {
+                    "title": "Social & Staff",
+                    "description": "Select a conversation to start"
+                }
+            ],
+            "modals": [
+                {
+                    "title": "Open Ticket",
+                    "description": "Briefly describe your issue.",
+                    "buttons": [
+                        {
+                            "content": "Cancel"
+                        },
+                        {
+                            "content": "Create"
+                        }
+                    ]
+                }
+            ]
+        },
+        "store": {
+            "description": "Customize your in-game experience",
+            "placeholder": "Search item...",
+            "divs": [
+                {
+                    "title": "Cart"
+                },
+                {
+                    "title": "Loading catalog...",
+                    "description": "No items found."
+                },
+                {
+                    "title": "Your Cart",
+                    "description": "Your cart is empty.",
+                    "gats": [
+                        "Total"
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Checkout"
+                        }
+                    ]
+                }
+            ],
+            "modals": [
+                {
+                    "title": "Unequip?",
+                    "description": "You are going to remove this item from your character.",
+                    "buttons": [
+                        {
+                            "content": "Cancel"
+                        },
+                        {
+                            "content": "Unequip"
+                        }
+                    ]
+                },
+                {
+                    "title": "Swap Item?",
+                    "description": "You already have an item from this category equipped.",
+                    "divs": [
+                        {
+                            "title": "Out",
+                            "description": "Old"
+                        },
+                        {
+                            "title": "In",
+                            "description": "New"
+                        }
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Cancel"
+                        },
+                        {
+                            "content": "Replace"
+                        }
+                    ]
+                },
+                {
+                    "title": "Payment via Pix",
+                    "buttons": [
+                        {
+                            "content": "Cancel"
+                        },
+                        {
+                            "content": "Confirm"
+                        },
+                        {
+                            "content": "Prefer PayPal? Open a Ticket."
+                        }
+                    ]
+                }
+            ],
+            "scripts": {
+                "confirmConflictAction": [
+                    "Swapping..."
+                ],
+                "copyPix": [
+                    "Code copied!"
+                ],
+                "equipItem": [
+                    "Equipping.."
+                ],
+                "updateCartUI": [
+                    "Empty cart.",
+                    "Empty",
+                    "Pay"
+                ],
+                "createProductCard": [
+                    "Unequip",
+                    "Equip",
+                    "Remove",
+                    "FREE"
+                ]
+            }
+        }
+    },
+    "header": {
+        "title-app-1": "Total people online on Launcher",
+        "title-app-2": "New version available",
+        "title-app-3": "Minimize",
+        "title-app-4": "Close"
+    },
+    "sidebar": {
+        "buttons": [
+            {
+                "title-app": "Main Menu",
+                "description": "PLAY"
+            },
+            {
+                "title-app": "Cosmetics Store",
+                "description": "STORE"
+            },
+            {
+                "title-app": "Friend List",
+                "description": "SOCIAL"
+            },
+            {
+                "title-app": "Manage Textures",
+                "description": "PACKS"
+            },
+            {
+                "title-app": "System Logs",
+                "description": "LOGS"
+            },
+            {
+                "title-app": "Launcher Settings",
+                "description": "OPTIONS"
+            }
+        ]
+    },
+    "scripts": {
+        "clearConsoleLogs": [
+            "Terminal cleared by user."
+        ],
+        "copyConsoleLogs": [
+            "No visible logs to copy.",
+            "Logs copied to clipboard!",
+            "Error copying logs."
+        ],
+        "updateUserUI": [
+            "No saved accounts",
+            "Active",
+            "Remove Account"
+        ],
+        "saveSettings": [
+            "Settings saved"
+        ],
+        "btnPlayEventClick": [
+            "FINISHING...",
+            "Terminal cleared by System (new client starting).",
+            "PLAY",
+            "Login expired. Reconnect your account."
+        ],
+        "api.onProgress": [
+            "DOWNLOADING",
+            "PREPARING..."
+        ],
+        "onPercentDownloadTxT": [
+            "Downloading"
+        ],
+        "api.onGameClosed": [
+            "PLAY"
+        ],
+        "api.onGameStarted": [
+            "PLAYING"
+        ],
+        "api.onGameStartedExtra": [
+            "STARTING GAME"
+        ],
+        "statusPing": [
+            "Worth Network is Offline",
+            "Worth Network under Maintenance",
+            "players on Worth Network",
+            "Error Connecting."
+        ],
+        "btn-update-nowEventClick": [
+            "Starting..."
+        ],
+        "sendCode": [
+            "Invalid ID. Use numbers only.",
+            "Sending.",
+            "Connection error."
+        ],
+        "updateDiscordSettingsUI": [
+            "Link Account",
+            "Click to set your ID",
+            "Connected as",
+            "Disconnect"
+        ],
+        "btn-confirm-unlinkEventClick": [
+            "Account disconnected successfully."
+        ]
+    }
+}
