@@ -1,0 +1,602 @@
+{
+    "modals": {
+        "welcomeModal": {
+            "btn-skip": "Saltar Intro",
+            "slides": [
+                {
+                    "title": "Bienvenido a",
+                    "description": "Tu experiencia definitiva comienza aquí. Selecciona tu idioma para configurar el entorno ideal.",
+                    "inputs": [
+                        {
+                            "title": "Idioma"
+                        }
+                    ]
+                },
+                {
+                    "title": "Rendimiento Extremo",
+                    "description": "Nuestro sistema de optimización de chunks y gestión de memoria garantiza que tengas los mayores FPS posibles.",
+                    "divs": [
+                        {
+                            "content": "Boost de FPS"
+                        },
+                        {
+                            "content": "Sin Lag"
+                        }
+                    ]
+                },
+                {
+                    "title": "Seguridad Total",
+                    "description": "Juega sin preocupaciones. Cliente verificado y libre de cualquier código malicioso."
+                },
+                {
+                    "title": "Estilo Único",
+                    "description": "Accede a capas, alas y bandanas exclusivas. Personaliza tu interfaz (HUD) totalmente."
+                },
+                {
+                    "title": "Conéctate",
+                    "description": "Chatea con tus amigos directamente desde el launcher. Mantén a la comunidad siempre cerca."
+                },
+                {
+                    "title": "Mantente Informado",
+                    "description": "Mira las novedades en nuestro blog integrado. Changelogs, eventos y actualizaciones de primera mano."
+                },
+                {
+                    "title": "Control Total",
+                    "description": "Cambia las cosas con facilidad. Configuraciones intuitivas para dejar el juego a tu manera."
+                },
+                {
+                    "title": "Para Todos",
+                    "description": "Aceptamos cuentas Originales y Piratas. La diversión no tiene barreras en WorthClient.",
+                    "divs": [
+                        {
+                            "content": "Original"
+                        },
+                        {
+                            "content": "Pirata"
+                        }
+                    ]
+                },
+                {
+                    "title": "¡Todo Listo!",
+                    "description": "Tu configuración ha sido aplicada. Haz clic abajo para iniciar.",
+                    "buttons": [
+                        {
+                            "content": "Comenzar"
+                        }
+                    ]
+                }
+            ]
+        },
+        "authErrorModal": {
+            "title": "Acceso Denegado",
+            "descriptions": [
+                "Error de Autenticación",
+                "Tu sesión ha expirado o es inválida."
+            ],
+            "buttons": [
+                {
+                    "content": "Entendido, Cerrar Sesión"
+                }
+            ]
+        },
+        "clearHistoryModal": {
+            "title": "¿Borrar Historial?",
+            "descriptions": [
+                "¿Estás seguro? Esto borrará todos los mensajes de esta conversación para",
+                "ambos usuarios"
+            ],
+            "buttons": [
+                {
+                    "content": "Cancelar"
+                },
+                {
+                    "content": "Borrar"
+                }
+            ]
+        },
+        "newBlogModal": {
+            "title": "Archivo"
+        },
+        "closeTicketModal": {
+            "title": "¿Cerrar Ticket?",
+            "description": "Esta atención será archivada como resuelta.<br>¿Deseas confirmar el cierre?",
+            "buttons": [
+                {
+                    "content": "Volver"
+                },
+                {
+                    "content": "Cerrar"
+                }
+            ]
+        },
+        "deleteAccountModal": {
+            "title": "¿Eliminar Cuenta?",
+            "descriptions": [
+                "¿Estás seguro de que deseas eliminar la cuenta",
+                "Esta acción no se puede deshacer."
+            ],
+            "buttons": [
+                {
+                    "content": "Cancelar"
+                },
+                {
+                    "content": "Eliminar"
+                }
+            ]
+        },
+        "discordModal": [
+            {
+                "title": "Vincular Discord",
+                "description": "Conecta tu cuenta para sincronizar roles, cosméticos y acceder a beneficios exclusivos.",
+                "label": "Tu ID de Discord",
+                "content": "Error",
+                "divs": [
+                    {
+                        "title": "¿Problemas de conexión?",
+                        "description": "Tal vez no estés en nuestro servidor o tus MD están cerrados. El bot necesita encontrarte.",
+                        "button": {
+                            "content": "Entrar a la Comunidad"
+                        }
+                    },
+                    {
+                        "title": "¿Dónde encuentro esto?",
+                        "descriptions": [
+                            "Activa el",
+                            "Modo Desarrollador",
+                            "en Discord, haz clic derecho en tu perfil y ve a \"Copiar ID\"."
+                        ]
+                    }
+                ],
+                "buttons": [
+                    {
+                        "content": "Cancelar"
+                    },
+                    {
+                        "content": "Enviar Código"
+                    }
+                ]
+            },
+            {
+                "title": "Verificación",
+                "descriptions": [
+                    "Enviamos un código a tu MD en Discord.",
+                    "Escríbelo abajo para confirmar."
+                ],
+                "divs": [
+                    {
+                        "title": "Código Inválido"
+                    }
+                ],
+                "buttons": [
+                    {
+                        "content": "Volver"
+                    },
+                    {
+                        "content": "Confirmar"
+                    }
+                ]
+            },
+            {
+                "title": "¡Todo Listo!",
+                "description": "Tu cuenta ha sido vinculada con éxito.",
+                "divs": [
+                    {
+                        "title": "Vinculado",
+                        "span": "Usuario"
+                    }
+                ],
+                "buttons": [
+                    {
+                        "content": "Concluir"
+                    }
+                ]
+            }
+        ],
+        "discordUnlinkModal": {
+            "title": "¿Desvincular Cuenta?",
+            "description": "Atención: Desvincular la cuenta resultará en la pérdida inmediata de roles y beneficios sincronizados en Discord. ¿Confirmas la acción?",
+            "buttons": [
+                {
+                    "content": "Cancelar"
+                },
+                {
+                    "content": "Desvincular"
+                }
+            ]
+        },
+        "errorConnectionModal": {
+            "titles": [
+                "Servidor",
+                "Offline"
+            ],
+            "descriptions": [
+                "Error al conectar con el servidor. Probablemente estamos en",
+                "mantenimiento",
+                ".",
+                "¡No te preocupes! Tan pronto como el sistema vuelva a estar activo, liberaremos el acceso automáticamente."
+            ],
+            "divs": [
+                {
+                    "title": "Estado API",
+                    "description": "SIN SEÑAL"
+                },
+                {
+                    "title": "Reconectando..."
+                }
+            ],
+            "buttons": [
+                {
+                    "content": "Intentar Ahora"
+                }
+            ]
+        },
+        "errorCrashModal": {
+            "titles": [
+                "Error",
+                "Crítico"
+            ],
+            "description": "Ocurrió un problema inesperado en el código y el launcher necesita reiniciarse.",
+            "divs": [
+                {
+                    "title": "Log de Error",
+                    "title-app-1": "Copiar error",
+                    "description": "Uncaught ReferenceError: variable is not defined..."
+                }
+            ],
+            "buttons": [
+                {
+                    "content": "Reiniciar Launcher"
+                }
+            ]
+        },
+        "loadModal": {
+            "title": "Cargando"
+        },
+        "offlineModal": {
+            "title": "Entrar como Pirata",
+            "description": "Crea un perfil local para jugar sin autenticación.",
+            "buttons": [
+                {
+                    "content": "Cancelar"
+                },
+                {
+                    "content": "Registrar"
+                }
+            ]
+        },
+        "removeFriendModal": {
+            "title": "¿Eliminar Amistad?",
+            "descriptions": [
+                "¿Deseas eliminar a",
+                "de tu lista?",
+                "Ya no podrán conversar."
+            ],
+            "buttons": [
+                {
+                    "content": "Cancelar"
+                },
+                {
+                    "content": "Eliminar"
+                }
+            ]
+        },
+        "updateAttModal": {
+            "title": "¡Actualización Disponible!",
+            "descriptions": [
+                "Una nueva versión",
+                "fue encontrada.",
+                "Nuevas funciones y correcciones te esperan."
+            ],
+            "buttons": [
+                {
+                    "content": "Más Tarde"
+                },
+                {
+                    "content": "Descargar Ahora"
+                }
+            ]
+        }
+    },
+    "categorys": {
+        "console": {
+            "title": "CONSOLA",
+            "description": "Monitoreando procesos en tiempo real"
+        },
+        "home": {
+            "tracking-wide": "HACIENDO PING...",
+            "divs": [
+                {
+                    "title": "Últimas Novedades",
+                    "description": "VER TODO"
+                },
+                {
+                    "title": "JUGAR"
+                },
+                {
+                    "title": "Gestionar Cuentas",
+                    "description": "Pirata"
+                }
+            ]
+        },
+        "resoucespacks": {
+            "description": "Texturas recomendadas por la comunidad.",
+            "divs": [
+                {
+                    "title": "Ocultar Instalados",
+                    "placeholder": "Buscar textura...",
+                    "description": "Ninguna textura encontrada."
+                }
+            ],
+            "modals": [
+                {
+                    "title": "¿Desinstalar Textura?",
+                    "descriptions": [
+                        "Estás a punto de eliminar esta textura de tus archivos.",
+                        "¿Deseas confirmar la eliminación?"
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Cancelar"
+                        },
+                        {
+                            "content": "Confirmar"
+                        }
+                    ]
+                }
+            ],
+            "scripts": {
+                "getButtonHTMLAndClass": [
+                    "Instalado",
+                    "Instalar"
+                ],
+                "setButtonState": [
+                    "Eliminando..."
+                ]
+            }
+        },
+        "settings": {},
+        "social": {
+            "title": "Social y Soporte",
+            "description": "Conéctate o pide ayuda",
+            "divs": [
+                {
+                    "title": "Online",
+                    "description": "Visible para todos",
+                    "sets": [
+                        "Online",
+                        "Ocupado",
+                        "Ausente",
+                        "Invisible"
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Amigos"
+                        },
+                        {
+                            "content": "Soporte"
+                        }
+                    ]
+                },
+                {
+                    "title": "Ningún amigo aún"
+                },
+                {
+                    "title": "Abrir Nuevo Ticket",
+                    "description": "Ningún ticket abierto"
+                },
+                {
+                    "title": "Social y Staff",
+                    "description": "Selecciona una conversación para comenzar"
+                }
+            ],
+            "modals": [
+                {
+                    "title": "Abrir Ticket",
+                    "description": "Describe tu problema resumidamente.",
+                    "buttons": [
+                        {
+                            "content": "Cancelar"
+                        },
+                        {
+                            "content": "Crear"
+                        }
+                    ]
+                }
+            ]
+        },
+        "store": {
+            "description": "Personaliza tu experiencia in-game",
+            "placeholder": "Buscar objeto...",
+            "divs": [
+                {
+                    "title": "Carrito"
+                },
+                {
+                    "title": "Cargando catálogo...",
+                    "description": "Ningún objeto encontrado."
+                },
+                {
+                    "title": "Tu Carrito",
+                    "description": "Tu carrito está vacío.",
+                    "gats": [
+                        "Total"
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Finalizar Compra"
+                        }
+                    ]
+                }
+            ],
+            "modals": [
+                {
+                    "title": "¿Desequipar?",
+                    "description": "Vas a eliminar este objeto de tu personaje.",
+                    "buttons": [
+                        {
+                            "content": "Cancelar"
+                        },
+                        {
+                            "content": "Desequipar"
+                        }
+                    ]
+                },
+                {
+                    "title": "¿Cambiar Objeto?",
+                    "description": "Ya posees un objeto de esta categoría equipado.",
+                    "divs": [
+                        {
+                            "title": "Sale",
+                            "description": "Antiguo"
+                        },
+                        {
+                            "title": "Entra",
+                            "description": "Nuevo"
+                        }
+                    ],
+                    "buttons": [
+                        {
+                            "content": "Cancelar"
+                        },
+                        {
+                            "content": "Sustituir"
+                        }
+                    ]
+                },
+                {
+                    "title": "Pago vía Pix",
+                    "buttons": [
+                        {
+                            "content": "Cancelar"
+                        },
+                        {
+                            "content": "Confirmar"
+                        },
+                        {
+                            "content": "¿Prefieres PayPal? Abre un Ticket."
+                        }
+                    ]
+                }
+            ],
+            "scripts": {
+                "confirmConflictAction": [
+                    "Cambiando..."
+                ],
+                "copyPix": [
+                    "¡Código copiado!"
+                ],
+                "equipItem": [
+                    "Equipando.."
+                ],
+                "updateCartUI": [
+                    "Carrito vacío.",
+                    "Vacío",
+                    "Pagar"
+                ],
+                "createProductCard": [
+                    "Desequipar",
+                    "Equipar",
+                    "Eliminar",
+                    "GRATIS"
+                ]
+            }
+        }
+    },
+    "header": {
+        "title-app-1": "Total de personas online en el Launcher",
+        "title-app-2": "Nueva versión disponible",
+        "title-app-3": "Minimizar",
+        "title-app-4": "Cerrar"
+    },
+    "sidebar": {
+        "buttons": [
+            {
+                "title-app": "Menú Principal",
+                "description": "JUGAR"
+            },
+            {
+                "title-app": "Tienda de Cosméticos",
+                "description": "TIENDA"
+            },
+            {
+                "title-app": "Lista de Amigos",
+                "description": "SOCIAL"
+            },
+            {
+                "title-app": "Gestionar Texturas",
+                "description": "PACKS"
+            },
+            {
+                "title-app": "Logs del Sistema",
+                "description": "LOGS"
+            },
+            {
+                "title-app": "Configuraciones del Launcher",
+                "description": "OPCIONES"
+            }
+        ]
+    },
+    "scripts": {
+        "clearConsoleLogs": [
+            "Terminal limpiada por el usuario."
+        ],
+        "copyConsoleLogs": [
+            "Ningún log visible para copiar.",
+            "¡Logs copiados al portapapeles!",
+            "Error al copiar logs."
+        ],
+        "updateUserUI": [
+            "Sin cuentas guardadas",
+            "Activo",
+            "Eliminar Cuenta"
+        ],
+        "saveSettings": [
+            "Configuraciones guardadas"
+        ],
+        "btnPlayEventClick": [
+            "FINALIZANDO...",
+            "Terminal limpiada por el Sistema (nuevo cliente iniciando).",
+            "JUGAR",
+            "Login expirado. Reconecta tu cuenta."
+        ],
+        "api.onProgress": [
+            "DESCARGANDO",
+            "PREPARANDO..."
+        ],
+        "onPercentDownloadTxT": [
+            "Descargando"
+        ],
+        "api.onGameClosed": [
+            "JUGAR"
+        ],
+        "api.onGameStarted": [
+            "JUGANDO"
+        ],
+        "api.onGameStartedExtra": [
+            "INICIANDO JUEGO"
+        ],
+        "statusPing": [
+            "Red Worth está Offline",
+            "Red Worth en Mantenimiento",
+            "jugadores en Red Worth",
+            "Error al Conectar."
+        ],
+        "btn-update-nowEventClick": [
+            "Iniciando..."
+        ],
+        "sendCode": [
+            "ID inválido. Usa solo números.",
+            "Enviando.",
+            "Error de conexión."
+        ],
+        "updateDiscordSettingsUI": [
+            "Vincular Cuenta",
+            "Haz clic para definir tu ID",
+            "Conectado como",
+            "Desconectar"
+        ],
+        "btn-confirm-unlinkEventClick": [
+            "Cuenta desconectada con éxito."
+        ]
+    }
+}
