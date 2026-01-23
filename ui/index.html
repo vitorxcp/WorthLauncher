@@ -79,15 +79,18 @@
   <load src="./components/modals/welcomeModal.html" />
   <load src="./components/modals/blog/blogModal.html" />
   <load src="./components/modals/blog/newModal.html" />
-  <div id="custom-tooltip" class="fixed z-[100001] px-3 py-2
-           bg-[#2a29294d] backdrop-blur-[8px]
-           text-white text-xs font-semibold tracking-wide
-           rounded-xl shadow-[0_0_20px_rgba(255,215,0,0.10)]
-           border border-[#f7ff0433] ring-1 ring-white/10
-           pointer-events-none max-w-xs
-           opacity-0 scale-95 translate-y-2
-           transition-all duration-300 ease-out origin-bottom" style="will-change: transform, opacity;">
-  </div>
+  <div id="custom-tooltip"
+     class="fixed z-[23445232345] px-3 py-2
+            bg-zinc-950/80
+            text-zinc-100 text-[11px] font-semibold tracking-wider uppercase leading-none
+            rounded-md border border-white/10 ring-1 ring-white/5
+            shadow-[0_10px_40px_-10px_rgba(0,0,0,0.8)]
+            pointer-events-none select-none
+            opacity-0 scale-95 translate-y-2
+            transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top-left
+            will-change-transform">
+</div>
+  <script src="./js/translate.js"></script>
   <script src="./js/index.js"></script>
   <script src="./js/blog.js"></script>
   <script src="./js/socket.io.js"></script>
