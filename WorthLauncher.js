@@ -294,8 +294,8 @@ function createWindow() {
     }
 
     mainWindow = new BrowserWindow({
-        width: 1100,
-        height: 700,
+        width: 1200,
+        height: 800,
         minWidth: 1000,
         minHeight: 650,
         frame: false,
@@ -347,8 +347,8 @@ function createWindow() {
 
 const createSplashWindow = () => {
     splashWindow = new BrowserWindow({
-        width: 360,
-        height: 460,
+        width: 380,
+        height: 480,
         frame: false,
         transparent: true,
         icon: path.join(__dirname, 'ui/public/assets/icon.png'),
@@ -384,6 +384,8 @@ app.whenReady().then(async () => {
     await syncApiTextures();
     setInterval(syncApiTextures, 60000);
     await loadSessionFromCache();
+    
+    setInterval(loadSessionFromCache, 12 * 60 * 60 * 1000);
 
     const modsPath = getInternalModsPath();
     if (!fs.existsSync(modsPath)) {
