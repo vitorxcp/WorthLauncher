@@ -1,8 +1,8 @@
 lucide.createIcons();
 
-const defaultSettings = { ram: '4G', fullscreen: true, closeLauncher: true, width: 900, height: 550, discordRichPresence: true };
+const defaultSettings = { ram: '4G', fullscreen: true, closeLauncher: true, width: 950, height: 600, discordRichPresence: true };
 let settings = JSON.parse(localStorage.getItem('worth_settings')) || defaultSettings;
-
+let isLangOpen = false;
 let currentUser = null;
 let userSelect = null;
 let savedAccounts = JSON.parse(localStorage.getItem('worth_accounts')) || [];
@@ -20,8 +20,6 @@ try {
     const modalOffline = document.getElementById('modal-offline');
     const inputNick = document.getElementById('offline-nick');
     const accountsListEl = document.getElementById('accounts-list');
-    const modalWelcome = document.getElementById('modal-welcome');
-    const isFirstRun = !localStorage.getItem('setup_complete');
 
 
     const getTimestamp = () => {
@@ -134,7 +132,6 @@ try {
     let currentLogFilter = 'all';
 
     function setupLogFilters() {
-        // Mapeamento de botões (IDs que você deve por no HTML)
         const filters = {
             'all': document.getElementById('btn-filter-all'),
             'info': document.getElementById('btn-filter-info'),
@@ -350,7 +347,7 @@ try {
         if (!t) {
             t = document.createElement('div');
             t.id = 'toast';
-            t.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#0a0a0a]/90 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-bold border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 opacity-0 translate-y-8 pointer-events-none z-[99999] flex items-center gap-2 transform will-change-transform";
+            t.className = "fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#0a0a0a]/90 text-white px-5 py-2.5 rounded-full text-xs font-bold border border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all duration-300 opacity-0 translate-y-8 pointer-events-none z-[99999] flex items-center gap-2 transform will-change-transform";
             document.body.appendChild(t);
         }
 
@@ -376,29 +373,6 @@ try {
             t.classList.add('opacity-0', 'translate-y-8');
         }, 3000);
     }
-
-    if (isFirstRun) {
-        modalWelcome.classList.remove('hidden-force');
-    }
-
-    document.getElementById('btn-finish-setup').addEventListener('click', async () => {
-        const btn = document.getElementById('btn-finish-setup');
-        const modal = document.getElementById('modal-welcome');
-        const card = document.getElementById('welcome-card');
-
-        btn.innerHTML = `<span class="animate-spin h-5 w-5 border-2 border-black border-t-transparent rounded-full mr-2"></span> INICIANDO...`;
-        btn.classList.add('opacity-80', 'cursor-wait');
-
-        setTimeout(() => {
-            localStorage.setItem('setup_complete', 'true');
-            card.classList.add('scale-90', 'opacity-0');
-            modal.classList.add('opacity-0');
-            setTimeout(() => {
-                modal.classList.add('hidden-force');
-                addLog("Setup inicial finalizado.");
-            }, 700);
-        }, 600);
-    });
 
     function saveAccountsToStorage() {
         localStorage.setItem('worth_accounts', JSON.stringify(savedAccounts));
@@ -510,10 +484,11 @@ try {
 
     const modalDelete = document.getElementById('modal-delete-account');
     const modalDeleteContent = document.getElementById('modal-delete-content');
-    const targetNameSpan = document.getElementById('delete-target-name');
 
 
     function openDeleteModal(idx, username) {
+        const targetNameSpan = document.querySelector('#delete-target-name');
+
         pendingDeleteIndex = idx;
         targetNameSpan.innerText = username;
 
@@ -616,6 +591,25 @@ try {
             console.error(`Falha no login Microsoft: ${res.error}`);
         }
     });
+
+    window.selectLanguage = function (val, flag, name) {
+        currentFlag.innerText = flag;
+        currentText.innerText = name;
+        hiddenInput.value = val;
+
+        document.querySelectorAll('.check-icon').forEach(icon => {
+            if (icon.getAttribute('data-val') === val) {
+                icon.classList.remove('opacity-0');
+            } else {
+                icon.classList.add('opacity-0');
+            }
+        });
+
+        localStorage.setItem("appLanguage", val);
+        appLanguage(val)
+        isLangOpen = false;
+        toggleLangMenu();
+    };
 
     function updateSettingsUI() {
         document.getElementById('ram-slider').value = parseInt(settings.ram);
@@ -879,7 +873,7 @@ try {
 
         const moveTooltip = (e) => {
             if (tooltip.classList.contains('hidden-force')) return;
-
+            tooltip.classList.remove('opacity-0', 'scale-95', 'translate-y-2');
             const winWidth = window.innerWidth;
             const winHeight = window.innerHeight;
             const tipWidth = tooltip.offsetWidth;
@@ -900,8 +894,10 @@ try {
             observer.disconnect();
 
             activeElement = null;
-            tooltip.classList.remove('tooltip-visible');
+            tooltip.classList.add('opacity-0', 'scale-95', 'translate-y-2');
+
             tooltip.classList.add('hidden-force');
+            tooltip.classList.remove('tooltip-visible');
         };
 
         document.addEventListener('mousemove', (e) => {
@@ -925,6 +921,7 @@ try {
 
             moveTooltip(e);
         });
+
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -985,6 +982,9 @@ try {
         setInterval(async () => {
             await verificarAtualizarVersao();
         }, 300000)
+
+        var transfdv34 = localStorage.getItem("appLanguage") || "pt";
+        appLanguage(transfdv34)
     })
 
     const modalUpdate = document.getElementById('modal-update');
@@ -1189,7 +1189,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 await video.play();
                 video.classList.remove('opacity-0');
             } catch (error) {
-                console.warn("Autoplay pausado pelo navegador (economia de energia):", error);
+                console.warn("Autoplay pausado (economia de energia):", error);
                 video.classList.remove('opacity-0');
             }
         };
@@ -1275,12 +1275,11 @@ let tempUserData = {};
 
 function getElement(id) {
     const el = document.getElementById(id);
-    if (!el) console.error(`[ERRO CRÍTICO] Elemento HTML com ID '${id}' não existe na página! Verifique o HTML.`);
+    if (!el) console.error(`[ERRO CRÍTICO] Elemento HTML com ID '${id}' não existe na página! Verifique.`);
     return el;
 }
 
 function openModal(modalId) {
-    console.log(`[UI] Tentando abrir: ${modalId}`);
     const modal = getElement(modalId);
     if (!modal) return;
 
@@ -1296,7 +1295,6 @@ function openModal(modalId) {
 }
 
 function closeModal(modalId) {
-    console.log(`[UI] Tentando fechar: ${modalId}`);
     const modal = getElement(modalId);
     if (!modal) return;
 
@@ -1519,7 +1517,7 @@ function updateDiscordSettingsUI() {
                     
                     <button onclick="unlinkDiscord()" 
                         class="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 transition hover:shadow-red-500/20 shadow-lg" 
-                        title="Desconectar">
+                        title-app="Desconectar">
                         <i data-lucide="log-out" class="w-4 h-4"></i>
                     </button>
                 </div>
