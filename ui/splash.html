@@ -20,8 +20,8 @@
 
         .glass-panel {
             position: relative;
-            width: 360px; height: 460px;
-            background: rgba(10, 10, 10, 0.95);
+            width: 380px; height: 480px;
+            background: rgba(0, 0, 0, 0.69);
             border: 1px solid rgba(251, 191, 36, 0.15);
             border-radius: 16px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
@@ -237,7 +237,7 @@
     <script>
         const { ipcRenderer, shell } = require('electron');
 
-        const DISCORD_URL = "https://discord.gg/SEU_LINK_AQUI"; 
+        const DISCORD_URL = "https://discord.gg/usm6hcryH9"; 
 
         const els = {
             panel: document.getElementById('main-panel'),
@@ -270,8 +270,6 @@
             if (mode === 'error') {
                 els.errorCtx.classList.remove('fade-out');
                 els.panel.classList.add('error-mode');
-                els.status.innerText = "SISTEMA INTERROMPIDO";
-                els.status.classList.add('text-red-500');
             }
         };
 
@@ -286,7 +284,40 @@
         const showError = (message) => {
             console.error("Splash Error:", message);
             els.errorMsg.innerText = message || "Erro desconhecido. Contate o suporte.";
+            
             setMode('error');
+            
+            let countdown = 5;
+            
+            const updateCountdownText = () => {
+                els.status.innerText = `ERRO. INICIANDO EM ${countdown}s...`;
+                els.status.classList.remove('text-zinc-400');
+                els.status.classList.add('text-red-400');
+            };
+
+            updateCountdownText();
+
+            const intervalId = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    updateCountdownText();
+                } else {
+                    clearInterval(intervalId);
+                    
+                    els.status.classList.remove('text-red-400');
+                    els.status.classList.add('text-zinc-400');
+                    
+                    setText("FORÇANDO INICIALIZAÇÃO...");
+                    setMode('spin');
+
+                    ipcRenderer.send('startLauncher'); 
+                }
+            }, 1000);
+
+            els.btnRetry.onclick = () => {
+                clearInterval(intervalId);
+                location.reload();
+            };
         };
 
         els.btnCopy.addEventListener('click', () => {
@@ -304,10 +335,6 @@
 
         els.btnDiscord.addEventListener('click', () => {
             shell.openExternal(DISCORD_URL);
-        });
-
-        els.btnRetry.addEventListener('click', () => {
-            location.reload();
         });
 
         ipcRenderer.on('app:error-notification', (event, message) => {
